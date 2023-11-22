@@ -4,20 +4,10 @@
 
 @_spi(Internal) import SwiftUIX
 
-public struct _UnaryViewTraitReader<Key: _ViewTraitKey, Content: View>: View where Key.Value: Equatable {
+public struct _UnaryViewTraitReader<Key: SwiftUI._ViewTraitKey, Content: View>: View {
     let key: Key.Type
     let content: Content
     let action: (Key.Value) -> Void
-    
-    public init<T>(
-        _ type: T.Type,
-        @ViewBuilder content: () -> Content,
-        action: @escaping (Key.Value) -> Void
-    ) where Key == _TypeToViewTraitKeyAdaptor<T> {
-        self.key =  _TypeToViewTraitKeyAdaptor<T>.self
-        self.content = content()
-        self.action = action
-    }
     
     public var body: some View {
         _VariadicViewAdapter(self.content) { content in
@@ -38,5 +28,29 @@ public struct _UnaryViewTraitReader<Key: _ViewTraitKey, Content: View>: View whe
             
             return
         }
+    }
+}
+
+extension _UnaryViewTraitReader {
+    public init<T>(
+        _ type: T.Type,
+        @ViewBuilder content: () -> Content,
+        action: @escaping (Key.Value) -> Void
+    ) where Key == _TypeToViewTraitKeyAdaptor<T> {
+        self.key =  _TypeToViewTraitKeyAdaptor<T>.self
+        self.content = content()
+        self.action = action
+    }
+}
+
+@available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
+extension _UnaryViewTraitReader where Key == _SwiftUIX_ViewTraitValues._ViewTraitKey {
+    public init(
+        @ViewBuilder content: () -> Content,
+        action: @escaping (Key.Value) -> Void
+    )  {
+        self.key =  Key.self
+        self.content = content()
+        self.action = action
     }
 }

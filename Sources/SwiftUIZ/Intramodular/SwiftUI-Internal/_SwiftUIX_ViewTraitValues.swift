@@ -15,9 +15,13 @@ public struct _SwiftUIX_ViewTraitValues {
         public var valueBox: any _SwiftUIX_AnyValueBox
     }
     
-    typealias _StorageKey = _SwiftUIX_Metatype<any _SwiftUIX_ViewTraitKey.Type>
+    public typealias _StorageKey = _SwiftUIX_Metatype<any _SwiftUIX_ViewTraitKey.Type>
     
     var storage: [_StorageKey: any _SwiftUIX_AnyValueBox]
+    
+    public var keys: [_StorageKey] {
+        Array(storage.keys)
+    }
     
     public init() {
         self.storage = [:]
