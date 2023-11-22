@@ -5,7 +5,7 @@
 import SwiftUIIntrospect
 import SwiftUIX
 
-#if os(iOS)
+#if os(iOS) || os(tvOS) || os(visionOS)
 extension View {
     public func _introspectAppKitOrUIKitButton(
         _ action: @escaping (AppKitOrUIKitButton) -> Void

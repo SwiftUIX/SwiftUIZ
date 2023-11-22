@@ -20,14 +20,14 @@ public final class Pasteboard {
     }
 }
 
-#if os(iOS)
+#if os(iOS) || os(tvOS) || os(visionOS)
 @available(tvOS, unavailable)
 extension Pasteboard {
     public func setString(_ string: String) {
         base.string = string
     }
 }
-#else
+#elseif os(macOS)
 @available(tvOS, unavailable)
 extension Pasteboard {
     public func setString(_ string: String) {
