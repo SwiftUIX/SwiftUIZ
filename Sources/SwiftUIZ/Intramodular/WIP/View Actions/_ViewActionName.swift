@@ -14,7 +14,17 @@ public protocol _ViewActionNameType<ActionGroupType> {
 public struct _ViewActionName<ActionGroupType: _ViewActionGroup, ActionType>: _ViewActionNameType {
     public let base: Any.Type
     
-    public init(base: ActionType.Type) {
+    @_spi(Internal)
+    public init(base: Any.Type) {
+        self.base = base
+    }
+}
+
+public struct _ViewActionNameWithExtra<ActionGroupType: _ViewActionGroup, ActionType, Extra>: _ViewActionNameType {
+    public let base: Any.Type
+    
+    @_spi(Internal)
+    public init(base: Any.Type) {
         self.base = base
     }
 }

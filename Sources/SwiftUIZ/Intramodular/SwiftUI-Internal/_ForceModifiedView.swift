@@ -4,13 +4,68 @@
 
 import Swallow
 
-public protocol _ForceModifiedView<ViewModifierType>: DynamicProperty, View {
-    associatedtype ViewModifierType: Initiable & ViewModifier
+public protocol _ThinForceModifiedView<ViewModifierType>: DynamicProperty, View {
+    associatedtype ViewModifierType: Initiable & _ThinViewModifier<Self>
+    
+    static var _viewModifier: ViewModifierType { get }
 }
 
-extension _ForceModifiedView {
+public protocol _ForceModifiedView<ViewModifierType>: DynamicProperty, View {
+    associatedtype ViewModifierType: Initiable & ViewModifier
+    
+    static var _viewModifier: ViewModifierType { get }
+}
+
+// MARK: - Implementation
+
+extension _ThinForceModifiedView {
+    @usableFromInline
+    typealias _ThinModifiedBody = _ThinModifiedView<Self, ViewModifierType>
+    
+    public static var _viewModifier: ViewModifierType {
+        .init()
+    }
+    
+    @_transparent
+    public static func _makeView(
+        view: _GraphValue<Self>,
+        inputs: _ViewInputs
+    ) -> _ViewOutputs {
+        let keyPath: KeyPath<Self, _ThinModifiedBody> = \Self.[_lazilyModifiedBy: Metatype(ViewModifierType.self)]
+        
+        let _modifiedView = view[keyPath]
+        
+        return _ThinModifiedBody._makeView(view: _modifiedView, inputs: inputs)
+    }
+    
+    @_transparent
+    public static func _makeViewList(
+        view: _GraphValue<Self>,
+        inputs: _ViewListInputs
+    ) -> _ViewListOutputs {
+        let keyPath: KeyPath<Self, _ThinModifiedBody> = \Self.[_lazilyModifiedBy: Metatype(ViewModifierType.self)]
+        
+        let _modifiedView = view[keyPath]
+        
+        return _ThinModifiedBody._makeViewList(view: _modifiedView, inputs: inputs)
+    }
+    
+    @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
+    @_transparent
+    public static func _viewListCount(
+        inputs: _ViewListCountInputs
+    ) -> Int? {
+        _ThinModifiedBody._viewListCount(inputs: inputs)
+    }
+}
+
+extension _ForceModifiedView where ViewModifierType: ViewModifier {
     @usableFromInline
     typealias _ModifiedBody = ModifiedContent<_ForceModifiedViewBody<Self>, ViewModifierType>
+    
+    public static var _viewModifier: ViewModifierType {
+        .init()
+    }
     
     @_transparent
     public static func _makeView(
@@ -48,7 +103,8 @@ extension _ForceModifiedView {
 // MARK: - Auxiliary
 
 @usableFromInline
-struct _ForceModifiedViewBody<Content: _ForceModifiedView>: View {
+struct _ForceModifiedViewBody<Content: View>: View {
+    @usableFromInline
     var content: Content
     
     @usableFromInline
@@ -60,6 +116,18 @@ struct _ForceModifiedViewBody<Content: _ForceModifiedView>: View {
     var body: some View {
         LazyView {
             content.body
+        }
+    }
+}
+
+extension _ThinForceModifiedView {
+    @usableFromInline
+    subscript<T: Initiable & _ThinViewModifier>(
+        _lazilyModifiedBy body: Metatype<T.Type>
+    ) -> _ThinModifiedView<Self, T> {
+        @_transparent
+        get {
+            _ThinModifiedView(content: self, modifier: T())
         }
     }
 }

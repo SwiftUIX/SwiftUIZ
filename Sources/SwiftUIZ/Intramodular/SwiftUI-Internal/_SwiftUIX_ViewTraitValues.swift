@@ -4,10 +4,6 @@
 
 @_spi(Internal) import SwiftUIX
 
-public protocol _ViewTraitBehavior {
-    
-}
-
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 public struct _SwiftUIX_ViewTraitValues {
     public struct _StorageValue {
@@ -78,7 +74,7 @@ public struct _SwiftUIX_ViewTraitValues {
             return self[key]
         } set {
             let key = _ViewTraitKeyFromType<Value>()
-
+            
             self[key] = newValue
         }
     }
