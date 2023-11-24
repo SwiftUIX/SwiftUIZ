@@ -4,15 +4,13 @@
 
 import SwiftUI
 
-extension View {
-    public func _focusOnAppear() -> some View {
-        modifier(_FocusOnAppear())
-    }
+private struct _FocusOnAppear: ViewModifier {
+    @FocusState private var isFocused: Bool
     
-    public func _focusActivatingBackground<V: View>(
-        @ViewBuilder content: () -> V
-    ) -> some View {
-        modifier(_AddFocusActivatingBackground(background: content()))
+    func body(content: Content) -> some View {
+        content.focused($isFocused).onAppear {
+            isFocused = true
+        }
     }
 }
 
@@ -32,12 +30,16 @@ private struct _AddFocusActivatingBackground<Background: View>: ViewModifier {
     }
 }
 
-private struct _FocusOnAppear: ViewModifier {
-    @FocusState private var isFocused: Bool
+// MARK: - API
+
+extension View {
+    public func _focusOnAppear() -> some View {
+        modifier(_FocusOnAppear())
+    }
     
-    func body(content: Content) -> some View {
-        content.focused($isFocused).onAppear {
-            isFocused = true
-        }
+    public func _focusActivatingBackground<V: View>(
+        @ViewBuilder content: () -> V
+    ) -> some View {
+        modifier(_AddFocusActivatingBackground(background: content()))
     }
 }

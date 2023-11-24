@@ -4,14 +4,14 @@
 
 import SwiftUIX
 
-public struct _BufferedBinding<Value: Equatable, Content: View>: View {
-    public let value: Binding<Value>
+fileprivate struct _WithBufferedBinding<Value: Equatable, Content: View>: View {
+    let value: Binding<Value>
     
     @State private var valueCopy: Value
     
-    public let content: (Binding<Value>) -> Content
+    let content: (Binding<Value>) -> Content
     
-    public init(
+    init(
         over value: Binding<Value>,
         @ViewBuilder content: @escaping (Binding<Value>) -> Content
     ) {
@@ -20,9 +20,16 @@ public struct _BufferedBinding<Value: Equatable, Content: View>: View {
         self.content = content
     }
     
-    public var body: some View {
+    var body: some View {
         content($valueCopy.onSet { newValue in
             value.wrappedValue = newValue
         })
     }
+}
+
+public func withBufferedBinding<Value: Equatable, Content: View>(
+    over binding: Binding<Value>,
+    content: @escaping (Binding<Value>) -> Content
+) -> some View {
+    _WithBufferedBinding(over: binding, content: content)
 }

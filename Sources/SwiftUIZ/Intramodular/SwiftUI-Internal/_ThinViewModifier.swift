@@ -7,7 +7,7 @@
 /// `ViewModifier` without SwiftUI runtime fuckery.
 ///
 /// Needed to workaround issues with traits not being propagated correctly.
-public protocol _ThinViewModifier<Content>: DynamicProperty, Initiable {
+public protocol _ThinViewModifier<Content>: DynamicProperty {
     associatedtype Content: View
     associatedtype Body: View
     
