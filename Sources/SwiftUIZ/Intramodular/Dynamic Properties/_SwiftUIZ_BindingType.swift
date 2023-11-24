@@ -6,26 +6,26 @@ import Merge
 import Swallow
 import SwiftUI
 
-public protocol _SwiftUIZ_BindingType<Value> {
+public protocol _SwiftUIX_BindingType<Value> {
     associatedtype Value
     
     var wrappedValue: Value { get nonmutating set }
     
     subscript<Subject>(
         _dynamicMember keyPath: WritableKeyPath<Value, Subject>
-    ) -> any _SwiftUIZ_BindingType<Subject> { get }
+    ) -> any _SwiftUIX_BindingType<Subject> { get }
 }
 
 // MARK: - Supplementary
 
 extension Binding {
     @_spi(Internal)
-    public init(_from binding: some _SwiftUIZ_BindingType<Value>) {
+    public init(_from binding: some _SwiftUIX_BindingType<Value>) {
         self.init(
             get: {
                 binding.wrappedValue
             },
-            set: { 
+            set: {
                 binding.wrappedValue = $0
             }
         )
@@ -34,38 +34,38 @@ extension Binding {
 
 // MARK: - Implemented Conformances
 
-extension Merge.PublishedAsyncBinding: _SwiftUIZ_BindingType {
+extension Merge.PublishedAsyncBinding: _SwiftUIX_BindingType {
     @_disfavoredOverload
     public subscript<Subject>(
         _dynamicMember keyPath: WritableKeyPath<Value, Subject>
-    ) -> any _SwiftUIZ_BindingType<Subject> {
+    ) -> any _SwiftUIX_BindingType<Subject> {
         self[dynamicMember: keyPath]
     }
 }
 
-extension Merge.PublishedBinding: _SwiftUIZ_BindingType {
+extension Merge.PublishedBinding: _SwiftUIX_BindingType {
     @_disfavoredOverload
     public subscript<Subject>(
         _dynamicMember keyPath: WritableKeyPath<Value, Subject>
-    ) -> any _SwiftUIZ_BindingType<Subject> {
+    ) -> any _SwiftUIX_BindingType<Subject> {
         self[dynamicMember: keyPath]
     }
 }
 
-extension Swallow.Inout: _SwiftUIZ_BindingType {
+extension Swallow.Inout: _SwiftUIX_BindingType {
     @_disfavoredOverload
     public subscript<Subject>(
         _dynamicMember keyPath: WritableKeyPath<Value, Subject>
-    ) -> any _SwiftUIZ_BindingType<Subject> {
+    ) -> any _SwiftUIX_BindingType<Subject> {
         self[dynamicMember: keyPath]
     }
 }
 
-extension SwiftUI.Binding: _SwiftUIZ_BindingType {
+extension SwiftUI.Binding: _SwiftUIX_BindingType {
     @_disfavoredOverload
     public subscript<Subject>(
         _dynamicMember keyPath: WritableKeyPath<Value, Subject>
-    ) -> any _SwiftUIZ_BindingType<Subject> {
+    ) -> any _SwiftUIX_BindingType<Subject> {
         self[dynamicMember: keyPath]
     }
 }

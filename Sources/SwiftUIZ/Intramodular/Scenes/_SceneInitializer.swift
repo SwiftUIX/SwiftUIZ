@@ -179,7 +179,7 @@ public enum _SceneInitializers {
             assert(parameters.id == nil)
             
             // FIXME!!!
-            guard let document = parameters.value as? (any _SwiftUIZ_BindingType<Document>) else {
+            guard let document = parameters.value as? (any _SwiftUIX_BindingType<Document>) else {
                 throw _SceneInitializationError.invalidParameter(.value)
             }
             

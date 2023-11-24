@@ -50,7 +50,7 @@ public struct _AnySceneContent: SceneContent {
 
 extension _AnySceneContent {
     private init<Document: InterfaceModel>(
-        document: any _SwiftUIZ_BindingType<Document>
+        document: any _SwiftUIX_BindingType<Document>
     ) {
         self.init {
             _InitializedSceneContent(
@@ -63,14 +63,14 @@ extension _AnySceneContent {
     }
 
     public init<Document: InterfaceModel>(
-        document: some _SwiftUIZ_BindingType<Document>
+        document: some _SwiftUIX_BindingType<Document>
     ) {
-        self.init(document: document as (any _SwiftUIZ_BindingType<Document>))
+        self.init(document: document as (any _SwiftUIX_BindingType<Document>))
     }
     
     public init<Document: InterfaceModel>(
         document: Binding<Document>
     ) {
-        self.init(document: document as (any _SwiftUIZ_BindingType<Document>))
+        self.init(document: document as (any _SwiftUIX_BindingType<Document>))
     }
 }

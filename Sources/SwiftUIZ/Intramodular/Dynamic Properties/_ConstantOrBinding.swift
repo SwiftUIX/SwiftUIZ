@@ -11,7 +11,7 @@ public struct _ConstantOrBinding<Value>: DynamicProperty, PropertyWrapper, @unch
     fileprivate enum Base {
         case constant(Value)
         case lazyConstant(() -> Value)
-        case binding(any _SwiftUIZ_BindingType<Value>)
+        case binding(any _SwiftUIX_BindingType<Value>)
         
         func evaluate() -> Value {
             switch self {
@@ -46,7 +46,7 @@ public struct _ConstantOrBinding<Value>: DynamicProperty, PropertyWrapper, @unch
         }
     }
     
-    public var binding: any _SwiftUIZ_BindingType<Value> {
+    public var binding: any _SwiftUIX_BindingType<Value> {
         get throws {
             guard case .binding(let binding) = base else {
                 throw _PlaceholderError()
@@ -99,7 +99,7 @@ public struct _ConstantOrBinding<Value>: DynamicProperty, PropertyWrapper, @unch
     
     func _mapGetSet<T>(
         get: @escaping @Sendable (Value) -> T,
-        set: @escaping @Sendable (any _SwiftUIZ_BindingType<Value>, T) -> Void
+        set: @escaping @Sendable (any _SwiftUIX_BindingType<Value>, T) -> Void
     ) -> _ConstantOrBinding<T> {
         switch _baseOrSwiftUIBinding {
             case .left(let base):
@@ -127,13 +127,13 @@ extension _ConstantOrBinding {
         self.init(base: .left(.binding(Inout(get: get, set: set))))
     }
     
-    public static func binding<Binding: _SwiftUIZ_BindingType>(
+    public static func binding<Binding: _SwiftUIX_BindingType>(
         _ binding: Binding
     ) -> Self where Binding.Value == Value {
         Self(base: (binding as? SwiftUI.Binding<Value>).map(Either.right) ?? Either.left(Base.binding(binding)))
     }
     
-    public static func binding<Binding: _SwiftUIZ_BindingType>(
+    public static func binding<Binding: _SwiftUIX_BindingType>(
         _ binding: @escaping @Sendable () -> Binding
     ) -> Self where Binding.Value == Value {
         .init(get: { binding().wrappedValue }, set: { binding().wrappedValue = $0 })
@@ -157,7 +157,7 @@ extension _ConstantOrBinding {
         )
     }
     
-    public static func unsafelyUnwrapping<Binding: _SwiftUIZ_BindingType>(
+    public static func unsafelyUnwrapping<Binding: _SwiftUIX_BindingType>(
         _ binding: @escaping () -> Binding
     ) -> Self where Binding.Value == Optional<Value> {
         let initialValue = binding().wrappedValue!
@@ -169,7 +169,7 @@ extension _ConstantOrBinding {
     }
     
     @_disfavoredOverload
-    public static func unsafelyUnwrapping<Binding: _SwiftUIZ_BindingType>(
+    public static func unsafelyUnwrapping<Binding: _SwiftUIX_BindingType>(
         _ binding: @autoclosure @escaping () -> Binding
     ) -> Self where Binding.Value == Optional<Value> {
         unsafelyUnwrapping({ binding() })

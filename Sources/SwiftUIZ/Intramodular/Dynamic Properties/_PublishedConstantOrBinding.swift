@@ -65,7 +65,7 @@ public final class _PublishedConstantOrBinding<Value> {
     
     private func _setValue(
         _ newValue: Value,
-        for binding: some _SwiftUIZ_BindingType<Value?>
+        for binding: some _SwiftUIX_BindingType<Value?>
     ) {
         if let parent = parent {
             (parent.objectWillChange as! _opaque_VoidSender).send()
