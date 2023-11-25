@@ -11,34 +11,59 @@ public protocol _SwiftUIX_ViewTraitKey<Value>: Hashable, Sendable {
     static var defaultValue: Value { get }
 }
 
+private struct _AddViewTrait<Key: _SwiftUIX_ViewTraitKey, Content: View>: _ThinViewModifier {
+    @Environment(\._traitsResolutionContext) var traitResolutionContext
+    
+    let key: Key
+    let value: Key.Value
+    
+    func body(content: Content) -> some View {
+        if traitResolutionContext.mode == .traitOnly {
+            _VariadicViewAdapter(content) { content in
+                let _: Void = assert(content.children.count == 1)
+                
+                var traits = content.children.first?.traits._SwiftUIX_viewTraitValues ?? _SwiftUIX_ViewTraitValues()
+                
+                let _: Void = traits[key] = value
+                
+                ZeroSizeView()
+                    ._trait(\._SwiftUIX_viewTraitValues, traits)
+            }
+        } else {
+            content
+                .transformEnvironment(\._SwiftUIX_viewTraitValues) { traits in
+                    traits[key] = value
+                }
+                ._transformTraits {
+                    $0[key] = value
+                }
+                ._trait(
+                    _SwiftUIX_ViewTraitKeyAdaptor<Key>.self,
+                    .init(wrappedValue: value)
+                )
+        }
+    }
+}
+ 
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 extension View {
     public func trait<Value>(
         _ value: Value
     ) -> some View {
-        trait(_ViewTraitKeyFromType<Value>(), value)
+        trait(_SwiftUIX_TypeToViewTraitKeyAdaptor<Value>(), value)
     }
     
     public func trait<Key: _SwiftUIX_ViewTraitKey>(
         _ key: Key,
         _ value: Key.Value
     ) -> some View {
-        self.transformEnvironment(\._SwiftUIX_viewTraitValues) { traits in
-            traits[key] = value
-        }
-        ._transformViewTraitValues {
-            $0[key] = value
-        }
-        ._trait(
-            _SwiftUIX_ViewTraitKeyAdaptor<Key>.self,
-            .init(wrappedValue: value)
-        )
+        _modifier(_AddViewTrait(key: key, value: value))
     }
     
-    public func _transformViewTraitValues(
+    public func _transformTraits(
         _ transform: @escaping (inout _SwiftUIX_ViewTraitValues) -> Void
     ) -> some View {
-        modifier(_SwiftUIX_TransformViewTraitValues(transform: transform))
+        modifier(_SwiftUIX_transformTraits(transform: transform))
     }
 }
 
@@ -50,14 +75,14 @@ extension View {
         self.transformEnvironment(\._SwiftUIX_viewTraitValues) { traits in
             traits[keyPath: key] = value
         }
-        ._transformViewTraitValues {
+        ._transformTraits {
             $0[keyPath: key] = value
         }
     }
 }
 
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-fileprivate struct _SwiftUIX_TransformViewTraitValues: ViewModifier {
+fileprivate struct _SwiftUIX_transformTraits: ViewModifier {
     let transform: (inout _SwiftUIX_ViewTraitValues) -> Void
     
     func body(content: Content) -> some View {

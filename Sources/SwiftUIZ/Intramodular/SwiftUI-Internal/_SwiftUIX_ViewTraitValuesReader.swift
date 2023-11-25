@@ -4,7 +4,7 @@
 
 @_spi(Internal) import SwiftUIX
 
-public struct _SwiftUIX_ViewTraitValuesReader<Content: View>: View {
+public struct _SwiftUIX_ViewTraitsReader<Content: View>: View {
     let content: (_SwiftUIX_ViewTraitValues) -> Content
     
     public init(@ViewBuilder content: @escaping (_SwiftUIX_ViewTraitValues) -> Content) {

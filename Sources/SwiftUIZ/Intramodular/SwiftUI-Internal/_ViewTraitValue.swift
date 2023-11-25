@@ -12,18 +12,23 @@ public protocol _ViewTraitValue {
 // MARK: - Auxiliary
 
 public struct _ViewTraitsResolutionContext {
-    public var viewDisabledTypes: Set<Metatype<Any.Type>> = []
+    public enum Mode {
+        case regular
+        case traitOnly
+    }
     
-    public init() {
-        
+    public let mode: Mode
+    
+    public init(mode: Mode = .regular) {
+        self.mode = mode
     }
 }
 
 extension EnvironmentValues {
-    @EnvironmentValue var _traitsResolutionContext = _ViewTraitsResolutionContext()
+    @EnvironmentValue public var _traitsResolutionContext = _ViewTraitsResolutionContext()
 }
 
-public struct _DetachablePreferenceTrait<Key: _PreferenceTraitKey, Content: View>: _ThinViewModifier {
+/*public struct _DetachablePreferenceTrait<Key: _PreferenceTraitKey, Content: View>: _ThinViewModifier {
     @Environment(\._traitsResolutionContext) var context
     
     public var key: Key.Type
@@ -74,3 +79,4 @@ public struct _DetachableViewTrait<Key: _ViewTraitKey, Content: View>: _ThinView
         ._trait(key, value)
     }
 }
+*/

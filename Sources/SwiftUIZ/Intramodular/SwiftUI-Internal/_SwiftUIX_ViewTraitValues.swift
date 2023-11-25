@@ -6,9 +6,13 @@
 
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 public struct _SwiftUIX_ViewTraitValues {
-    public struct _StorageValue {
+    public struct _StorageValue: _PartiallyEquatable {
         public var namespace: Namespace.ID?
         public var valueBox: any _SwiftUIX_AnyValueBox
+        
+        public func isEqual(to other: Self) -> Bool? {
+            namespace == other.namespace && _isKnownEqual(valueBox.wrappedValue, other.valueBox.wrappedValue)
+        }
     }
     
     public typealias _StorageKey = _SwiftUIX_Metatype<any _SwiftUIX_ViewTraitKey.Type>
@@ -69,20 +73,26 @@ public struct _SwiftUIX_ViewTraitValues {
     
     public subscript<Value>(_ type: Value.Type) -> Value? {
         get {
-            let key = _ViewTraitKeyFromType<Value>()
+            let key = _SwiftUIX_TypeToViewTraitKeyAdaptor<Value>()
             
             return self[key]
         } set {
-            let key = _ViewTraitKeyFromType<Value>()
+            let key = _SwiftUIX_TypeToViewTraitKeyAdaptor<Value>()
             
             self[key] = newValue
         }
     }
 }
 
+extension _SwiftUIX_ViewTraitValues: _PartiallyEquatable {
+    public func isEqual(to other: Self) -> Bool? {
+        _isKnownEqual(storage, other.storage)
+    }
+}
+
 // MARK: - Auxiliary
 
-struct _ViewTraitKeyFromType<T>: _SwiftUIX_ViewTraitKey {
+public struct _SwiftUIX_TypeToViewTraitKeyAdaptor<T>: _SwiftUIX_ViewTraitKey {
     public typealias Value = T?
     
     public static var defaultValue: T? {

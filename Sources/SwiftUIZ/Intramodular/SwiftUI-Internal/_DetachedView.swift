@@ -9,6 +9,8 @@ public struct _DetachedView<Content: View>: View {
     let content: Content
     let inspect: (DetatchedViewProxy<Content>) -> Void
     
+    @ViewStorage var proxy: DetatchedViewProxy<Content>?
+    
     public init(
         _ content: Content,
         inspect: @escaping (DetatchedViewProxy<Content>) -> Void
@@ -18,14 +20,61 @@ public struct _DetachedView<Content: View>: View {
     }
     
     public var body: some View {
-        _VariadicViewAdapter(content) { children in
+        _VariadicViewAdapter {
+            content
+                .environment(
+                    \._traitsResolutionContext,
+                     _ViewTraitsResolutionContext(mode: .traitOnly)
+                )
+                .eraseToAnyView()
+        } content: { children in
             PerformAction(deferred: false) {
-                inspect(.init(base: children))
+                let proxy = DetatchedViewProxy<Content>(base: children)
+                
+                if !_isKnownEqual(proxy, self.proxy) {
+                    self.proxy = proxy
+                    
+                    inspect(.init(base: children))
+                } else {
+                    _ = proxy
+                }
             }
         }
     }
 }
 
-public struct DetatchedViewProxy<Content: View> {
-    let base: _TypedVariadicView<Content>
+public struct DetatchedViewProxy<Content: View>: _PartiallyEquatable {
+    let base: _SwiftUIX_ViewTraitValues
+    
+    init(base: _TypedVariadicView<AnyView>) {
+        self.base = base.children.first?.traits._SwiftUIX_viewTraitValues ?? .init()
+    }
+    
+    public func isEqual(to other: Self) -> Bool? {
+        base.isEqual(to: other.base)
+    }
+    
+    public subscript<Key: _SwiftUIX_ViewTraitKey>(
+        _ key: Key
+    ) -> Key.Value {
+        get {
+            base[key]
+        }
+    }
+    
+    public subscript<T>(
+        _ type: T.Type
+    ) -> T? {
+        get {
+            self[_SwiftUIX_TypeToViewTraitKeyAdaptor<T>()]
+        }
+    }
+    
+    public subscript<T: ExpressibleByNilLiteral>(
+        _ type: T.Type
+    ) -> T {
+        get {
+            self[_SwiftUIX_TypeToViewTraitKeyAdaptor<T>()] ?? nil
+        }
+    }
 }
