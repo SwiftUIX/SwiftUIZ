@@ -24,7 +24,7 @@ public struct _FocusRingDrawing: AppKitOrUIKitViewRepresentable {
 #if os(iOS) || os(tvOS) || os(visionOS) || os(watchOS)
 extension _FocusRingDrawing {
     public class AppKitOrUIKitViewType: AppKitOrUIKitView {
-        
+        fileprivate var drawFocusRing: Bool = false
     }
 }
 #elseif os(macOS)
