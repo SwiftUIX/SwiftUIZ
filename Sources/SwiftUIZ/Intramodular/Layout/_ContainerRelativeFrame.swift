@@ -28,7 +28,8 @@ struct _SwiftUIX_ContainerRelativeFrame: ViewModifier {
     let length: (CGFloat, Axis) -> CGFloat
     
     @WeakState private var window: AppKitOrUIKitWindow?
-    
+    @WeakState private var view: AppKitOrUIKitView?
+
     @StateObject var observedFrame = _NSKeyValueObservedKeyPath<AppKitOrUIKitWindow, CGRect, CGSize>(keyPath: \.frame, member: \.size)
     
     var relativeWidth: CGFloat? {
@@ -64,6 +65,7 @@ struct _SwiftUIX_ContainerRelativeFrame: ViewModifier {
             }
     }
 }
+
 
 extension View {
     public func containerRelativeFrame(

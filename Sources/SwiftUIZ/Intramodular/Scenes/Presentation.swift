@@ -5,21 +5,21 @@
 import SwiftUIX
 
 /// A scene that represents a presentation.
-public struct Presentation<Content: View>: _SwiftUIZ_Scene {
-    public let initializer: _SceneInitializerGroup
+public struct Presentation<Content: View>: DynamicScene {
+    public let initializer: _DynamicSceneInitializerGroup
     
     public init(@ViewBuilder content: () -> Content) {
-        self.initializer = _SceneInitializerGroup(
+        self.initializer = _DynamicSceneInitializerGroup(
             id: Metatype(Self.self),
             initializers: [
-                _AnySceneInitializer(
-                    erasing: _SceneInitializers.ResolvedContent(content: content())
+                _AnyDynamicSceneInitializer(
+                    erasing: _DynamicSceneInitializers.ResolvedContent(content: content())
                 )
             ]
         )
     }
     
-    public var body: some _SwiftUIZ_Scene {
+    public var body: some DynamicScene {
         _SwiftUIZ_FakeScene {
             initializer
         }

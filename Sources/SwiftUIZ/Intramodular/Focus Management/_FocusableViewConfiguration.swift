@@ -6,19 +6,6 @@ import SwiftUI
 import SwiftUIX
 import UniformTypeIdentifiers
 
-public struct _SwiftUIX_AnyPasteCommandDelegate {
-    public var supportedContentTypes: [UTType]
-    public var action: ([NSItemProvider]) -> Void
-    
-    public init(
-        supportedContentTypes: [UTType],
-        action: @escaping ([NSItemProvider]) -> Void
-    ) {
-        self.supportedContentTypes = supportedContentTypes
-        self.action = action
-    }
-}
-
 public struct _FocusableViewConfiguration: ExpressibleByNilLiteral {
     public enum Mode {
         case `default`

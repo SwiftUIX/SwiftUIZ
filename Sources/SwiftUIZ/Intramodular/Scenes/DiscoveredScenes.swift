@@ -19,7 +19,7 @@ public struct DiscoveredScenes: Scene {
     
     public var body: some Scene {
         _SwiftUIZ_FakeScene {
-            try! Self.discoveredScenes.flatMap { sceneType -> [_SceneInitializerGroup] in
+            try! Self.discoveredScenes.flatMap { sceneType -> [_DynamicSceneInitializerGroup] in
                 guard !(sceneType is any _SwiftUIZ_PrimitiveScene.Type) else {
                     return []
                 }
@@ -41,7 +41,7 @@ public struct DiscoveredScenes: Scene {
                 
                 let scene = sceneType.init()
                 
-                guard let _scene = scene.body as? any _SwiftUIZ_Scene else {
+                guard let _scene = scene.body as? any DynamicScene else {
                     assertionFailure()
                     
                     return []

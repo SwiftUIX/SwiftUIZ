@@ -3,3 +3,7 @@
 //
 
 import Swallow
+
+public protocol _ViewSupplier {
+    
+}

@@ -14,33 +14,21 @@ public protocol SceneContent: View {
 
 // MARK: - Implemented Conformances
 
-public struct _ResolvedSceneContent: _AnyViewWrapper, View {
-    private let content: AnyView
-    
-    public init(content: AnyView) {
-        self.content = content
-    }
-    
-    init<Content: View>(content: Content) {
-        self.content = content.eraseToAnyView()
-    }
-    
-    public var body: some View {
-        content
-    }
-}
-
 public struct _AnySceneContent: SceneContent {
     public let content: () -> AnyView
     
-    internal init(content: @escaping () -> AnyView) {
+    public init(content: @escaping () -> AnyView) {
         self.content = content
     }
     
-    internal init<Content: View>(
+    public init<Content: View>(
         @ViewBuilder content: @escaping () -> Content
     ) {
         self.content = { content().eraseToAnyView() }
+    }
+    
+    public init<Content: View>(content: Content) {
+        self.content = { content.eraseToAnyView() }
     }
     
     public var body: some View {
@@ -53,7 +41,7 @@ extension _AnySceneContent {
         document: any _SwiftUIX_BindingType<Document>
     ) {
         self.init {
-            _InitializedSceneContent(
+            _InitializeDynamicSceneContent(
                 parameters: .init(
                     value: document
                 )
@@ -61,7 +49,7 @@ extension _AnySceneContent {
             .id(document.wrappedValue.id)
         }
     }
-
+    
     public init<Document: InterfaceModel>(
         document: some _SwiftUIX_BindingType<Document>
     ) {

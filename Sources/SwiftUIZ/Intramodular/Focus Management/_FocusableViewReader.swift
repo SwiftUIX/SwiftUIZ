@@ -69,7 +69,7 @@ public struct _FocusableViewReader<Content: View>: View {
     public var body: some View {
         content(resolvedProxy)
             ._assignTopLevelFocusableRepresentationNamespace(configuration.assignedTopLevelNamespace)
-            .onPreferenceChange(_SwiftUIX_FocusableRepresentation.PreferenceKey.self) {
+            .onPreferenceChange(_SwiftUIX_FocusableRepresentation._PreferenceKey.self) {
                 readProxy.rawValue = $0
             }
     }

@@ -6,16 +6,16 @@ import CorePersistence
 import SwiftUIX
 
 @Singleton
-public final class _SwiftUIZ_SceneManager: ObservableObject {
-    public var scenes: IdentifierIndexingArrayOf<_SceneInitializerGroup> = []
+public final class _DynamicSceneManager: ObservableObject {
+    @Published public var scenes: IdentifierIndexingArrayOf<_DynamicSceneInitializerGroup> = []
     
-    func _register(_ scenes: [_SceneInitializerGroup]) {
+    func _register(_ scenes: [_DynamicSceneInitializerGroup]) {
         self.scenes.append(contentsOf: scenes)
     }
     
     func initializer(
-        for parameters: _SwiftUIZ_AnySceneInitializerParameters
-    ) throws -> (any _SceneInitializer)? {
+        for parameters: _SwiftUIZ_AnyDynamicSceneInitializerParameters
+    ) throws -> (any _DynamicSceneInitializer)? {
         scenes.first(byUnwrapping: { group in
             group.initializers.first(where: {
                 (try? $0.resolve(from: parameters)) != nil
@@ -24,8 +24,8 @@ public final class _SwiftUIZ_SceneManager: ObservableObject {
     }
     
     internal func _resolveSceneContent(
-        for parameters: _SwiftUIZ_AnySceneInitializerParameters
-    ) throws -> _ResolvedSceneContent? {
+        for parameters: _SwiftUIZ_AnyDynamicSceneInitializerParameters
+    ) throws -> _AnySceneContent? {
         guard let initializer = try initializer(for: parameters) else {
             runtimeIssue("Failed to find a scene initializer.")
             

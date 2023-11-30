@@ -4,6 +4,23 @@
 
 import SwiftUI
 
+// MARK: - Implementation
+
+/// This type is **WIP**.
+public protocol DynamicView: _DynamicView, _ThinForceModifiedView where ViewModifierType == _DynamicViewModifier<Self> {
+    var _unsafeDynamicViewFlags: Set<_DynamicViewContentUnsafeFlag> { get }
+}
+
+// MARK: - Implementation
+
+extension DynamicView {
+    public var _unsafeDynamicViewFlags: Set<_DynamicViewContentUnsafeFlag> {
+        []
+    }
+}
+
+// MARK: - Internal
+
 public protocol _DynamicView: View {
     
 }
@@ -12,25 +29,14 @@ extension _DynamicView {
     public typealias ViewModifierType = _DynamicViewModifier<Self>
 }
 
-/// This type is **WIP**.
-public protocol DynamicView: _DynamicView, _ThinForceModifiedView where ViewModifierType == _DynamicViewModifier<Self> {
-    
-}
-
-// MARK: - Internal
-
 public struct _DynamicViewModifier<Content: View>: Initiable, _ThinViewModifier {
     public init() {
         
     }
     
     public func body(content: Content) -> some View {
-        content
-    }
-}
-
-struct Foo: DynamicView {
-    var body: some View {
-        Text("")
+        _DynamicViewContent(root: content) {
+            content
+        }
     }
 }

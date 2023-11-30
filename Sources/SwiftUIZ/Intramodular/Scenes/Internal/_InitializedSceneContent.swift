@@ -4,15 +4,16 @@
 
 import Swallow
 
-struct _InitializedSceneContent: View {
-    @StateObject private var sceneManager: _SwiftUIZ_SceneManager = .shared
+@_spi(Internal)
+public struct _InitializeDynamicSceneContent: View {
+    @StateObject private var sceneManager: _DynamicSceneManager = .shared
     
-    @_LazyState var resolvedContent: _ResolvedSceneContent?
+    @_LazyState private var resolvedContent: _AnySceneContent?
     
-    init(
-        parameters: _SwiftUIZ_AnySceneInitializerParameters
+    public init(
+        parameters: _SwiftUIZ_AnyDynamicSceneInitializerParameters
     ) {
-        let sceneManager = _SwiftUIZ_SceneManager.shared
+        let sceneManager = _DynamicSceneManager.shared
         
         self._resolvedContent = .init(
             wrappedValue: try! sceneManager._resolveSceneContent(for: parameters)
