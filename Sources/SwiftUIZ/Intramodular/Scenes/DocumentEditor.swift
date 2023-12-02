@@ -10,7 +10,7 @@ public struct DocumentEditor<Document, Content: View>: DynamicScene {
     private let initializer: _DynamicSceneInitializerGroup
     
     public var body: some DynamicScene {
-        _SwiftUIZ_FakeScene {
+        _SwiftUIZ_DonateSceneInitializer {
             initializer
         }
     }

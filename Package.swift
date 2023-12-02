@@ -15,9 +15,12 @@ let package = Package(
         .library(
             name: "SwiftUIZ",
             targets: [
+                "Engine",
+                "EngineCore",
+                "EngineCoreC",
                 "SwiftUIZ"
             ]
-        )
+        ),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-syntax", from: "509.0.0"),
@@ -44,8 +47,27 @@ let package = Package(
             path: "Sources/SwiftUIZ_Macros"
         ),
         .target(
+            name: "EngineCoreC"
+        ),
+        .target(
+            name: "EngineCore",
+            dependencies: [
+                "EngineCoreC",
+            ]
+        ),
+        .target(
+            name: "Engine",
+            dependencies: [
+                "EngineCore",
+                "EngineCoreC",
+            ]
+        ),
+        .target(
             name: "SwiftUIZ",
             dependencies: [
+                "EngineCoreC",
+                "EngineCore",
+                "Engine",
                 "CorePersistence",
                 "Expansions",
                 "Merge",

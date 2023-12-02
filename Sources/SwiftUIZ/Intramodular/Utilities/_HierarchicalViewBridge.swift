@@ -19,6 +19,19 @@ public protocol _HierarchicalViewBridgeType: __HierarchicalViewBridgeType, AnyOb
     var isInvalid: Bool { get }
 }
 
+@propertyWrapper
+public struct _ViewBridge<T: _HierarchicalViewBridgeType>: DynamicProperty {
+    @Environment(\.[Metatype(T.InstanceType.self)]) var _bridge: Weak<T.InstanceType>
+    
+    public var wrappedValue: T {
+        _bridge.wrappedValue as! T
+    }
+    
+    public init(_: T.Type) {
+        
+    }
+}
+
 open class _HierarchicalViewBridge<InstanceType>: _HierarchicalViewBridgeType {
     public typealias _Self = _HierarchicalViewBridge<InstanceType>
     
@@ -40,7 +53,7 @@ open class _HierarchicalViewBridge<InstanceType>: _HierarchicalViewBridgeType {
     }
     
     public fileprivate(set) var children: Set<WeakObjectPointer<_Self>> = []
-        
+    
     public func add(_ instance: _HierarchicalViewBridge<InstanceType>) {
         assert(instance._parent == nil)
         
@@ -57,7 +70,7 @@ open class _HierarchicalViewBridge<InstanceType>: _HierarchicalViewBridgeType {
         stateFlags.insert(.invalid)
     }
     
-    init() {
+    public init() {
         
     }
     

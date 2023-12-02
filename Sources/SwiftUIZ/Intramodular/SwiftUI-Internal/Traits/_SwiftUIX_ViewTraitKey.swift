@@ -4,6 +4,9 @@
 
 import SwiftUI
 
+/// SwiftUIX's version of `_ViewTraitKey`.
+///
+/// The benefit of using this version is that it allows for dynamic enumeration/manipulation of trait values.
 public protocol _SwiftUIX_ViewTraitKey<Value>: Hashable, Sendable {
     associatedtype Value
     associatedtype ValueBox: _SwiftUIX_AnyMutableValueBox<Value> = _SwiftUIX_MutableValueBox<Value> where ValueBox.Value == Value
@@ -50,7 +53,9 @@ extension View {
     public func trait<Value>(
         _ value: Value
     ) -> some View {
-        trait(_SwiftUIX_TypeToViewTraitKeyAdaptor<Value>(), value)
+        assert(type(of: value) == Value.self)
+        
+        return trait(_SwiftUIX_TypeToViewTraitKeyAdaptor<Value>(), value)
     }
     
     public func trait<Key: _SwiftUIX_ViewTraitKey>(
@@ -63,26 +68,12 @@ extension View {
     public func _transformTraits(
         _ transform: @escaping (inout _SwiftUIX_ViewTraitValues) -> Void
     ) -> some View {
-        modifier(_SwiftUIX_transformTraits(transform: transform))
-    }
-}
-
-extension View {
-    public func _WIP_trait<Value>(
-        _ key: WritableKeyPath<_SwiftUIX_ViewTraitValues, Value>,
-        _ value: Value
-    ) -> some View {
-        self.transformEnvironment(\._SwiftUIX_viewTraitValues) { traits in
-            traits[keyPath: key] = value
-        }
-        ._transformTraits {
-            $0[keyPath: key] = value
-        }
+        _modifier(_SwiftUIX_TransformTraits(transform: transform))
     }
 }
 
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-fileprivate struct _SwiftUIX_transformTraits: ViewModifier {
+fileprivate struct _SwiftUIX_TransformTraits<Content: View>: _ThinViewModifier {
     let transform: (inout _SwiftUIX_ViewTraitValues) -> Void
     
     func body(content: Content) -> some View {

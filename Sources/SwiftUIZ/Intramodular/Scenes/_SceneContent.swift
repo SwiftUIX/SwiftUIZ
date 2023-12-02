@@ -6,7 +6,7 @@ import FoundationX
 import Swallow
 import SwiftUIX
 
-public protocol SceneContent: View {
+public protocol DynamicSceneContent: View {
     associatedtype Body
     
     var body: Body { get }
@@ -14,7 +14,7 @@ public protocol SceneContent: View {
 
 // MARK: - Implemented Conformances
 
-public struct _AnySceneContent: SceneContent {
+public struct _AnyDynamicSceneContent: DynamicSceneContent {
     public let content: () -> AnyView
     
     public init(content: @escaping () -> AnyView) {
@@ -36,7 +36,7 @@ public struct _AnySceneContent: SceneContent {
     }
 }
 
-extension _AnySceneContent {
+extension _AnyDynamicSceneContent {
     private init<Document: InterfaceModel>(
         document: any _SwiftUIX_BindingType<Document>
     ) {

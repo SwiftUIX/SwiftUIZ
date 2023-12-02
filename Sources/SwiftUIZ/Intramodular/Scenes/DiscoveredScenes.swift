@@ -18,7 +18,7 @@ public struct DiscoveredScenes: Scene {
     }
     
     public var body: some Scene {
-        _SwiftUIZ_FakeScene {
+        _SwiftUIZ_DonateSceneInitializer {
             try! Self.discoveredScenes.flatMap { sceneType -> [_DynamicSceneInitializerGroup] in
                 guard !(sceneType is any _SwiftUIZ_PrimitiveScene.Type) else {
                     return []

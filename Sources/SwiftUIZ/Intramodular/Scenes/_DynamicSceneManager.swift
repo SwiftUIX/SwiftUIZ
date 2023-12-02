@@ -23,9 +23,17 @@ public final class _DynamicSceneManager: ObservableObject {
         })
     }
     
-    internal func _resolveSceneContent(
+    public func resolveContent<T>(
+        for instance: T
+    ) -> (some DynamicSceneContent)? {
+        _expectNoThrow {
+            try? _resolveDynamicSceneContent(for: .init(value: instance))
+        }
+    }
+    
+    internal func _resolveDynamicSceneContent(
         for parameters: _SwiftUIZ_AnyDynamicSceneInitializerParameters
-    ) throws -> _AnySceneContent? {
+    ) throws -> _AnyDynamicSceneContent? {
         guard let initializer = try initializer(for: parameters) else {
             runtimeIssue("Failed to find a scene initializer.")
             
@@ -39,5 +47,19 @@ public final class _DynamicSceneManager: ObservableObject {
         }
         
         return content
+    }
+}
+
+extension InterfaceModel {
+    fileprivate func _opaque_attemptToResolve(
+        from sceneManager: _DynamicSceneManager
+    ) -> _AnyDynamicSceneContent? {
+        if let content = try? sceneManager._resolveDynamicSceneContent(for: .init(value: id)) {
+            return content
+        } else if let content = try? sceneManager._resolveDynamicSceneContent(for: .init(id: id, value: self)) {
+            return content
+        } else {
+            return nil
+        }
     }
 }

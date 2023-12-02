@@ -12,7 +12,7 @@ public protocol _DynamicSceneInitializer {
     
     func resolve(
         from parameters: _SwiftUIZ_AnyDynamicSceneInitializerParameters
-    ) throws -> _AnySceneContent?
+    ) throws -> _AnyDynamicSceneContent?
 }
 
 extension _DynamicSceneInitializer {
@@ -37,7 +37,7 @@ public struct _AnyDynamicSceneInitializer: _DynamicSceneInitializer {
     
     public func resolve(
         from parameters: _SwiftUIZ_AnyDynamicSceneInitializerParameters
-    ) throws -> _AnySceneContent? {
+    ) throws -> _AnyDynamicSceneContent? {
         try base.resolve(from: parameters)
     }
 }
@@ -119,26 +119,54 @@ public enum _DynamicSceneInitializers {
         
         public func resolve(
             from parameters: _SwiftUIZ_AnyDynamicSceneInitializerParameters
-        ) throws -> _AnySceneContent? {
+        ) throws -> _AnyDynamicSceneContent? {
             guard parameters.isEmpty else {
                 throw _SceneInitializationError.unusedParameters
             }
             
-            return _AnySceneContent(content: content.eraseToAnyView()) // FIXME??
+            return _AnyDynamicSceneContent(content: content.eraseToAnyView()) // FIXME??
         }
     }
     
+    public struct ValueBased<
+        Value,
+        Content: DynamicSceneContent
+    >: _DynamicSceneInitializer {
+        public typealias ID = Never
+                
+        public var value: (Value) throws -> Content?
+        
+        public func resolve(
+            from parameters: _SwiftUIZ_AnyDynamicSceneInitializerParameters
+        ) throws -> _AnyDynamicSceneContent? {
+            guard !parameters.isEmpty else {
+                throw _SceneInitializationError.missingParameter(.id)
+            }
+            
+            try _warnOnThrow {
+                try _tryAssert(parameters.idType == nil)
+                try _tryAssert(parameters.id == nil)
+            }
+                                    
+            guard let value = parameters.value as? Value else {
+                throw _SceneInitializationError.invalidParameter(.value)
+            }
+            
+            return try self.value(value).map({ _AnyDynamicSceneContent(content: $0.eraseToAnyView()) })
+        }
+    }
+
     public struct IdentifierWithValue<
         ID,
         Value,
-        Content: SceneContent
+        Content: DynamicSceneContent
     >: _DynamicSceneInitializer {
         public var id: ID
         public var value: (Value) throws -> Content?
         
         public func resolve(
             from parameters: _SwiftUIZ_AnyDynamicSceneInitializerParameters
-        ) throws -> _AnySceneContent? {
+        ) throws -> _AnyDynamicSceneContent? {
             guard !parameters.isEmpty else {
                 throw _SceneInitializationError.missingParameter(.id)
             }
@@ -155,7 +183,7 @@ public enum _DynamicSceneInitializers {
                 throw _SceneInitializationError.invalidParameter(.value)
             }
             
-            return try self.value(value).map({ _AnySceneContent(content: $0.eraseToAnyView()) })
+            return try self.value(value).map({ _AnyDynamicSceneContent(content: $0.eraseToAnyView()) })
         }
     }
     
@@ -171,7 +199,7 @@ public enum _DynamicSceneInitializers {
         
         public func resolve(
             from parameters: _SwiftUIZ_AnyDynamicSceneInitializerParameters
-        ) throws -> _AnySceneContent? {
+        ) throws -> _AnyDynamicSceneContent? {
             guard !parameters.isEmpty else {
                 throw _SceneInitializationError.missingParameters
             }
@@ -189,7 +217,7 @@ public enum _DynamicSceneInitializers {
                 isEditable: true
             )
             
-            return _AnySceneContent(content: self.content(configuration))
+            return _AnyDynamicSceneContent(content: self.content(configuration))
         }
     }
     
@@ -205,7 +233,7 @@ public enum _DynamicSceneInitializers {
         
         public func resolve(
             from parameters: _SwiftUIZ_AnyDynamicSceneInitializerParameters
-        ) throws -> _AnySceneContent? {
+        ) throws -> _AnyDynamicSceneContent? {
             guard !parameters.isEmpty else {
                 throw _SceneInitializationError.missingParameters
             }
@@ -223,7 +251,7 @@ public enum _DynamicSceneInitializers {
                 isEditable: true
             )
             
-            return _AnySceneContent(content: self.content(configuration))
+            return _AnyDynamicSceneContent(content: self.content(configuration))
         }
 
     }
