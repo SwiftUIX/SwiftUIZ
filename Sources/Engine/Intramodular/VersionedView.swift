@@ -89,14 +89,8 @@ extension VersionedView where Body == Never{
         #if !DEBUG
         if #available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, visionOS 1.0, *) {
             return V5Body._makeView(view: view[\.v5Body], inputs: inputs)
-        } else if #available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *) {
-            return V4Body._makeView(view: view[\.v4Body], inputs: inputs)
-        } else if #available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *) {
-            return V3Body._makeView(view: view[\.v3Body], inputs: inputs)
-        } else if #available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *) {
-            return V2Body._makeView(view: view[\.v2Body], inputs: inputs)
         } else {
-            return V1Body._makeView(view: view[\.v1Body], inputs: inputs)
+            return V1Body._makeView(view: view[\.v4Body], inputs: inputs)
         }
         #else
         /// Support ``VersionInput`` for development support

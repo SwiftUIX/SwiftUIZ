@@ -56,14 +56,8 @@ public struct VersionInputKey: ViewInputKey {
     public static var defaultValue: VersionInput {
         if #available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, visionOS 1.0, *) {
             return .v5
-        } else if #available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *) {
+        } else {
             return .v4
-        } /*else if #available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *) {
-            return .v3
-        } else if #available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *) {
-            return .v2
-        }*/ else {
-            return .v1
         }
     }
 }
