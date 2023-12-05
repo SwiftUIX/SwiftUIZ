@@ -10,6 +10,10 @@ private struct _FocusOnAppear: ViewModifier {
     func body(content: Content) -> some View {
         content.focused($isFocused).onAppear {
             isFocused = true
+
+            withAnimation(after: .milliseconds(50)) {
+                isFocused = true
+            }
         }
     }
 }
@@ -33,6 +37,7 @@ private struct _AddFocusActivatingBackground<Background: View>: ViewModifier {
 // MARK: - API
 
 extension View {
+    /// Set the focus state of this view when it appears.
     public func _focusOnAppear() -> some View {
         modifier(_FocusOnAppear())
     }

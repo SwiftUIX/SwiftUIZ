@@ -55,7 +55,9 @@ extension View {
     ) -> some View {
         assert(type(of: value) == Value.self)
         
-        return trait(_SwiftUIX_TypeToViewTraitKeyAdaptor<Value>(), value)
+        return self
+            .trait(_SwiftUIX_TypeToViewTraitKeyAdaptor<Value>(), value)
+            ._trait(_TypeToViewTraitKeyAdaptor<Value>.self, value)
     }
     
     public func trait<Key: _SwiftUIX_ViewTraitKey>(

@@ -191,29 +191,8 @@ extension VersionedDynamicProperty {
                 fieldOffset: fieldOffset,
                 inputs: &inputs
             )
-        } else if #available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *) {
-            V4Property._makeProperty(
-                in: &buffer,
-                container: container,
-                fieldOffset: fieldOffset,
-                inputs: &inputs
-            )
-        } else if #available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *) {
-            V3Property._makeProperty(
-                in: &buffer,
-                container: container,
-                fieldOffset: fieldOffset,
-                inputs: &inputs
-            )
-        } else if #available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *) {
-            V2Property._makeProperty(
-                in: &buffer,
-                container: container,
-                fieldOffset: fieldOffset,
-                inputs: &inputs
-            )
         } else {
-            V1Property._makeProperty(
+            V4Property._makeProperty(
                 in: &buffer,
                 container: container,
                 fieldOffset: fieldOffset,
