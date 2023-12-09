@@ -90,6 +90,17 @@ extension _SwiftUIX_ViewTraitValues: _PartiallyEquatable {
     }
 }
 
+// MARK: - Supplementary
+
+extension View {
+    public func trait<Value>(
+        _: Value.Type,
+        _ value: Value
+    ) -> some View {
+        return self._trait(_TypeToViewTraitKeyAdaptor<Value>.self, value)
+    }
+}
+
 // MARK: - Auxiliary
 
 public struct _SwiftUIX_TypeToViewTraitKeyAdaptor<T>: _SwiftUIX_ViewTraitKey {

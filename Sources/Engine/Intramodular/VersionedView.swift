@@ -167,12 +167,8 @@ extension VersionedView where Body == Never{
         #if !DEBUG
         if #available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *) {
             return V5Body._viewListCount(inputs: inputs)
-        } else if #available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *) {
-            return V4Body._viewListCount(inputs: inputs)
-        } else if #available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *) {
-            return V3Body._viewListCount(inputs: inputs)
         } else {
-            return V2Body._viewListCount(inputs: inputs)
+            return V4Body._viewListCount(inputs: inputs)
         }
         #else
         /// Support ``VersionInput`` for development support
