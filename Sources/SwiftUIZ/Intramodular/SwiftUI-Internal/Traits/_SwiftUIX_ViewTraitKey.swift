@@ -14,6 +14,23 @@ public protocol _SwiftUIX_ViewTraitKey<Value>: Hashable, Sendable {
     static var defaultValue: Value { get }
 }
 
+public struct _ViewTraitsResolutionContext {
+    public enum Mode {
+        case regular
+        case traitOnly
+    }
+    
+    public let mode: Mode
+    
+    public init(mode: Mode = .regular) {
+        self.mode = mode
+    }
+}
+
+extension EnvironmentValues {
+    @EnvironmentValue var _traitsResolutionContext = _ViewTraitsResolutionContext()
+}
+
 private struct _AddViewTrait<Key: _SwiftUIX_ViewTraitKey, Content: View>: _ThinViewModifier {
     @Environment(\._traitsResolutionContext) var traitResolutionContext
     

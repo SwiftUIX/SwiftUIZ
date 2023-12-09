@@ -5,6 +5,7 @@
 import Swallow
 @_spi(Internal) import SwiftUIX
 
+/// A convenience protocol that allows building `<View>Proxy` style APIs quickly.
 @_spi(Internal)
 public protocol _ViewProxyType: Equatable {
     init(_nilLiteral: ())
