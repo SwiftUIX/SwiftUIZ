@@ -11,6 +11,17 @@ fileprivate struct _WithBufferedBinding<Value: Equatable, Content: View>: View {
     
     let content: (Binding<Value>) -> Content
     
+    var valueBinding: Binding<Value> {
+        Binding(
+            get: {
+                valueCopy
+            },
+            set: { newValue in
+                valueCopy = newValue
+                value.wrappedValue = newValue
+            }
+        )
+    }
     init(
         over value: Binding<Value>,
         @ViewBuilder content: @escaping (Binding<Value>) -> Content
@@ -21,9 +32,14 @@ fileprivate struct _WithBufferedBinding<Value: Equatable, Content: View>: View {
     }
     
     var body: some View {
-        content($valueCopy.onSet { newValue in
-            value.wrappedValue = newValue
-        })
+        content(valueBinding)
+            .withChangePublisher(for: self.value.wrappedValue) { publisher in
+                publisher
+                    .debounce(for: .milliseconds(50), scheduler: DispatchQueue.main)
+                    .sink {
+                        self.valueBinding.wrappedValue = $0
+                    }
+            }
     }
 }
 
