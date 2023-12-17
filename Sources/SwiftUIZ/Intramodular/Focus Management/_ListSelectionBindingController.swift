@@ -70,6 +70,7 @@ public struct _ListSelectionBindingController<Data: RandomAccessCollection, Sele
     }
 }
 
+#if !os(tvOS)
 extension _ListSelectionBindingController {
     @discardableResult
     public func move(
@@ -91,6 +92,7 @@ extension _ListSelectionBindingController {
         }
     }
 }
+#endif
 
 /*public struct KeyboardNavigatedGridIndex {
     public enum KeyboardEvent {

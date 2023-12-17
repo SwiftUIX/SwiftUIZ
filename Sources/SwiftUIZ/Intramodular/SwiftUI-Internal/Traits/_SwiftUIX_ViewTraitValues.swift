@@ -73,11 +73,11 @@ public struct _SwiftUIX_ViewTraitValues {
     
     public subscript<Value>(_ type: Value.Type) -> Value? {
         get {
-            let key = _SwiftUIX_TypeToViewTraitKeyAdaptor<Value>()
+            let key = _SwiftUIX_ViewTraitKeys._MetatypeToViewTraitKeyAdaptor<Value>()
             
             return self[key]
         } set {
-            let key = _SwiftUIX_TypeToViewTraitKeyAdaptor<Value>()
+            let key = _SwiftUIX_ViewTraitKeys._MetatypeToViewTraitKeyAdaptor<Value>()
             
             self[key] = newValue
         }
@@ -92,19 +92,21 @@ extension _SwiftUIX_ViewTraitValues: _PartiallyEquatable {
 
 // MARK: - Auxiliary
 
-public struct _SwiftUIX_TypeToViewTraitKeyAdaptor<T>: _SwiftUIX_ViewTraitKey {
-    public typealias Value = T?
-    
-    public static var defaultValue: T? {
-        nil
+public enum _SwiftUIX_ViewTraitKeys {
+    public struct _MetatypeToViewTraitKeyAdaptor<T>: _SwiftUIX_ViewTraitKey {
+        public typealias Value = T?
+        
+        public static var defaultValue: T? {
+            nil
+        }
     }
-}
-
-@_spi(Internal)
-public struct _SwiftUIX_ViewTraitKeyAdaptor<Base: _SwiftUIX_ViewTraitKey>: _ViewTraitKey {
-    public typealias Value = Base.ValueBox
     
-    public static var defaultValue: Base.ValueBox {
-        .init(wrappedValue: Base.defaultValue)
+    @_spi(Internal)
+    public struct _ToSwiftUIViewTraitKeyAdaptor<Base: _SwiftUIX_ViewTraitKey>: _ViewTraitKey {
+        public typealias Value = Base.ValueBox
+        
+        public static var defaultValue: Base.ValueBox {
+            .init(wrappedValue: Base.defaultValue)
+        }
     }
 }

@@ -2,7 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
-import SwiftUI
+@_spi(Internal) import SwiftUIX
 
 /// SwiftUIX's version of `_ViewTraitKey`.
 ///
@@ -22,6 +22,9 @@ public struct _ViewTraitsResolutionContext {
     
     public let mode: Mode
     
+    /// The views holding these traits will be forced to resolve to an `EmptyView`.
+    public var disabledTraits: Set<_SwiftUIX_Metatype<any _SwiftUIX_ViewTraitKey.Type>> = []
+    
     public init(mode: Mode = .regular) {
         self.mode = mode
     }
@@ -38,33 +41,57 @@ private struct _AddViewTrait<Key: _SwiftUIX_ViewTraitKey, Content: View>: _ThinV
     let value: Key.Value
     
     func body(content: Content) -> some View {
-        if traitResolutionContext.mode == .traitOnly {
-            _VariadicViewAdapter(content) { content in
-                let _: Void = assert(content.children.count == 1)
-                
-                var traits = content.children.first?.traits._SwiftUIX_viewTraitValues ?? _SwiftUIX_ViewTraitValues()
-                
-                let _: Void = traits[key] = value
-                
-                ZeroSizeView()
-                    ._trait(\._SwiftUIX_viewTraitValues, traits)
-            }
+        if traitResolutionContext.disabledTraits.contains(.init(type(of: key))) {
+            EmptyView()
+        } else if traitResolutionContext.mode == .traitOnly {
+            _traitOnlyView(content: content)
         } else {
-            content
-                .transformEnvironment(\._SwiftUIX_viewTraitValues) { traits in
-                    traits[key] = value
-                }
-                ._transformTraits {
-                    $0[key] = value
-                }
-                ._trait(
-                    _SwiftUIX_ViewTraitKeyAdaptor<Key>.self,
-                    .init(wrappedValue: value)
-                )
+            _contentWithTrait(content: content)
+        }
+    }
+    
+    private func _traitOnlyView(content: Content) -> some View {
+        _VariadicViewAdapter(content) { content in
+            let _: Void = assert(content.children.count == 1)
+            
+            var traits = content.children.first?.traits._SwiftUIX_viewTraitValues ?? _SwiftUIX_ViewTraitValues()
+            
+            let _: Void = traits[key] = value
+            
+            ZeroSizeView()
+                ._trait(\._SwiftUIX_viewTraitValues, traits)
+        }
+    }
+    
+    private func _contentWithTrait(content: Content) -> some View {
+        content
+            .transformEnvironment(\._SwiftUIX_viewTraitValues) { traits in
+                traits[key] = value
+            }
+            ._transformTraits {
+                $0[key] = value
+            }
+            ._trait(
+                _SwiftUIX_ViewTraitKeys._ToSwiftUIViewTraitKeyAdaptor<Key>.self,
+                .init(wrappedValue: value)
+            )
+    }
+}
+
+extension View {
+    public func _disableViewsHoldingTrait(key: any _SwiftUIX_ViewTraitKey.Type) -> some View {
+        transformEnvironment(\._traitsResolutionContext) {
+            $0.disabledTraits.insert(.init(key))
+        }
+    }
+    
+    public func _disableViewsHoldingTrait<T>(ofType type: T.Type) -> some View {
+        transformEnvironment(\._traitsResolutionContext) {
+            $0.disabledTraits.insert(.init(_SwiftUIX_ViewTraitKeys._MetatypeToViewTraitKeyAdaptor<T>.self))
         }
     }
 }
- 
+
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 extension View {
     public func trait<Value>(
@@ -73,7 +100,7 @@ extension View {
         assert(type(of: value) == Value.self)
         
         return self
-            .trait(_SwiftUIX_TypeToViewTraitKeyAdaptor<Value>(), value)
+            .trait(_SwiftUIX_ViewTraitKeys._MetatypeToViewTraitKeyAdaptor<Value>(), value)
             ._trait(_TypeToViewTraitKeyAdaptor<Value>.self, value)
     }
     

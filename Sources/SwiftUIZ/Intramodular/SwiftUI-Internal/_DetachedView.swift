@@ -66,7 +66,7 @@ public struct DetatchedViewProxy<Content: View>: _PartiallyEquatable {
         _ type: T.Type
     ) -> T? {
         get {
-            self[_SwiftUIX_TypeToViewTraitKeyAdaptor<T>()]
+            self[_SwiftUIX_ViewTraitKeys._MetatypeToViewTraitKeyAdaptor<T>()]
         }
     }
     
@@ -74,7 +74,7 @@ public struct DetatchedViewProxy<Content: View>: _PartiallyEquatable {
         _ type: T.Type
     ) -> T {
         get {
-            self[_SwiftUIX_TypeToViewTraitKeyAdaptor<T>()] ?? nil
+            self[_SwiftUIX_ViewTraitKeys._MetatypeToViewTraitKeyAdaptor<T>()] ?? nil
         }
     }
 }
