@@ -19,19 +19,6 @@ public protocol _HierarchicalViewBridgeType: __HierarchicalViewBridgeType, AnyOb
     var isInvalid: Bool { get }
 }
 
-@propertyWrapper
-public struct _ViewBridge<T: _HierarchicalViewBridgeType>: DynamicProperty {
-    @Environment(\.[Metatype(T.InstanceType.self)]) var _bridge: Weak<T.InstanceType>
-    
-    public var wrappedValue: T {
-        _bridge.wrappedValue as! T
-    }
-    
-    public init(_: T.Type) {
-        
-    }
-}
-
 open class _HierarchicalViewBridge<InstanceType>: _HierarchicalViewBridgeType {
     public typealias _Self = _HierarchicalViewBridge<InstanceType>
     
@@ -54,7 +41,17 @@ open class _HierarchicalViewBridge<InstanceType>: _HierarchicalViewBridgeType {
     
     public fileprivate(set) var children: Set<WeakObjectPointer<_Self>> = []
     
-    public func add(_ instance: _HierarchicalViewBridge<InstanceType>) {
+    private init(invalid: Void) {
+        stateFlags.insert(.invalid)
+    }
+    
+    public init() {
+        
+    }
+    
+    public func add(
+        _ instance: _HierarchicalViewBridge<InstanceType>
+    ) {
         assert(instance._parent == nil)
         
         guard instance._parent !== self else {
@@ -63,15 +60,9 @@ open class _HierarchicalViewBridge<InstanceType>: _HierarchicalViewBridgeType {
         
         instance._parent = self
         
-        children.insert(.init(wrappedValue: instance))
-    }
-    
-    private init(invalid: Void) {
-        stateFlags.insert(.invalid)
-    }
-    
-    public init() {
+        children.insert(WeakObjectPointer(wrappedValue: instance))
         
+        _cleanUpChildren()
     }
     
     private func removeFromParent() {
@@ -85,6 +76,16 @@ open class _HierarchicalViewBridge<InstanceType>: _HierarchicalViewBridgeType {
     
     deinit {
         removeFromParent()
+    }
+    
+    open func supersedes<T: _HierarchicalViewBridge>(_ other: T) -> Bool {
+        false
+    }
+    
+    private func _cleanUpChildren() {
+        children.removeAll(where: {
+            $0.wrappedValue == nil
+        })
     }
 }
 
@@ -102,23 +103,38 @@ extension View {
     public func _host<T: _HierarchicalViewBridgeType>(
         _ bridge: T
     ) -> some View {
-        environment(\.[Metatype(T.InstanceType.self)], Weak(Optional.some(bridge as! T.InstanceType)))
+        environment(\.[_viewBridgeType: Metatype(T.InstanceType.self)], Weak(Optional.some(bridge as! T.InstanceType)))
+    }
+}
+
+struct _HostViewBridge<Bridge: _HierarchicalViewBridgeType, Content: View>: _ThinViewModifier {
+    @ObservedObject var bridge: Bridge
+    
+    var _weakBridge: Weak<Bridge.InstanceType> {
+        Weak(Optional.some(bridge as! Bridge.InstanceType))
+    }
+    
+    func body(
+        content: Content
+    ) -> some View {
+        content
+            .environment(\.[_viewBridgeType: Metatype(Bridge.InstanceType.self)], _weakBridge)
     }
 }
 
 // MARK: - Auxiliary
 
 extension EnvironmentValues {
-    public struct _HierarchicalViewBridgeKey<T>: EnvironmentKey {
-        public typealias Value = Weak<T>
+    struct _HierarchicalViewBridgeKey<T>: EnvironmentKey {
+        typealias Value = Weak<T>
         
-        public static var defaultValue: Value {
+        static var defaultValue: Value {
             .init(nil)
         }
     }
     
-    public subscript<T>(
-        _ type: Metatype<T.Type>
+    subscript<T>(
+        _viewBridgeType type: Metatype<T.Type>
     ) -> Weak<T> {
         get {
             self[_HierarchicalViewBridgeKey<T>.self]

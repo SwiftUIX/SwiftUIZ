@@ -17,13 +17,16 @@ public struct _DynamicViewContent<Root: View, Content: View>: View {
     @usableFromInline
     let content: Content
     
-    public init(root: Root, @ViewBuilder content: () -> Content) {
+    public init(
+        root: Root,
+        @ViewBuilder content: () -> Content
+    ) {
         self.root = root
         self.content = content()
     }
     
     @usableFromInline
-    @ViewStorage var descriptor: _SwiftUIZ_ViewDescriptor?
+    @ViewStorage var descriptor: _DynamicViewDescriptor?
     
     @_transparent
     public var body: some View {

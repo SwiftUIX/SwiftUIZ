@@ -5,7 +5,7 @@
 import Swallow
 
 public protocol _ThinForceModifiedView<ViewModifierType>: DynamicProperty, View {
-    associatedtype ViewModifierType: Initiable & _ThinViewModifier<Self>
+    associatedtype ViewModifierType: Initiable & _ThinViewModifier<Body>
     
     static var _viewModifier: ViewModifierType { get }
 }
@@ -20,13 +20,12 @@ public protocol _ForceModifiedView<ViewModifierType>: DynamicProperty, View {
 
 extension _ThinForceModifiedView {
     @usableFromInline
-    typealias _ThinModifiedBody = _ThinModifiedView<Self, ViewModifierType>
+    typealias _ThinModifiedBody = _RecursiveThinModifiedView<Self, ViewModifierType>
     
     public static var _viewModifier: ViewModifierType {
         .init()
     }
     
-    @_transparent
     public static func _makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
@@ -38,7 +37,6 @@ extension _ThinForceModifiedView {
         return _ThinModifiedBody._makeView(view: _modifiedView, inputs: inputs)
     }
     
-    @_transparent
     public static func _makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
@@ -51,7 +49,6 @@ extension _ThinForceModifiedView {
     }
     
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-    @_transparent
     public static func _viewListCount(
         inputs: _ViewListCountInputs
     ) -> Int? {
@@ -67,7 +64,6 @@ extension _ForceModifiedView where ViewModifierType: ViewModifier {
         .init()
     }
     
-    @_transparent
     public static func _makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
@@ -79,7 +75,6 @@ extension _ForceModifiedView where ViewModifierType: ViewModifier {
         return _ModifiedBody._makeView(view: _modifiedView, inputs: inputs)
     }
     
-    @_transparent
     public static func _makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
@@ -92,7 +87,6 @@ extension _ForceModifiedView where ViewModifierType: ViewModifier {
     }
     
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-    @_transparent
     public static func _viewListCount(
         inputs: _ViewListCountInputs
     ) -> Int? {
@@ -124,10 +118,9 @@ extension _ThinForceModifiedView {
     @usableFromInline
     subscript<T: Initiable & _ThinViewModifier>(
         _lazilyModifiedBy body: Metatype<T.Type>
-    ) -> _ThinModifiedView<Self, T> {
-        @_transparent
+    ) -> _RecursiveThinModifiedView<Self, T> {
         get {
-            _ThinModifiedView(content: self, modifier: T())
+            _RecursiveThinModifiedView(content: self, modifier: T())
         }
     }
 }
@@ -137,9 +130,24 @@ extension _ForceModifiedView {
     subscript<T: Initiable & ViewModifier>(
         _lazilyModifiedBy body: Metatype<T.Type>
     ) -> ModifiedContent<_ForceModifiedViewBody<Self>, T> {
-        @_transparent
         get {
             ModifiedContent(content: _ForceModifiedViewBody(content: self), modifier: T())
         }
+    }
+}
+
+
+@usableFromInline
+struct _RecursiveThinModifiedView<Content: View, Modifier: _ThinViewModifier<Content.Body>>: View {
+    public let content: Content
+    public let modifier: Modifier
+    
+    public init(content: Content, modifier: Modifier) {
+        self.content = content
+        self.modifier = modifier
+    }
+    
+    public var body: some View {
+        modifier.body(content: content.body)
     }
 }

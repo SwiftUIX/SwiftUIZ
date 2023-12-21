@@ -6,8 +6,12 @@ import SwiftUI
 
 // MARK: - Implementation
 
+public protocol _DynamicViewStyleConfiguration {
+    
+}
+
 /// This type is **WIP**.
-public protocol DynamicView: _DynamicView, _ThinForceModifiedView where ViewModifierType == _DynamicViewModifier<Self> {
+public protocol DynamicView: _DynamicView, _ThinForceModifiedView where ViewModifierType == _DynamicViewModifier<Body> {
     var _unsafeDynamicViewFlags: Set<_DynamicViewContentUnsafeFlag> { get }
 }
 
@@ -26,7 +30,7 @@ public protocol _DynamicView: View {
 }
 
 extension _DynamicView {
-    public typealias ViewModifierType = _DynamicViewModifier<Self>
+    public typealias ViewModifierType = _DynamicViewModifier<Body>
 }
 
 public struct _DynamicViewModifier<Content: View>: Initiable, _ThinViewModifier {

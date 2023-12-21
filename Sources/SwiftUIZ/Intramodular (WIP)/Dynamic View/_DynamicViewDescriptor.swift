@@ -6,7 +6,7 @@ import Runtime
 @_spi(Internal) import SwiftUIX
 
 @_spi(Internal)
-public struct _SwiftUIZ_ViewDescriptor: Hashable {
+public struct _DynamicViewDescriptor: Hashable {
     public struct Parameter: Hashable {
         public let id: AnyHashable
         public let key: PartialKeyPath<_SwiftUIX_ViewParameterKeys>
@@ -27,7 +27,7 @@ public struct _SwiftUIZ_ViewDescriptor: Hashable {
                     throw Never.Reason.unexpected
                 }
                 
-                parameters.append(.init(id: id, key: value.key))
+                parameters.append(Parameter(id: id, key: value.key))
             }
         }
     }

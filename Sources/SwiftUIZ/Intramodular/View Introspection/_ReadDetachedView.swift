@@ -5,7 +5,7 @@
 import SwiftUIX
 
 /// A view that is detached (i.e. not rendered) but can still be used to read traits.
-public struct _DetachedView<Content: View>: View {
+public struct _ReadDetachedView<Content: View>: View {
     let content: Content
     let inspect: (DetatchedViewProxy<Content>) -> Void
     

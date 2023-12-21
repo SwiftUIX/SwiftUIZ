@@ -84,9 +84,9 @@ public struct _SwiftUIX_ViewParameters: Initiable {
 
 @_spi(Private)
 public struct _SwiftUIZ_ParameterReceiverContext: Equatable {
-    public var descriptor: _SwiftUIZ_ViewDescriptor
+    public var descriptor: _DynamicViewDescriptor
     
-    public init(descriptor: _SwiftUIZ_ViewDescriptor) {
+    public init(descriptor: _DynamicViewDescriptor) {
         self.descriptor = descriptor
     }
 }
