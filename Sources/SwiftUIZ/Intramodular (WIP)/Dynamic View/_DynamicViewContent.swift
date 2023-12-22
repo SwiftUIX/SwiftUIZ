@@ -25,25 +25,24 @@ public struct _DynamicViewContent<Root: View, Content: View>: View {
         self.content = content()
     }
     
-    @usableFromInline
-    @ViewStorage var descriptor: _DynamicViewDescriptor?
-    
-    @_transparent
-    public var body: some View {
-        let _ = _expectNoThrow {
-            try _initializeViewDescriptor()
-        }
+    @StateObject var bridge = _DynamicViewElementBridge()
         
+    public var body: some View {
+        let _: Void = _initializeViewDescriptor()
+
         content
-            ._trait(_SwiftUIZ_ParameterReceiverContext.self, .init(descriptor: descriptor!))
+            .trait(_DynamicViewReceptor.self, _DynamicViewReceptor(bridge: bridge))
+            ._host(bridge)
     }
     
     @usableFromInline
-    func _initializeViewDescriptor() throws {
-        guard descriptor == nil else {
-            return
+    func _initializeViewDescriptor() {
+        _expectNoThrow {
+            guard bridge.descriptor == nil else {
+                return
+            }
+            
+            bridge.descriptor = try .init(from: root)
         }
-        
-        descriptor = try .init(from: root)
     }
 }

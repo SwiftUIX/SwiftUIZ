@@ -78,8 +78,11 @@ open class _HierarchicalViewBridge<InstanceType>: _HierarchicalViewBridgeType {
         removeFromParent()
     }
     
-    open func supersedes<T: _HierarchicalViewBridge>(_ other: T) -> Bool {
-        false
+    /// Whether this instance supersedes another instance that is detected as below it.
+    open func supersedes<T: _HierarchicalViewBridge>(
+        _ other: T
+    ) -> Bool {
+        true
     }
     
     private func _cleanUpChildren() {
@@ -102,12 +105,12 @@ extension _HierarchicalViewBridge: Hashable {
 extension View {
     public func _host<T: _HierarchicalViewBridgeType>(
         _ bridge: T
-    ) -> some View {
-        environment(\.[_viewBridgeType: Metatype(T.InstanceType.self)], Weak(Optional.some(bridge as! T.InstanceType)))
+    ) -> some View where T.InstanceType: __HierarchicalViewBridgeType {
+        _modifier(_HostViewBridge(bridge: bridge))
     }
 }
 
-struct _HostViewBridge<Bridge: _HierarchicalViewBridgeType, Content: View>: _ThinViewModifier {
+fileprivate struct _HostViewBridge<Bridge: _HierarchicalViewBridgeType, Content: View>: _ThinViewModifier where Bridge.InstanceType: __HierarchicalViewBridgeType {
     @ObservedObject var bridge: Bridge
     
     var _weakBridge: Weak<Bridge.InstanceType> {
@@ -119,6 +122,19 @@ struct _HostViewBridge<Bridge: _HierarchicalViewBridgeType, Content: View>: _Thi
     ) -> some View {
         content
             .environment(\.[_viewBridgeType: Metatype(Bridge.InstanceType.self)], _weakBridge)
+            ._trait(_ViewBridgeTraitKey<Bridge.InstanceType>.self, _weakBridge)
+    }
+}
+
+public struct _ViewBridgeTraitKey<Bridge: __HierarchicalViewBridgeType>: _ViewTraitKey {
+    public static var defaultValue: Weak<Bridge> {
+        Weak(nil)
+    }
+    
+    public init<_Bridge: _HierarchicalViewBridgeType>(
+        _ bridgeType: _Bridge.Type
+    ) where Bridge == _Bridge.InstanceType {
+        
     }
 }
 

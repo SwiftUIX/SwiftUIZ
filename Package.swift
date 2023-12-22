@@ -15,15 +15,13 @@ let package = Package(
         .library(
             name: "SwiftUIZ",
             targets: [
-                "Engine",
-                "EngineCore",
-                "EngineCoreC",
                 "SwiftUIZ"
             ]
         ),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-syntax", from: "509.0.0"),
+        .package(url: "https://github.com/nathantannar4/Engine", branch: "main"),
         .package(url: "https://github.com/siteline/SwiftUI-Introspect", from: "0.2.3"),
         .package(url: "https://github.com/SwiftUIX/SwiftUIX.git", branch: "master"),
         .package(url: "https://github.com/vmanot/CorePersistence.git", branch: "main"),
@@ -47,28 +45,10 @@ let package = Package(
             path: "Sources/SwiftUIZ_Macros"
         ),
         .target(
-            name: "EngineCoreC"
-        ),
-        .target(
-            name: "EngineCore",
-            dependencies: [
-                "EngineCoreC",
-            ]
-        ),
-        .target(
-            name: "Engine",
-            dependencies: [
-                "EngineCore",
-                "EngineCoreC",
-            ]
-        ),
-        .target(
             name: "SwiftUIZ",
             dependencies: [
-                "EngineCoreC",
-                "EngineCore",
-                "Engine",
                 "CorePersistence",
+                "Engine",
                 "Expansions",
                 "Merge",
                 "Swallow",

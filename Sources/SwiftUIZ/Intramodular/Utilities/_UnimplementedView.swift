@@ -29,24 +29,20 @@ public struct _RuntimeWarningView: View {
 }
 
 public struct _UnimplementedView: View {
-    @usableFromInline
-    let raiseIssue: () -> Void
-    
+    @_transparent
     public var body: some View {
         Image(systemName: .exclamationmarkTriangleFill)
             .foregroundColor(.yellow)
             .padding(.small)
             .border(Color.red)
-            .onAppear(perform: raiseIssue)
     }
     
+    @_transparent
     public init(
         file: StaticString = #file,
         line: UInt = #line
     ) {
-        raiseIssue = {
-            runtimeIssue("This view is unimplemented.", file: file, line: line)
-        }
+        runtimeIssue("This view is unimplemented.", file: file, line: line)
     }
 }
 

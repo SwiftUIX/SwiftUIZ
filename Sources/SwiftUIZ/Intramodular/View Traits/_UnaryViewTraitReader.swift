@@ -17,7 +17,7 @@ public struct _UnaryViewTraitReader<Key: SwiftUI._ViewTraitKey, Content: View>: 
                 let trait = view[key]
                 let _: Void = action(trait)
                 
-                view
+                self.content
             }
         }
     }
@@ -32,6 +32,26 @@ public struct _UnaryViewTraitReader<Key: SwiftUI._ViewTraitKey, Content: View>: 
 }
 
 extension _UnaryViewTraitReader {
+    public init(
+        _ key: Key.Type,
+        @ViewBuilder content: () -> Content,
+        action: @escaping (Key.Value) -> Void
+    ) where Key: SwiftUI._ViewTraitKey {
+        self.key =  key
+        self.content = content()
+        self.action = action
+    }
+    
+    public init(
+        _ key: Key,
+        @ViewBuilder content: () -> Content,
+        action: @escaping (Key.Value) -> Void
+    ) where Key: SwiftUI._ViewTraitKey {
+        self.key = type(of: key)
+        self.content = content()
+        self.action = action
+    }
+
     public init<T>(
         _ type: T.Type,
         @ViewBuilder content: () -> Content,

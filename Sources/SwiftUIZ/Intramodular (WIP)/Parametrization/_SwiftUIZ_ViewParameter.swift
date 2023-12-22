@@ -34,13 +34,13 @@ protocol _ViewParameterType: DynamicProperty, PropertyWrapper {
 
 @propertyWrapper
 public struct _ViewParameter<Value>: _ViewParameterType {
-    @Environment(\._viewProvisionContext) var _viewProvisionContext
+    @Environment(\._dynamicViewProvisioningContext) var _dynamicViewProvisioningContext
     
     @State var id: AnyHashable? = UUID()
     let key: PartialKeyPath<_SwiftUIX_ViewParameterKeys>
     
     public var wrappedValue: Value {
-        _viewProvisionContext.storage[.init(key: key, id: id!)] as! Value
+        _dynamicViewProvisioningContext.viewParameterValues[.init(key: key, id: id!)] as! Value
     }
     
     public init<Key: _SwiftUIX_ViewParameterKey>(
@@ -78,28 +78,6 @@ public struct _SwiftUIX_ViewParameters: Initiable {
             storage[\_SwiftUIX_ViewParameterKeys.[Metatype(type)]].map({ $0 as! T })
         } set {
             storage[\_SwiftUIX_ViewParameterKeys.[Metatype(type)]] = newValue
-        }
-    }
-}
-
-@_spi(Private)
-public struct _SwiftUIZ_ParameterReceiverContext: Equatable {
-    public var descriptor: _DynamicViewDescriptor
-    
-    public init(descriptor: _DynamicViewDescriptor) {
-        self.descriptor = descriptor
-    }
-}
-
-extension _SwiftUIZ_ParameterReceiverContext {
-    struct _PreferenceKey: SwiftUI.PreferenceKey {
-        typealias Value = _SwiftUIZ_ParameterReceiverContext?
-        
-        static func reduce(
-            value: inout Value,
-            nextValue: () -> Value
-        ) {
-            value = nextValue() ?? value
         }
     }
 }

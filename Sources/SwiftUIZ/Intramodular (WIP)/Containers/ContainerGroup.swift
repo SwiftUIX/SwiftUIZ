@@ -5,7 +5,7 @@
 import Diagnostics
 @_spi(Internal) import SwiftUIX
 
-public struct ContainerGroup<Content: View>: View {
+public struct ContainerGroup<Content: View>: DynamicView {
     let content: Content
     
     public init(@ViewBuilder content: () -> Content) {
