@@ -28,3 +28,18 @@ public macro EnvironmentValuesMacro() = #externalMacro(module: "SwiftUIZ_Macros"
 
 /// Credits:
 /// - https://github.com/Wouter01/SwiftUI-Macros/tree/main
+
+import Swallow
+
+extension ForEach where Content: View {
+    public init<Element>(
+        _ data: IdentifierIndexingArray<Element, ID>,
+        @ViewBuilder content: @escaping (Element) -> Content
+    ) where Data == LazyMapSequence<IdentifierIndexingArray<Element, ID>, _ArbitrarilyIdentifiedValue<Element, ID>> {
+        let id = data.id
+        
+        self.init(data.lazy.map({ _ArbitrarilyIdentifiedValue(value: $0, id: id) })) {
+            content($0.value)
+        }
+    }
+}
