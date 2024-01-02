@@ -40,7 +40,9 @@ public struct _ViewParameter<Value>: _ViewParameterType {
     let key: PartialKeyPath<_SwiftUIX_ViewParameterKeys>
     
     public var wrappedValue: Value {
-        _dynamicViewProvisioningContext.viewParameterValues[.init(key: key, id: id!)] as! Value
+        let key = _DynamicViewContentProvisioningContext.ParameterKey(key: key, id: id!)
+        
+        return _dynamicViewProvisioningContext.parameterValues[key] as! Value
     }
     
     public init<Key: _SwiftUIX_ViewParameterKey>(

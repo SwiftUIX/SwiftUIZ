@@ -11,10 +11,10 @@ public class _DynamicViewContentProvisioningContext {
         let id: AnyHashable
     }
     
-    public var viewParameterValues: [ParameterKey: Any] = [:]
+    public var parameterValues: [ParameterKey: Any] = [:]
     
     public var isEmpty: Bool {
-        viewParameterValues.isEmpty
+        parameterValues.isEmpty
     }
     
     public init() {
@@ -26,10 +26,12 @@ public class _DynamicViewContentProvisioningContext {
         context: _DynamicViewReceptor
     ) {
         for key in context.bridge.descriptor.parameters {
-            viewParameterValues[ParameterKey(key: key.key, id: key.id)] = values.storage[key.key]!
+            parameterValues[ParameterKey(key: key.key, id: key.id)] = values.storage[key.key]!
         }
     }
 }
+
+// MARK: - Auxiliary
 
 @_spi(Internal)
 extension EnvironmentValues {

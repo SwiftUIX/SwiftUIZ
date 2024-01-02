@@ -22,6 +22,7 @@ public struct ViewAssociationLevel<Content: View>: View {
             ._modifier(modifier)
     }
 }
+
 struct _EstablishViewAssociationContext<Content: View>: _ThinViewModifier {
     @Environment(\._viewAssociationContext) @Weak private var _parentContext
     
@@ -34,4 +35,3 @@ struct _EstablishViewAssociationContext<Content: View>: _ThinViewModifier {
             }
     }
 }
-

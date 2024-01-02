@@ -17,7 +17,7 @@ public struct _DynamicViewDescriptor: Hashable {
     public init(
         from view: some View
     ) throws {
-        let mirror = try! AnyNominalOrTupleMirror(reflecting: view)
+        let mirror = try AnyNominalOrTupleMirror(reflecting: view)
         
         self.parameters = []
         
