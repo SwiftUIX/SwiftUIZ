@@ -36,10 +36,15 @@ extension View {
     }
     
     public func _introspectAppKitOrUIKitWindow(
+        noDelay: Bool = false,
         _ action: @escaping (AppKitOrUIKitWindow) -> Void
     ) -> some View {
         introspect(.window, on: .macOS(.v11, .v12, .v13, .v14)) { view in
-            DispatchQueue.main.async {
+            if !noDelay {
+                DispatchQueue.main.async {
+                    action(view)
+                }
+            } else {
                 action(view)
             }
         }
