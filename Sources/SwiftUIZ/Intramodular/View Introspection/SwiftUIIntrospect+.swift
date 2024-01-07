@@ -14,6 +14,7 @@ extension View {
     }
 
     public func _introspectAppKitOrUIKitWindow(
+        noDelay: Bool = false,
         _ action: @escaping (AppKitOrUIKitWindow) -> Void
     ) -> some View {
         introspect(.window, on: .iOS(.v13, .v14, .v15, .v16, .v17)) { view in
