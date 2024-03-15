@@ -2,30 +2,30 @@
 // Copyright (c) Vatsal Manot
 //
 
+import _DVGraph
 @_spi(Internal) import Merge
 import SwiftUIX
 
+public protocol _DVConcreteAttributeConvertible {
+    func __conversion() throws -> any _DVConcreteAttribute
+}
 
-public final class _DVAttribute {
-    
+extension _Provide: _DVConcreteAttributeConvertible {
+    public func __conversion() throws -> any _DVConcreteAttribute {
+        valueContainer
+    }
 }
 
 @propertyWrapper
-public struct _Provide<Parent, Data, WrappedValue>: DynamicProperty {
+public struct _Provide<Parent, Data, WrappedValue>: DynamicProperty, PropertyWrapper {
     public final class _ObservableObject_Implementation {
-        public weak var enclosingInstance: (any ObservableObject)?
-        
-        var wrappedValue: WrappedValue? {
-            willSet {
-                _ObservableObject_objectWillChange_send(enclosingInstance)
-            }
-        }
+        public lazy var base = _ProvideValueContainer<WrappedValue>()
     }
     
     public struct _SwiftUI_Implementation: DynamicProperty {
         @StateObject private var renderBridge = _ViewPrototypeRenderBridge()
         
-        @State var wrappedValue: WrappedValue?
+        @StateObject var base = _ProvideValueContainer<WrappedValue>()
     }
     
     public struct Implementation {
@@ -41,21 +41,20 @@ public struct _Provide<Parent, Data, WrappedValue>: DynamicProperty {
     public var _imp_ObservableObject = _ObservableObject_Implementation()
     public var _imp_SwiftUI = _SwiftUI_Implementation()
     
+    public var valueContainer: _ProvideValueContainer<WrappedValue> {
+        switch implementation.type {
+            case ._ObservableObject:
+                return _imp_ObservableObject.base
+            case ._SwiftUI:
+                return _imp_SwiftUI.base
+        }
+    }
+    
     var _rawWrappedValue: WrappedValue {
         get {
-            switch implementation.type {
-                case ._ObservableObject:
-                    return _imp_ObservableObject.wrappedValue!
-                case ._SwiftUI:
-                    return _imp_SwiftUI.wrappedValue!
-            }
+            valueContainer.wrappedValue!
         } nonmutating set {
-            switch implementation.type {
-                case ._ObservableObject:
-                    return _imp_ObservableObject.wrappedValue = newValue
-                case ._SwiftUI:
-                    return _imp_SwiftUI.wrappedValue! = newValue
-            }
+            valueContainer.wrappedValue = newValue
         }
     }
     
@@ -75,8 +74,8 @@ public struct _Provide<Parent, Data, WrappedValue>: DynamicProperty {
     ) -> WrappedValue {
         get {
             if _enclosingInstance[keyPath: storageKeyPath].implementation.type == ._ObservableObject {
-                if _enclosingInstance[keyPath: storageKeyPath]._imp_ObservableObject.enclosingInstance == nil {
-                    _enclosingInstance[keyPath: storageKeyPath]._imp_ObservableObject.enclosingInstance = _enclosingInstance as? (any ObservableObject)
+                if _enclosingInstance[keyPath: storageKeyPath].valueContainer.enclosingInstance == nil {
+                    _enclosingInstance[keyPath: storageKeyPath].valueContainer.enclosingInstance = _enclosingInstance as? (any ObservableObject)
                 }
             }
             
@@ -93,6 +92,11 @@ public struct _Provide<Parent, Data, WrappedValue>: DynamicProperty {
             self
         }
     }
+}
+
+
+extension ObservableObject {
+    public typealias Provide<T, U> = _Provide<Self, T, U>
 }
 
 extension _Provide {
@@ -112,7 +116,7 @@ extension _Provide {
         
         fatalError()
     }
-
+    
     public init(
         _ keyPath: KeyPath<Parent, WrappedValue>
     ) where Parent: View, Data == WrappedValue {
@@ -147,4 +151,40 @@ extension _Provide: View {
 
 extension DynamicView {
     public typealias Provide<T, U> = _Provide<Self, T, U>
+}
+
+public final class _ProvideValueContainer<WrappedValue>: ObservableObject, _DVConcreteObservableObjectAttribute {
+    public typealias Context = _DVConcreteAttributeTransactionalAccessContext<Void>
+    public typealias Coordinator = Void
+    public typealias ObjectType = _ProvideValueContainer<WrappedValue>
+    
+    public weak var enclosingInstance: (any ObservableObject)?
+    
+    public var id = UUID()
+    
+    @Published public var _wappedValue: WrappedValue? {
+        willSet {
+            _ObservableObject_objectWillChange_send(enclosingInstance)
+        }
+    }
+    
+    public var wrappedValue: WrappedValue? {
+        get {
+            _wappedValue
+        } set {
+            _wappedValue = newValue
+        }
+    }
+    
+    public var positionHint: AnyHashable {
+        id
+    }
+    
+    public init(wappedValue: WrappedValue? = nil) {
+        self._wappedValue = wappedValue
+    }
+    
+    public func object(context: Context) -> _ProvideValueContainer<WrappedValue> {
+        self
+    }
 }

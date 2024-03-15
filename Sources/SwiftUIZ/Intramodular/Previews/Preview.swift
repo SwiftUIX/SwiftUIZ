@@ -53,9 +53,9 @@ public struct _ViewPreviewsContent: View {
 }
 
 /// A scene for all instances of `ViewPreview` that are discoverable at runtime.
-public struct ViewPreviews: Scene {
+public struct PreviewCatalogGroup: Scene {
     public var body: some Scene {
-        WindowGroup {
+        WindowGroup(.dynamic) {
             _ViewPreviewsContent()
         }
     }

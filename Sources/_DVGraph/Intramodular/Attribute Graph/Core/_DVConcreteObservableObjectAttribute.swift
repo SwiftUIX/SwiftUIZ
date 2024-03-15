@@ -32,7 +32,7 @@ public struct ObservableObjectConcreteAttributeEvaluator<T: _DVConcreteObservabl
     public func value(
         context: Context
     ) -> Value {
-        let object = context.withTransactionContext(attribute.object)
+        let object = context.withTransactionContext(attribute.object(context:))
         
         return associateOverridden(
             value: object,

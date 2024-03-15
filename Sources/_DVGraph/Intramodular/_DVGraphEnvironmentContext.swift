@@ -5,7 +5,8 @@
 import Swallow
 import SwiftUIX
 
-public struct _DVGraphEnvironmentContext: MergeOperatable {
+public struct _DVGraphEnvironmentContext {
+    public var inheritance: [_DVGraph.Node.ID] = []
     public var attributeGraphScope = _DVConcreteAttributeGraph.Scope()
     public var attributeGraphOverrides = [_DVConcreteAttributeGraph.Override: any _DVOverrideOfConcreteAttribute]()
     public var attributeGraphObservers = [_DVConcreteAttributeGraphContext.Observer]()
@@ -13,7 +14,9 @@ public struct _DVGraphEnvironmentContext: MergeOperatable {
     public init() {
         
     }
-    
+}
+
+extension _DVGraphEnvironmentContext: MergeOperatable {
     public mutating func mergeInPlace(
         with other: _DVGraphEnvironmentContext
     ) {

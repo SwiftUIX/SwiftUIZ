@@ -38,7 +38,9 @@ extension _DVConcreteAttributeGraphContext {
         _DVConcreteAttributeGraphContext(
             store,
             observers: observers,
-            overrides: overrides.mapValues { $0.scoped(key: key) },
+            overrides: overrides.mapValues { (override: any _DVOverrideOfConcreteAttribute) in
+                override.scoped(key: key)
+            },
             enablesAssertion: false
         )
     }
@@ -328,7 +330,10 @@ extension _DVConcreteAttributeGraphContext {
         let value: T.AttributeEvaluator.Value
         
         if let override {
-            value = attribute._attributeEvaluator.associateOverridden(value: override.value(attribute), context: context)
+            value = attribute._attributeEvaluator.associateOverridden(
+                value: override.value(attribute),
+                context: context
+            )
         }
         else {
             value = attribute._attributeEvaluator.value(context: context)
@@ -648,5 +653,17 @@ extension _DVConcreteAttributeGraphContext {
         public init(onUpdate: @escaping (_DVAttributeGraphSnapshot) -> Void) {
             self.onUpdate = onUpdate
         }
+    }
+}
+extension _DVConcreteAttributeGraphContext {
+    public init(from environment: EnvironmentValues) {
+        let graph = environment._dynamicViewGraph
+        
+        self = .createWithScope(
+            environment._dynamicViewGraphContext.attributeGraphScope,
+            store: graph.concreteAttributeGraph,
+            observers: environment._dynamicViewGraphContext.attributeGraphObservers,
+            overrides: environment._dynamicViewGraphContext.attributeGraphOverrides
+        )
     }
 }

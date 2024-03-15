@@ -6,7 +6,6 @@ import _DVGraph
 import _SwiftUI_Internals
 import SwiftUI
 
-@_spi(Internal)
 public class _DVViewBridge: _DVHierarchicalViewBridge {
     public var owner: _DVGraph?
 

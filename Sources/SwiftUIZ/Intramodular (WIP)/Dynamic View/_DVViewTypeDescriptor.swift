@@ -3,55 +3,45 @@
 //
 
 import Runtime
+import Swallow
 @_spi(Internal) import SwiftUIX
-
-@_spi(Internal)
-public protocol _DVAttributeTypeDescriptor {
-    static func update(
-        _ descriptor: inout _DVViewTypeDescriptor,
-        context: _DVDescriptorCreateContext
-    ) throws
-}
-
-@_spi(Internal)
-public struct _DVViewParameterAttributeDescriptor: _DVAttributeTypeDescriptor, Hashable {
-    public static func update(
-        _ descriptor: inout _DVViewTypeDescriptor,
-        context: _DVDescriptorCreateContext
-    ) throws {
-        for field in context.view {
-            if let value = field.value as? (any _ViewParameterType) {
-                guard let id = value.id else {
-                    throw Never.Reason.unexpected
-                }
-                
-                descriptor.parameters.append(
-                    _DVViewTypeDescriptor.Parameter(
-                        id: id,
-                        key: value.key
-                    )
-                )
-            }
-        }
-    }
-}
 
 
 public struct _DVDescriptorCreateContext {
     let view: AnyNominalOrTupleMirror<any View>
 }
 
-@_spi(Internal)
-public struct _DVViewTypeDescriptor: Hashable {
-    public struct Parameter: Hashable {
-        public let id: AnyHashable
-        public let key: PartialKeyPath<_SwiftUIZ_DynamicViewParameterKeys>
+
+public protocol _DVViewTypeDescriptorKey<Value>: HeterogeneousDictionaryKey where Self.Domain == _DVViewTypeDescriptor {
+    static var defaultValue: Value { get }
+}
+
+
+extension _DVViewTypeDescriptorKey where Value: Initiable {
+    public static var defaultValue: Value {
+        Value()
+    }
+}
+
+@frozen
+public struct _DVViewTypeDescriptor {
+    public let type: TypeMetadata
+    public var base = HeterogeneousDictionary<_DVViewTypeDescriptor>()
+        
+    public subscript<Key: _DVViewTypeDescriptorKey>(_ key: Key.Type) -> Key.Value {
+        get {
+            self.base[key] ?? Key.defaultValue
+        } set {
+            self.base[key] = newValue
+        }
     }
     
-    public var parameters: [Parameter] = []
-    
-    init() {
-        
+    public subscript<T: Initiable>(_ type: T.Type) -> T {
+        get {
+            self[_GenericHeterogeneousDictionaryKey<Self, T>.self]
+        } set {
+            self[_GenericHeterogeneousDictionaryKey<Self, T>.self] = newValue
+        }
     }
     
     public init(
@@ -59,11 +49,11 @@ public struct _DVViewTypeDescriptor: Hashable {
     ) throws {
         let view = try AnyNominalOrTupleMirror<any View>(reflecting: view)
         let context = _DVDescriptorCreateContext(view: view)
-                
-        self.init()
-        
-        let attributeDescriptors: [any _DVAttributeTypeDescriptor.Type] = try TypeMetadata._queryAll(
-            .conformsTo((any _DVAttributeTypeDescriptor).self),
+                        
+        self.type = TypeMetadata(Swift.type(of: view))
+
+        let attributeDescriptors: [any _DVViewTypeDescriptorFilling.Type] = try TypeMetadata._queryAll(
+            .conformsTo((any _DVViewTypeDescriptorFilling).self),
             .nonAppleFramework,
             .pureSwift
         )
@@ -74,12 +64,21 @@ public struct _DVViewTypeDescriptor: Hashable {
     }
 }
 
-extension _DVViewTypeDescriptor: CustomReflectable {
-    public var customMirror: Mirror {
-        Mirror(self) {
-            [
-                "parameters": parameters
-            ]
-        }
+
+public protocol _DVViewTypeDescriptorFilling {
+    static func update(
+        _ descriptor: inout _DVViewTypeDescriptor,
+        context: _DVDescriptorCreateContext
+    ) throws
+}
+
+
+extension _DVViewTypeDescriptor {
+    
+}
+
+extension _GenericHeterogeneousDictionaryKey: _DVViewTypeDescriptorKey where Self.Domain == _DVViewTypeDescriptor, Self.Value: Initiable {
+    public static var defaultValue: Value {
+        Value()
     }
 }

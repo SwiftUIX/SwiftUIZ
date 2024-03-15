@@ -21,6 +21,7 @@ public struct _DVCanvas<Content: View>: View, _DVCanvasType {
     
     public var body: some View {
         content
+            ._modifier(_EstablishDynamicViewScope())
             .environment(\._dynamicViewGraph, graph)
             .task {
                 Expansions.module.initialize()
@@ -58,17 +59,11 @@ extension View {
 }
 
 @MainActor
-public struct _EstablishDVConcreteAttributeScope<Content: View>: _ThinViewModifier {
-    private let content: Content
-
-    @Environment(\._dynamicViewAttributeGraphContext) private var environmentStore
-    
+public struct _EstablishDynamicViewScope<Content: View>: _ThinViewModifier {    
     @State private var scope = _DVConcreteAttributeGraph.Scope()
     
-    public init(
-        @ViewBuilder content: () -> Content
-    ) {
-        self.content = content()
+    public init() {
+        
     }
     
     public func body(content: Content) -> some View {

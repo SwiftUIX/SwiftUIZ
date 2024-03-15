@@ -2,6 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
+import Compute
 import Merge
 import Swallow
 import SwiftUIX
@@ -22,6 +23,14 @@ public final class _DVGraph: ObservableObject {
         self._isInvalidInstance = true
     }
     
+    public func insert(_ node: Node) {
+        self.nodes.insert(node)
+    }
+    
+    public func remove(_ node: Node) {
+        self.nodes.remove(node)
+    }
+    
     public init() {
         _isInvalidInstance = false
         
@@ -31,20 +40,39 @@ public final class _DVGraph: ObservableObject {
     }
 }
 
+public struct _DVViewDescriptor {
+    
+}
+
 extension _DVGraph {
-    public struct NodeTypeKind {
+    public class Edge: HashEquatable {
+        public let source: Node
+        public let destination: Node
         
-    }
-    
-    public struct NodeTypeMetadata {
+        public init(source: Node, destination: Node) {
+            self.source = source
+            self.destination = destination
+        }
         
+        public func hash(into hasher: inout Hasher) {
+            hasher.combine(source)
+            hasher.combine(destination)
+        }
     }
-    
-    public class Node: CustomStringConvertible, Identifiable {
+}
+
+extension _DVGraph {
+    public class Node: CustomStringConvertible, HashEquatable, Identifiable {
         public let id = _AutoIncrementingIdentifier<_DVGraph.Node>()
+        
+        public var attributes: [DVAttributeNodeID: any _DVConcreteAttribute] = [:]
         
         public var description: String {
             "#\(id)"
+        }
+        
+        public func hash(into hasher: inout Hasher) {
+            hasher.combine(id)
         }
         
         public init() {
@@ -59,18 +87,20 @@ extension _DVGraph {
     }
 }
 
-extension _DVConcreteAttributeGraphContext {
-    public init(from environment: EnvironmentValues) {
-        let graph = environment._dynamicViewGraph
-        
-        self = .createWithScope(
-            environment._dynamicViewGraphContext.attributeGraphScope,
-            store: graph.concreteAttributeGraph,
-            observers: environment._dynamicViewGraphContext.attributeGraphObservers,
-            overrides: environment._dynamicViewGraphContext.attributeGraphOverrides
-        )
+// MARK: - Internal
+
+extension _DVGraph {
+    public struct _GraphTypeDefinition: _StaticGraphTypeDefinition {
+        public typealias Node = _DVGraph.Node
+        public typealias Edge = _DVGraph.Edge
     }
 }
+
+extension _DVGraph.Node: _StaticGraphNodeDefinition {
+    public typealias Value = _DVGraph.Node
+}
+
+// MARK: - SwiftUI
 
 extension _DVGraph {
     fileprivate struct EnvironmentKey: SwiftUI.EnvironmentKey {

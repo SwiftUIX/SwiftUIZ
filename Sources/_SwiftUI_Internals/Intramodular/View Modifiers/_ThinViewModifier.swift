@@ -16,6 +16,16 @@ public protocol _ThinViewModifier<Content>: DynamicProperty {
     func body(content: Content) -> Body
 }
 
+public protocol _ThinForceViewModifier<Root, Content>: DynamicProperty {
+    associatedtype Root: View
+    associatedtype Content: View
+    associatedtype Body: View
+    
+    @MainActor
+    @ViewBuilder
+    func body(root: Root, content: Content) -> Body
+}
+
 // MARK: - Supplementary
 
 extension View {

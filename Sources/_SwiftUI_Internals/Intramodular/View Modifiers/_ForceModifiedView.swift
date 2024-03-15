@@ -6,7 +6,7 @@ import SwiftUIX
 import Swallow
 
 public protocol _ThinForceModifiedView<ViewModifierType>: DynamicProperty, View {
-    associatedtype ViewModifierType: Initiable & _ThinViewModifier<Body>
+    associatedtype ViewModifierType: Initiable
     
     static var _viewModifier: ViewModifierType { get }
 }
@@ -19,7 +19,7 @@ public protocol _ForceModifiedView<ViewModifierType>: DynamicProperty, View {
 
 // MARK: - Implementation
 
-extension _ThinForceModifiedView {
+extension _ThinForceModifiedView where ViewModifierType: _ThinViewModifier<Body> {
     @usableFromInline
     typealias _ThinModifiedBody = _RecursiveThinModifiedView<Self, ViewModifierType>
     
@@ -54,6 +54,44 @@ extension _ThinForceModifiedView {
         inputs: _ViewListCountInputs
     ) -> Int? {
         _ThinModifiedBody._viewListCount(inputs: inputs)
+    }
+}
+
+extension _ThinForceModifiedView where ViewModifierType: _ThinForceViewModifier<Self, Body> {
+    @usableFromInline
+    typealias _ThinForceModifiedBody = _RecursiveThinForceModifiedView<Self, ViewModifierType>
+    
+    public static var _viewModifier: ViewModifierType {
+        .init()
+    }
+    
+    public static func _makeView(
+        view: _GraphValue<Self>,
+        inputs: _ViewInputs
+    ) -> _ViewOutputs {
+        let keyPath: KeyPath<Self, _ThinForceModifiedBody> = \Self.[_lazilyModifiedBy: Metatype(ViewModifierType.self)]
+        
+        let _modifiedView = view[keyPath]
+        
+        return _ThinForceModifiedBody._makeView(view: _modifiedView, inputs: inputs)
+    }
+    
+    public static func _makeViewList(
+        view: _GraphValue<Self>,
+        inputs: _ViewListInputs
+    ) -> _ViewListOutputs {
+        let keyPath: KeyPath<Self, _ThinForceModifiedBody> = \Self.[_lazilyModifiedBy: Metatype(ViewModifierType.self)]
+        
+        let _modifiedView = view[keyPath]
+        
+        return _ThinForceModifiedBody._makeViewList(view: _modifiedView, inputs: inputs)
+    }
+    
+    @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
+    public static func _viewListCount(
+        inputs: _ViewListCountInputs
+    ) -> Int? {
+        _ThinForceModifiedBody._viewListCount(inputs: inputs)
     }
 }
 
@@ -124,6 +162,15 @@ extension _ThinForceModifiedView {
             _RecursiveThinModifiedView(content: self, modifier: T())
         }
     }
+    
+    @usableFromInline
+    subscript<T: Initiable & _ThinForceViewModifier>(
+        _lazilyModifiedBy body: Metatype<T.Type>
+    ) -> _RecursiveThinForceModifiedView<Self, T> {
+        get {
+            _RecursiveThinForceModifiedView(content: self, modifier: T())
+        }
+    }
 }
 
 extension _ForceModifiedView {
@@ -151,4 +198,23 @@ struct _RecursiveThinModifiedView<Content: View, Modifier: _ThinViewModifier<Con
     public var body: some View {
         modifier.body(content: content.body)
     }
+}
+
+@usableFromInline
+struct _RecursiveThinForceModifiedView<Content: View, Modifier: _ThinForceViewModifier<Content, Content.Body>>: View {
+    public let content: Content
+    public let modifier: Modifier
+    
+    public init(content: Content, modifier: Modifier) {
+        self.content = content
+        self.modifier = modifier
+    }
+    
+    public var body: some View {
+        modifier.body(root: content, content: content.body)
+    }
+}
+
+package enum _ForceModifiedView_TaskLocalValues {
+    @TaskLocal package static var root: (any View)?
 }

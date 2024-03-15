@@ -58,6 +58,7 @@ public struct ConcreteAttributeEvaluationContext<Value, Coordinator> {
         defer {
             transaction.commit()
         }
+        
         return body(context)
     }
     

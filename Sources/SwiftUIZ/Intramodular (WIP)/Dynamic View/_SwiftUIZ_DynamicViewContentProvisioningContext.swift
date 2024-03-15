@@ -25,7 +25,7 @@ public class _SwiftUIZ_DynamicViewContentProvisioningContext {
         from values: _SwiftUIZ_DynamicViewParameterList,
         context: _SwiftUIZ_DynamicViewReceiverContext
     ) {
-        for key in context.bridge.descriptor.parameters {
+        for key in context.bridge.descriptor._SwiftUIZ_viewParameters {
             parameterValues[ParameterKey(key: key.key, id: key.id)] = values.storage[key.key]!
         }
     }

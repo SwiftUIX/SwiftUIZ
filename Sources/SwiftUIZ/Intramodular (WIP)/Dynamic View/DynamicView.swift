@@ -10,7 +10,7 @@ public protocol _DynamicViewStyleConfiguration {
 }
 
 /// This type is **WIP**.
-public protocol DynamicView: _DynamicView, _ThinForceModifiedView where ViewModifierType == _DynamicViewModifier<Body> {
+public protocol DynamicView: _DynamicView, _ThinForceModifiedView where ViewModifierType == _DynamicViewModifier<Self, Body> {
     var _unsafeDynamicViewFlags: Set<_UnsafeDynamicViewFlag> { get }
 }
 
@@ -33,16 +33,17 @@ public enum _UnsafeDynamicViewFlag: Hashable {
 }
 
 extension _DynamicView {
-    public typealias ViewModifierType = _DynamicViewModifier<Body>
+    public typealias ViewModifierType = _DynamicViewModifier<Self, Body>
 }
 
-public struct _DynamicViewModifier<Content: View>: Initiable, _ThinViewModifier {
+public struct _DynamicViewModifier<Root: View, Content: View>: Initiable, _ThinForceViewModifier {
     public init() {
         
     }
     
-    public func body(content: Content) -> some View {
-        _ManagedDynamicViewBody(root: content) {
+    @ViewBuilder
+    public func body(root: Root, content: Content) -> some View {
+        _ManagedDynamicViewBody(root: root) {
             content
         }
     }
