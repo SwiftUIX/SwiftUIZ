@@ -2,7 +2,6 @@
 // Copyright (c) Vatsal Manot
 //
 
-import Expansions
 import SwiftUI
 
 @MainActor

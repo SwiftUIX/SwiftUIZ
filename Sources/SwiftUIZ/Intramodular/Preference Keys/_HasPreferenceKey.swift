@@ -13,7 +13,7 @@ extension MergeOperatable where Self: _HasPreferenceKey {
     public typealias _PreferenceKey = _MergeOperatableOptionalTypeToPreferenceKeyAdaptor<Self>
 }
 
-extension MergeOperatable where Self: _HasPreferenceKey & Initiable  {
+extension MergeOperatable where Self: _HasPreferenceKey & Equatable & Initiable  {
     public typealias _PreferenceKey = _InitiableMergeOperatableTypeToPreferenceKeyAdaptor<Self>
 }
 
@@ -65,7 +65,7 @@ public struct _MergeOperatableOptionalTypeToPreferenceKeyAdaptor<T: _HasPreferen
     }
 }
 
-public struct _InitiableMergeOperatableTypeToPreferenceKeyAdaptor<T: _HasPreferenceKey & Initiable & MergeOperatable>: PreferenceKey {
+public struct _InitiableMergeOperatableTypeToPreferenceKeyAdaptor<T: _HasPreferenceKey & Initiable & MergeOperatable & Equatable>: PreferenceKey {
     public typealias Value = T
     
     public static var defaultValue: T {
@@ -76,6 +76,12 @@ public struct _InitiableMergeOperatableTypeToPreferenceKeyAdaptor<T: _HasPrefere
         value: inout T,
         nextValue: () -> T
     ) {
-        value.mergeInPlace(with: nextValue())
+        var _value = value
+        
+        _value.mergeInPlace(with: nextValue())
+        
+        if _value != value {
+            value = _value
+        }
     }
 }

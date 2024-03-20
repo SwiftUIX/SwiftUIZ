@@ -3,6 +3,7 @@
 //
 
 import Swallow
+import OrderedCollections
 @_spi(Internal) import SwiftUIX
 
 public struct _SwiftUIX_FocusableRepresentation: Hashable, _HasPreferenceKey, Identifiable, MergeOperatable {
@@ -21,6 +22,7 @@ public struct _SwiftUIX_FocusableRepresentation: Hashable, _HasPreferenceKey, Id
         try interactions[.activate].unwrap().perform()
     }
 }
+
 extension _SwiftUIX_FocusableRepresentation {
     public struct Collected: Hashable, _HasPreferenceKey, Initiable {
         public typealias _PreferenceKey = _InitiableMergeOperatableTypeToPreferenceKeyAdaptor<Self>

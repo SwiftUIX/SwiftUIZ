@@ -3,8 +3,8 @@
 //
 
 @_exported import _SwiftUI_Internals
-@_exported import Expansions
 @_exported import Swallow
+@_exported import SwallowMacrosClient
 @_exported import SwiftUIX
 
 // MARK: - Other

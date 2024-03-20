@@ -3,6 +3,7 @@
 //
 
 import Swallow
+import OrderedCollections
 import SwiftUIX
 
 public struct _ViewTraitReader<Source: View, Trait: SwiftUI._ViewTraitKey, TraitValue, ID: Hashable, Content: View>: View where Trait.Value == Optional<TraitValue> {
@@ -73,7 +74,9 @@ public struct _ViewTraitReader<Source: View, Trait: SwiftUI._ViewTraitKey, Trait
                             _payloadDidChange(payload)
                         }
                     }
-                    .onChange(of: payload.mapValues({ EqualityMapAdaptor(base: $0, transform: { Hashable2ple((self.equatable($0.trait), $0.focusRepresentation)) }) })) { payload in
+                    .onChange(
+                        of: payload.mapValues({ EqualityMapAdaptor(base: $0, transform: { Hashable2ple((self.equatable($0.trait), $0.focusRepresentation)) }) })
+                    ) { payload in
                         _payloadDidChange(payload.mapValues({ $0.base }))
                     }
                 
