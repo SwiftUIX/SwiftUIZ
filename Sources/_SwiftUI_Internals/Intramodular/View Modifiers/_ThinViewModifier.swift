@@ -23,7 +23,7 @@ public protocol _ThinForceViewModifier<Root, Content>: DynamicProperty {
     
     @MainActor
     @ViewBuilder
-    func body(root: Root, content: Content) -> Body
+    func body(root: Root, content: LazyView<Content>) -> Body
 }
 
 // MARK: - Supplementary

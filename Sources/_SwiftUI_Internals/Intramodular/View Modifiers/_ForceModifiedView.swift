@@ -211,7 +211,10 @@ struct _RecursiveThinForceModifiedView<Content: View, Modifier: _ThinForceViewMo
     }
     
     public var body: some View {
-        modifier.body(root: content, content: content.body)
+        modifier.body(
+            root: content,
+            content: LazyView { content.body }
+        )
     }
 }
 

@@ -14,13 +14,14 @@ let package = Package(
             name: "SwiftUIZ",
             targets: [
                 "_SwiftUI_Internals",
-                "_DVGraph",
                 "_SwiftUIZ_Nuke",
                 "_SwiftUIZ_NukeUI",
+                "_SwiftUIZ_A",
+                "_SwiftUIZ_B",
+                "_DynamicViewGraph",
                 "MarkdownUI",
                 "Emoji",
-                "SwiftUIZ",
-                "SwiftUIZ_Macros"
+                "SwiftUIZ"
             ]
         ),
     ],
@@ -37,12 +38,12 @@ let package = Package(
             dependencies: [
                 .product(name: "MacroBuilder", package: "Swallow"),
             ],
-            path: "Sources/SwiftUIZ_Macros",
+            path: "Macros",
             swiftSettings: []
         ),
         .target(
             name: "cmark-gfm",
-            path: "Sources/cmark-gfm"
+            path: "Dependencies/cmark-gfm"
         ),
         .target(
             name: "_SwiftUI_Internals",
@@ -55,14 +56,14 @@ let package = Package(
         .target(
             name: "_SwiftUIZ_Nuke",
             dependencies: [],
-            path: "Sources/_SwiftUIZ_Nuke"
+            path: "Dependencies/_SwiftUIZ_Nuke"
         ),
         .target(
             name: "_SwiftUIZ_NukeUI",
             dependencies: [
                 "_SwiftUIZ_Nuke"
             ],
-            path: "Sources/_SwiftUIZ_NukeUI"
+            path: "Dependencies/_SwiftUIZ_NukeUI"
         ),
         .target(
             name: "MarkdownUI",
@@ -94,22 +95,8 @@ let package = Package(
             ]
         ),
         .target(
-            name: "_DVGraph",
+            name: "_SwiftUIZ_A",
             dependencies: [
-                "_SwiftUI_Internals",
-                "CorePersistence",
-                "Merge",
-                "Swallow",
-                "SwiftUIX",
-                "SwiftUIZ_Macros",
-            ],
-            path: "Sources/_DVGraph",
-            swiftSettings: []
-        ),
-        .target(
-            name: "SwiftUIZ",
-            dependencies: [
-                "_DVGraph",
                 "CorePersistence",
                 "Merge",
                 "Swallow",
@@ -117,16 +104,43 @@ let package = Package(
                 "SwiftUIX",
                 "SwiftUIZ_Macros",
             ],
+            path: "Sources/_SwiftUIZ_A",
+            swiftSettings: []
+        ),
+        .target(
+            name: "_DynamicViewGraph",
+            dependencies: [
+                "_SwiftUI_Internals",
+                "_SwiftUIZ_A",
+                "SwiftUIZ_Macros",
+            ],
+            path: "Sources/_DynamicViewGraph",
+            swiftSettings: []
+        ),
+        .target(
+            name: "_SwiftUIZ_B",
+            dependencies: [
+                "_DynamicViewGraph",
+                "_SwiftUIZ_A",
+            ],
+            path: "Sources/_SwiftUIZ_B",
+            swiftSettings: []
+        ),
+        .target(
+            name: "SwiftUIZ",
+            dependencies: [
+                "_SwiftUIZ_A",
+                "_SwiftUIZ_B",
+            ],
             path: "Sources/SwiftUIZ",
             swiftSettings: []
         ),
         .testTarget(
-            name: "_DVGraphTests",
+            name: "_DynamicViewGraphTests",
             dependencies: [
-                "_DVGraph",
-                "SwiftUIZ",
+                "_DynamicViewGraph",
             ],
-            path: "Tests/_DVGraph",
+            path: "Tests/_DynamicViewGraph",
             swiftSettings: []
         )
     ]
