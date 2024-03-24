@@ -88,11 +88,7 @@ let package = Package(
                 .copy("Resources/emoji-data.json"),
                 .copy("Resources/gemoji.json")
             ],
-            swiftSettings: [
-                .unsafeFlags([
-                    "-enable-library-evolution",
-                ])
-            ]
+            swiftSettings: []
         ),
         .target(
             name: "_SwiftUIZ_A",

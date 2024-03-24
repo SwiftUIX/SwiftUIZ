@@ -3,6 +3,7 @@
 //
 
 import _SwiftUI_Internals
+import SwallowMacrosClient
 import SwiftUI
 
 public protocol _DynamicViewStyleConfiguration {
@@ -38,7 +39,7 @@ extension _DynamicView {
 
 public struct _DynamicViewModifier<Root: View, Content: View>: Initiable, _ThinForceViewModifier {
     public init() {
-        
+        SwallowMacrosClient.module.initialize()
     }
     
     @ViewBuilder
