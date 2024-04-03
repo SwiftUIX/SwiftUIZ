@@ -422,7 +422,7 @@ extension UnsafeNode {
             endColumn: Int(endColumn),
             in: source
         ) {
-            print(source[range], "\n-------\n")
+            Swift.print(source[range], "\n-------\n")
         }
         
         var child = cmark_node_first_child(node)
