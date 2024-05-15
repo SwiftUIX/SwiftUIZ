@@ -11,7 +11,7 @@ Ambitious additions to SwiftUI. Work-in-progress, public API surface is producti
 This library wouldn't be possible without these incredible OSS projects that I'm building upon.
 
 <details>
-<summary>MarkdownUI</summary>
+<summary>MarkdownUI by @gonzalezreal</summary>
 
 - **Link**: (swift-markdown-ui)[https://github.com/gonzalezreal/swift-markdown-ui]
 - **License**: [MIT License](https://github.com/gonzalezreal/swift-markdown-ui/blob/main/LICENSE)
@@ -24,7 +24,7 @@ This library wouldn't be possible without these incredible OSS projects that I'm
 </details>
 
 <details>
-<summary>SwiftUI-Macros</summary>
+<summary>SwiftUI-Macros by @Wouter01</summary>
 
 - **Link**: [SwiftUI-Macros-ui](https://github.com/Wouter01/SwiftUI-Macros)
 - **License**: [MIT License](https://github.com/Wouter01/SwiftUI-Macros/blob/main/LICENSE)
