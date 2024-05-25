@@ -7,7 +7,7 @@ import Swallow
 import SwiftUIX
 
 /// A runtime discoverable alternative to `PreviewProvider`.
-public protocol ViewPreview: Initiable, View {
+public protocol ViewPreview: Initiable, DynamicView {
     static var title: String { get }
 }
 
@@ -53,11 +53,32 @@ public struct _ViewPreviewsContent: View {
 }
 
 /// A scene for all instances of `ViewPreview` that are discoverable at runtime.
-public struct PreviewCatalogGroup: Scene {
+public struct PreviewCatalogGroup: Initiable, _SceneX {
+    private var contentModifier: AnyViewModifier?
+    
     public var body: some Scene {
         WindowGroup(.dynamic) {
-            _ViewPreviewsContent()
+            if let contentModifier {
+                _ViewPreviewsContent()
+                    .modifier(contentModifier)
+            } else {
+                _ViewPreviewsContent()
+            }
         }
+    }
+    
+    public func contentModifier(
+        _ contentModifier: AnyViewModifier
+    ) -> Self {
+        withMutableScope(self) {
+            $0.contentModifier = contentModifier
+        }
+    }
+    
+    public func contentModifier<ModifierBody: View>(
+        _ modify: @escaping (AnyViewModifier.Content) -> ModifierBody
+    ) -> Self {
+        self.contentModifier(AnyViewModifier(modify))
     }
     
     public init() {

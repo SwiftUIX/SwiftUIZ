@@ -13,6 +13,8 @@ public struct ContainerGroup<Content: View>: View {
     }
     
     public var body: some View {
-        content
+        Group {
+            content
+        }
     }
 }

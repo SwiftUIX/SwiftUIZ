@@ -1,5 +1,5 @@
 //
-//  EnvironmentValueMacro.swift
+//  EnvironmentValuesMacro.swift & EnvironmentValueMacro.swift
 //  SwiftUIZ
 //
 //  Originally created by Wouter Hennen on 12/06/2023.
@@ -38,6 +38,10 @@ public struct EnvironmentValueMacro: AttachedMacro {
     
 }
 
+public struct EnvironmentValuesMacro {
+    
+}
+
 extension EnvironmentValueMacro: PeerMacro {
     public static func expansion(
         of node: AttributeSyntax,
@@ -45,7 +49,6 @@ extension EnvironmentValueMacro: PeerMacro {
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
         
-        // Skip declarations other than variables
         guard let varDecl = declaration.as(VariableDeclSyntax.self) else {
             return []
         }
@@ -54,7 +57,7 @@ extension EnvironmentValueMacro: PeerMacro {
             context.diagnose(
                 Diagnostic(
                     node: Syntax(node),
-                    message: MacroDiagnosticMessage.missingAnnotation
+                    message: DiagnosticMessage.missingAnnotation
                 )
             )
             
@@ -65,7 +68,7 @@ extension EnvironmentValueMacro: PeerMacro {
             context.diagnose(
                 Diagnostic(
                     node: Syntax(node),
-                    message: MacroDiagnosticMessage.notAnIdentifier
+                    message: DiagnosticMessage.notAnIdentifier
                 )
             )
             
@@ -78,7 +81,13 @@ extension EnvironmentValueMacro: PeerMacro {
         let hasDefaultValue = binding.initializer != nil
         
         guard isOptionalType || hasDefaultValue else {
-            context.diagnose(Diagnostic(node: Syntax(node), message: MacroDiagnosticMessage.noDefaultArgument))
+            context.diagnose(
+                Diagnostic(
+                    node: Syntax(node),
+                    message: DiagnosticMessage.noDefaultArgument
+                )
+            )
+            
             return []
         }
         
@@ -98,19 +107,29 @@ extension EnvironmentValueMacro: AccessorMacro {
         providingAccessorsOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [AccessorDeclSyntax] {
-        
-        // Skip declarations other than variables
         guard let varDecl = declaration.as(VariableDeclSyntax.self) else {
             return []
         }
         
         guard let binding = varDecl.bindings.first else {
-            context.diagnose(Diagnostic(node: Syntax(node), message: MacroDiagnosticMessage.missingAnnotation))
+            context.diagnose(
+                Diagnostic(
+                    node: Syntax(node),
+                    message: DiagnosticMessage.missingAnnotation
+                )
+            )
+            
             return []
         }
         
         guard let identifier = binding.pattern.as(IdentifierPatternSyntax.self)?.identifier.text else {
-            context.diagnose(Diagnostic(node: Syntax(node), message: MacroDiagnosticMessage.notAnIdentifier))
+            context.diagnose(
+                Diagnostic(
+                    node: Syntax(node),
+                    message: DiagnosticMessage.notAnIdentifier
+                )
+            )
+            
             return []
         }
         
@@ -126,5 +145,52 @@ extension EnvironmentValueMacro: AccessorMacro {
             }
             """
         ]
+    }
+}
+
+extension EnvironmentValuesMacro: MemberAttributeMacro {
+    public static func expansion(
+        of node: AttributeSyntax,
+        attachedTo declaration: some DeclGroupSyntax,
+        providingAttributesFor member: some DeclSyntaxProtocol,
+        in context: some MacroExpansionContext
+    ) throws -> [AttributeSyntax] {
+        guard member.is(VariableDeclSyntax.self) else {
+            return []
+        }
+        
+        return [
+            AttributeSyntax(
+                atSign: .atSignToken(),
+                attributeName: IdentifierTypeSyntax(name: .identifier("EnvironmentValue"))
+            )
+        ]
+    }
+}
+
+// MARK: - Diagnostics
+
+fileprivate enum DiagnosticMessage: String, SwiftDiagnostics.DiagnosticMessage {
+    case noDefaultArgument
+    case missingAnnotation
+    case notAnIdentifier
+    
+    var severity: DiagnosticSeverity {
+        return .error
+    }
+    
+    var message: String {
+        switch self {
+            case .noDefaultArgument:
+                "No default value provided."
+            case .missingAnnotation:
+                "No annotation provided."
+            case .notAnIdentifier:
+                "Identifier is not valid."
+        }
+    }
+    
+    var diagnosticID: MessageID {
+        MessageID(domain: "com.vmanot.SwiftUIZ", id: rawValue)
     }
 }

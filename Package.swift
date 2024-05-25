@@ -18,7 +18,6 @@ let package = Package(
                 "_SwiftUIZ_NukeUI",
                 "_SwiftUIZ_A",
                 "_SwiftUIZ_B",
-                "_DynamicViewGraph",
                 "MarkdownUI",
                 "Emoji",
                 "SwiftUIZ"
@@ -51,19 +50,28 @@ let package = Package(
                 "Swallow",
                 "SwiftUIX"
             ],
-            path: "Sources/_SwiftUI_Internals"
+            path: "Sources/_SwiftUI_Internals",
+            swiftSettings: [
+                .enableExperimentalFeature("AccessLevelOnImport")
+            ]
         ),
         .target(
             name: "_SwiftUIZ_Nuke",
             dependencies: [],
-            path: "Dependencies/_SwiftUIZ_Nuke"
+            path: "Dependencies/_SwiftUIZ_Nuke",
+            swiftSettings: [
+                .enableExperimentalFeature("AccessLevelOnImport")
+            ]
         ),
         .target(
             name: "_SwiftUIZ_NukeUI",
             dependencies: [
                 "_SwiftUIZ_Nuke"
             ],
-            path: "Dependencies/_SwiftUIZ_NukeUI"
+            path: "Dependencies/_SwiftUIZ_NukeUI",
+            swiftSettings: [
+                .enableExperimentalFeature("AccessLevelOnImport")
+            ]
         ),
         .target(
             name: "MarkdownUI",
@@ -75,20 +83,24 @@ let package = Package(
                 "SwiftUIX",
                 "SwiftUIZ",
             ],
-            path: "Sources/MarkdownUI",
-            swiftSettings: []
+            path: "Miscellaneous/MarkdownUI",
+            swiftSettings: [
+                .enableExperimentalFeature("AccessLevelOnImport")
+            ]
         ),
         .target(
             name: "Emoji",
             dependencies: [
                 "Swallow"
             ],
-            path: "Sources/Emoji",
+            path: "Miscellaneous/Emoji",
             resources: [
                 .copy("Resources/emoji-data.json"),
                 .copy("Resources/gemoji.json")
             ],
-            swiftSettings: []
+            swiftSettings: [
+                .enableExperimentalFeature("AccessLevelOnImport")
+            ]
         ),
         .target(
             name: "_SwiftUIZ_A",
@@ -101,26 +113,21 @@ let package = Package(
                 "SwiftUIZ_Macros",
             ],
             path: "Sources/_SwiftUIZ_A",
-            swiftSettings: []
+            swiftSettings: [
+                .enableExperimentalFeature("AccessLevelOnImport")
+            ]
         ),
         .target(
-            name: "_DynamicViewGraph",
+            name: "_SwiftUIZ_B",
             dependencies: [
                 "_SwiftUI_Internals",
                 "_SwiftUIZ_A",
                 "SwiftUIZ_Macros",
             ],
-            path: "Sources/_DynamicViewGraph",
-            swiftSettings: []
-        ),
-        .target(
-            name: "_SwiftUIZ_B",
-            dependencies: [
-                "_DynamicViewGraph",
-                "_SwiftUIZ_A",
-            ],
             path: "Sources/_SwiftUIZ_B",
-            swiftSettings: []
+            swiftSettings: [
+                .enableExperimentalFeature("AccessLevelOnImport")
+            ]
         ),
         .target(
             name: "SwiftUIZ",
@@ -129,15 +136,9 @@ let package = Package(
                 "_SwiftUIZ_B",
             ],
             path: "Sources/SwiftUIZ",
-            swiftSettings: []
-        ),
-        .testTarget(
-            name: "_DynamicViewGraphTests",
-            dependencies: [
-                "_DynamicViewGraph",
-            ],
-            path: "Tests/_DynamicViewGraph",
-            swiftSettings: []
+            swiftSettings: [
+                .enableExperimentalFeature("AccessLevelOnImport")
+            ]
         )
     ]
 )

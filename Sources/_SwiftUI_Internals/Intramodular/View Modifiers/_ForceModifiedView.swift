@@ -5,13 +5,66 @@
 import SwiftUIX
 import Swallow
 
-public protocol _ThinForceModifiedView<ViewModifierType>: DynamicProperty, View {
+public protocol _AnyForceModifiedView: DynamicProperty, View {
+    static var _disableForceModifiedViewModification: Bool { get }
+}
+
+extension _AnyForceModifiedView {
+    public static var _disableForceModifiedViewModification: Bool {
+        false
+    }
+    
+    fileprivate var _disableApplicationOfForceViewModifier: Bool {
+        Self._disableForceModifiedViewModification
+    }
+}
+
+fileprivate struct _AnyUnmodifiedView<Base: DynamicProperty & View>: View {
+    var base: Base
+    
+    var body: some View {
+        base.body
+    }
+    
+    public static func _makeView(
+        view: _GraphValue<Self>,
+        inputs: _ViewInputs
+    ) -> _ViewOutputs {
+        let body: _GraphValue<Base.Body> = view[\Self.base.body]
+        
+        return Base.Body._makeView(view: body, inputs: inputs)
+    }
+    
+    public static func _makeViewList(
+        view: _GraphValue<Self>,
+        inputs: _ViewListInputs
+    ) -> _ViewListOutputs {
+        let body: _GraphValue<Base.Body> = view[\Self.base.body]
+        
+        return Base.Body._makeViewList(view: body, inputs: inputs)
+    }
+    
+    @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
+    public static func _viewListCount(
+        inputs: _ViewListCountInputs
+    ) -> Int? {
+        Base.Body._viewListCount(inputs: inputs)
+    }
+}
+
+extension _AnyForceModifiedView {
+    fileprivate var _umodifiedHosted: _AnyUnmodifiedView<Self> {
+        _AnyUnmodifiedView(base: self)
+    }
+}
+
+public protocol _ThinForceModifiedView<ViewModifierType>: _AnyForceModifiedView, DynamicProperty, View {
     associatedtype ViewModifierType: Initiable
     
     static var _viewModifier: ViewModifierType { get }
 }
 
-public protocol _ForceModifiedView<ViewModifierType>: DynamicProperty, View {
+public protocol _ForceModifiedView<ViewModifierType>: _AnyForceModifiedView, DynamicProperty, View {
     associatedtype ViewModifierType: Initiable & ViewModifier
     
     static var _viewModifier: ViewModifierType { get }
@@ -31,6 +84,10 @@ extension _ThinForceModifiedView where ViewModifierType: _ThinViewModifier<Body>
         view: _GraphValue<Self>,
         inputs: _ViewInputs
     ) -> _ViewOutputs {
+        if Self._disableForceModifiedViewModification {
+            return _AnyUnmodifiedView<Self>._makeView(view: view[\._umodifiedHosted], inputs: inputs)
+        }
+        
         let keyPath: KeyPath<Self, _ThinModifiedBody> = \Self.[_lazilyModifiedBy: Metatype(ViewModifierType.self)]
         
         let _modifiedView = view[keyPath]
@@ -42,6 +99,10 @@ extension _ThinForceModifiedView where ViewModifierType: _ThinViewModifier<Body>
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
     ) -> _ViewListOutputs {
+        if Self._disableForceModifiedViewModification {
+            return _AnyUnmodifiedView<Self>._makeViewList(view: view[\._umodifiedHosted], inputs: inputs)
+        }
+        
         let keyPath: KeyPath<Self, _ThinModifiedBody> = \Self.[_lazilyModifiedBy: Metatype(ViewModifierType.self)]
         
         let _modifiedView = view[keyPath]
@@ -53,7 +114,11 @@ extension _ThinForceModifiedView where ViewModifierType: _ThinViewModifier<Body>
     public static func _viewListCount(
         inputs: _ViewListCountInputs
     ) -> Int? {
-        _ThinModifiedBody._viewListCount(inputs: inputs)
+        if Self._disableForceModifiedViewModification {
+            return _AnyUnmodifiedView<Self>._viewListCount(inputs: inputs)
+        }
+        
+        return _ThinModifiedBody._viewListCount(inputs: inputs)
     }
 }
 
@@ -69,6 +134,10 @@ extension _ThinForceModifiedView where ViewModifierType: _ThinForceViewModifier<
         view: _GraphValue<Self>,
         inputs: _ViewInputs
     ) -> _ViewOutputs {
+        if Self._disableForceModifiedViewModification {
+            return Body._makeView(view: view[\.body], inputs: inputs)
+        }
+
         let keyPath: KeyPath<Self, _ThinForceModifiedBody> = \Self.[_lazilyModifiedBy: Metatype(ViewModifierType.self)]
         
         let _modifiedView = view[keyPath]
@@ -80,6 +149,10 @@ extension _ThinForceModifiedView where ViewModifierType: _ThinForceViewModifier<
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
     ) -> _ViewListOutputs {
+        if Self._disableForceModifiedViewModification {
+            return Body._makeViewList(view: view[\.body], inputs: inputs)
+        }
+
         let keyPath: KeyPath<Self, _ThinForceModifiedBody> = \Self.[_lazilyModifiedBy: Metatype(ViewModifierType.self)]
         
         let _modifiedView = view[keyPath]
@@ -91,7 +164,11 @@ extension _ThinForceModifiedView where ViewModifierType: _ThinForceViewModifier<
     public static func _viewListCount(
         inputs: _ViewListCountInputs
     ) -> Int? {
-        _ThinForceModifiedBody._viewListCount(inputs: inputs)
+        if Self._disableForceModifiedViewModification {
+            return Body._viewListCount(inputs: inputs)
+        }
+
+        return _ThinForceModifiedBody._viewListCount(inputs: inputs)
     }
 }
 

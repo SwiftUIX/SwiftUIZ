@@ -28,8 +28,9 @@ public struct _ViewProxyReader<Proxy: _ViewProxyType, Content: View>: View {
     private let content: (Proxy) -> Content
     
     @State private var readProxy: Proxy?
-    
-    @ViewStorage var initialPassComplete: Bool = false
+    @State private var foo: Bool = false
+
+    @ViewStorage private var initialPassComplete: Bool = false
     
     private var resolvedProxy: Proxy {
         guard let proxy = readProxy ?? parentProvidedProxy else {
@@ -48,11 +49,14 @@ public struct _ViewProxyReader<Proxy: _ViewProxyType, Content: View>: View {
     ) {
         self.content = content
     }
-    
+        
     public var body: some View {
         content(resolvedProxy)
+            .background(ZeroSizeView().id(foo))
             .onPreferenceChange(_ProvideViewProxyPreferenceKey<Proxy>.self) { proxy in
                 readProxy = proxy
+                
+                foo.toggle()
             }
             .task {
                 DispatchQueue.main.async {

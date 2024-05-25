@@ -41,10 +41,11 @@ public struct _UnimplementedView: View {
     
     @_transparent
     public init(
+        _ warning: StaticString? = nil,
         file: StaticString = #file,
         line: UInt = #line
     ) {
-        runtimeIssue("This view is unimplemented.", file: file, line: line)
+        runtimeIssue(warning ?? "This view is unimplemented.", file: file, line: line)
     }
 }
 

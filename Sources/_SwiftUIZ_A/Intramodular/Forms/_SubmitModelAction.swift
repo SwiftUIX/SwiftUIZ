@@ -51,6 +51,6 @@ extension View {
         of model: Model.Type,
         perform action: @escaping (Model) -> Void
     ) -> some View {
-        _environment(_FormSubmitModelAction(action))
+        _environment(_FormSubmitModelAction.self, _FormSubmitModelAction(action))
     }
 }
