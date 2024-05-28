@@ -28,3 +28,9 @@ extension _DynamicViewProxy.HydrationSurface {
         }
     }
 }
+
+extension _DynamicViewBridge: _ShallowEnvironmentHydrationSurface {
+    public var staticViewTypeDescriptor: _StaticViewTypeDescriptor {
+        bodyStorage._dynamicViewGraphInsertion.node.staticViewTypeDescriptor
+    }
+}

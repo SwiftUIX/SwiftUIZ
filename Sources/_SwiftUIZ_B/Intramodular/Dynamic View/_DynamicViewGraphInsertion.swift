@@ -107,8 +107,3 @@ extension _DynamicViewBodyStorage {
     var _dynamicViewGraphInsertion: _DynamicViewGraphInsertion!
 }
 
-extension _DynamicViewBridge: _ShallowEnvironmentHydrationSurface {
-    public var staticViewTypeDescriptor: _StaticViewTypeDescriptor {
-        bodyStorage._dynamicViewGraphInsertion.node.staticViewTypeDescriptor
-    }
-}
