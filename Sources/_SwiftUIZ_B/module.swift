@@ -8,12 +8,12 @@
 
 extension _TaskLocalValues {
     public struct _DynamicViewGraph {
-        struct _DynamicViewBodyModifier {
+        struct _InterposeViewBody {
             let root: Any.Type
             let content: Any.Type
         }
         
-        var _managedDynamicViewBodyModifier: _DynamicViewBodyModifier?
+        var _managedDynamicViewBodyModifier: _InterposeViewBody?
     }
     
     @TaskLocal package static var _dynamicViewGraph = _DynamicViewGraph()

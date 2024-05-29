@@ -4,7 +4,7 @@
 
 import SwiftUIX
 
-extension WindowGroup: _SceneX where Content: _DynamicSceneContentContainerType {
+extension WindowGroup: _SceneX where Content: _InterposedSceneContent {
     public enum _DynamicWindowGroupKeyword {
         case dynamic
     }
@@ -12,18 +12,18 @@ extension WindowGroup: _SceneX where Content: _DynamicSceneContentContainerType 
     public init<C: View>(
         _: _DynamicWindowGroupKeyword,
         @ViewBuilder content: () -> C
-    ) where Content == _DynamicSceneContentContainer<C> {
+    ) where Content == _InterposeSceneContent<C> {
         self.init(content: {
-            _DynamicSceneContentContainer(content: content)
+            _InterposeSceneContent(content: content)
         })
     }
     
     public init<C: View>(
         _: _DynamicWindowGroupKeyword,
         _ content: @escaping @autoclosure () -> C
-    ) where Content == _DynamicSceneContentContainer<C> {
+    ) where Content == _InterposeSceneContent<C> {
         self.init(content: {
-            _DynamicSceneContentContainer(content: content)
+            _InterposeSceneContent(content: content)
         })
     }
 }
