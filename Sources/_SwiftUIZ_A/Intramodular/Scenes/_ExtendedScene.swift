@@ -4,17 +4,17 @@
 
 import SwiftUI
 
-public protocol _SceneX: _SwiftUIZ_MaybePrimitiveScene {
+public protocol _ExtendedScene: _SwiftUIZ_MaybePrimitiveScene {
     
 }
 
 extension Scene {
-    public func hidden() -> some _SceneX {
+    public func hidden() -> some _ExtendedScene {
         SwiftUI._EmptyScene()
     }
 }
 
-extension SwiftUI._EmptyScene: _SceneX {
+extension SwiftUI._EmptyScene: _ExtendedScene {
     public var body: Never {
         fatalError()
     }

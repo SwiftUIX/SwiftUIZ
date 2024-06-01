@@ -6,7 +6,7 @@ import SwiftUI
 import SwiftUIX
 
 public struct _InterposeSceneContent<Content: View>: View, _InterposedSceneContent {
-    @StateObject private var graph: _AnyDynamicViewGraph = __unsafe_ViewGraphType.init()
+    @StateObject private var graph: _AnyViewHypergraph = __unsafe_ViewGraphType.init()
     
     public let content: Content
     

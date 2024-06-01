@@ -60,7 +60,7 @@ extension View {
 // MARK: - Auxiliary
 
 @propertyWrapper
-public struct _View_DynamicReplacementObserver: DynamicProperty, Initiable, PropertyWrapper {
+public struct _View_DynamicReplacementObserver: Initiable, _SwiftUIZ_DynamicProperty {
     @ObservedObject private var base = _DynamicReplacementManager.shared
     
     public var wrappedValue: Int {

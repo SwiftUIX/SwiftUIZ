@@ -7,7 +7,7 @@ import SwiftUI
 
 @dynamicMemberLookup
 @propertyWrapper
-public struct _ConstantOrBinding<Value>: DynamicProperty, PropertyWrapper, @unchecked Sendable {
+public struct _ConstantOrBinding<Value>: _SwiftUIZ_DynamicProperty {
     fileprivate enum Base {
         case constant(Value)
         case lazyConstant(() -> Value)

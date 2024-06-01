@@ -50,7 +50,7 @@ fileprivate struct _WithBufferedBinding<Value: Equatable, Content: View>: View {
     }
 }
 
-public func withBufferedBinding<Value: Equatable, Content: View>(
+public func _withBufferedBinding<Value: Equatable, Content: View>(
     over binding: Binding<Value>,
     toDestinationOnly: Bool = false,
     content: @escaping (Binding<Value>) -> Content

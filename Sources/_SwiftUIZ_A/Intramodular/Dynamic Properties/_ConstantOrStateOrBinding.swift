@@ -6,7 +6,7 @@ import SwiftUIX
 import Swallow
 
 @propertyWrapper
-public struct _ConstantOrStateOrBinding<Value>: DynamicProperty  {
+public struct _ConstantOrStateOrBinding<Value>: _SwiftUIZ_DynamicProperty  {
     public enum Kind {
         case constant
         case binding

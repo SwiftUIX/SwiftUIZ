@@ -7,7 +7,7 @@ import Swallow
 import SwiftUI
 
 @propertyWrapper
-public final class _PublishedConstantOrBinding<Value> {
+public final class _PublishedConstantOrBinding<Value>: _SwiftUIZ_DynamicProperty {
     private let base: _ConstantOrBinding<Value?>
     private var binding: _ConstantOrBinding<Value>!
     

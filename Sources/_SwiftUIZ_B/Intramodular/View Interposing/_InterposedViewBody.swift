@@ -19,7 +19,7 @@ public struct _InterposedViewBody<Root: DynamicView, Content: View>: View {
     @usableFromInline
     let content: Content
     
-    @ViewStorage private var dynamicViewGraphInsertion: GraphInsertion!
+    @ViewStorage private var _viewGraphInsertion: ViewGraphInsertion!
     @StateObject private var _storage = _InterposedViewBodyStorage()
     @StateObject private var _dynamicViewBridge = _InterposedViewBodyBridge(
         _swiftType: Root.self,
@@ -54,12 +54,12 @@ public struct _InterposedViewBody<Root: DynamicView, Content: View>: View {
         }
         
         ResolveBody(
-            dynamicViewGraphInsertion: dynamicViewGraphInsertion,
+            _viewGraphInsertion: _viewGraphInsertion,
             viewProxy: projectedProxy,
             content: content
         )
         .transformEnvironment(\.self) { environment in
-            dynamicViewGraphInsertion.transformEnvironment(&environment)
+            _viewGraphInsertion.transformEnvironment(&environment)
         }
         ._host(_dynamicViewBridge)
         ._SwiftUIX_trait(
@@ -71,13 +71,13 @@ public struct _InterposedViewBody<Root: DynamicView, Content: View>: View {
     func initialize() throws {
         _dynamicViewBridge._bodyStorage = _storage
         
-        if dynamicViewGraphInsertion == nil {
-            dynamicViewGraphInsertion = try GraphInsertion(
+        if _viewGraphInsertion == nil {
+            _viewGraphInsertion = try ViewGraphInsertion(
                 for: root,
                 in: self._interposeContext.graph
             )
             
-            _storage.dynamicViewGraphInsertion = dynamicViewGraphInsertion
+            _storage._viewGraphInsertion = _viewGraphInsertion
             
             DispatchQueue.main.async {
                 _dynamicViewBridge.objectWillChange.send()
@@ -88,7 +88,7 @@ public struct _InterposedViewBody<Root: DynamicView, Content: View>: View {
 
 extension _InterposedViewBody {
     struct ResolveBody: View {
-        let dynamicViewGraphInsertion: GraphInsertion?
+        let _viewGraphInsertion: ViewGraphInsertion?
         let viewProxy: _InterposedViewBodyProxy?
         let content: Content
         
@@ -96,12 +96,12 @@ extension _InterposedViewBody {
             if let viewProxy {
                 let _: Void = {
                     #try(.optimistic) {
-                        try viewProxy._resolveViewBodyUsingDynamicViewGraph()
+                        try viewProxy._resolveViewBodyUsing_HeavyweightViewHypergraph()
                     }
                 }()
                 
                 if viewProxy._isViewBodyResolved {
-                    if let swizzledContent: any View = dynamicViewGraphInsertion?.node.swizzledViewBody {
+                    if let swizzledContent: any View = _viewGraphInsertion?.insertedObject.swizzledViewBody {
                         swizzledContent.eraseToAnyView()
                     } else {
                         content

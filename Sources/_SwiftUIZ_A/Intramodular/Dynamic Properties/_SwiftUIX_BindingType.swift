@@ -6,7 +6,7 @@ import Merge
 import Swallow
 import SwiftUI
 
-public protocol _SwiftUIX_BindingType<Value> {
+public protocol _SwiftUIX_BindingType<Value>: _SwiftUIZ_DynamicProperty {
     associatedtype Value
     
     var wrappedValue: Value { get nonmutating set }

@@ -9,7 +9,7 @@ extension EnvironmentValues {
         var _isInvalidInstance: Bool { get set }
         
         var scope: _ViewInterposeScope { get set }
-        var _opaque_dynamicViewGraph: _AnyDynamicViewGraph? { get set }
+        var _opaque_dynamicViewGraph: _AnyViewHypergraph? { get set }
     }
 }
 

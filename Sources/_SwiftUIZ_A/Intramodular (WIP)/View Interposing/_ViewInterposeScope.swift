@@ -4,16 +4,13 @@
 
 import SwiftUI
 
-public final class _ViewInterposeScope: CustomStringConvertible, Hashable {
-    @inlinable
-    public var description: String {
-        String(hashValue, radix: 36, uppercase: false)
-    }
-    
-    public init() {
+public final class _ViewInterposeScope: Hashable, ObservableObject {
+    init() {
         
     }
-    
+}
+
+extension _ViewInterposeScope {
     @inlinable
     public func hash(into hasher: inout Hasher) {
         hasher.combine(ObjectIdentifier(self))
@@ -25,9 +22,15 @@ public final class _ViewInterposeScope: CustomStringConvertible, Hashable {
     }
 }
 
+extension _ViewInterposeScope: CustomStringConvertible {
+    public var description: String {
+        String(hashValue, radix: 36, uppercase: false)
+    }
+}
+
 @MainActor
 public struct _SetViewInterposeScope<C: View>: _ThinViewModifier {
-    @State private var scope = _ViewInterposeScope()
+    @StateObject private var scope = _ViewInterposeScope()
     
     public init() {
         

@@ -19,7 +19,7 @@ public struct _InterposeViewBody<Root: DynamicView, Content: View>: Initiable, _
             content
         }
         .environment(\._lazyViewResolver, _AnyLazyViewResolver(resolve: { resolve in
-            let context: _TaskLocalValues._DynamicViewGraph = withMutableScope(_TaskLocalValues._dynamicViewGraph) {
+            let context: _TaskLocalValues._HeavyweightViewHypergraph = withMutableScope(_TaskLocalValues._dynamicViewGraph) {
                 $0._managedDynamicViewBodyModifier = .init(root: type(of: root), content: Content.self)
             }
             

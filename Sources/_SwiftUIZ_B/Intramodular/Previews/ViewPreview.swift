@@ -53,7 +53,7 @@ public struct _ViewPreviewsContent: View {
 }
 
 /// A scene for all instances of `ViewPreview` that are discoverable at runtime.
-public struct PreviewCatalogGroup: Initiable, _SceneX {
+public struct PreviewCatalogGroup: Initiable, _ExtendedScene {
     private var contentModifier: AnyViewModifier?
     
     public var body: some Scene {

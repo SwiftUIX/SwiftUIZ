@@ -7,7 +7,7 @@ import SwiftUI
 
 @frozen
 @propertyWrapper
-public struct _LazyState<Value>: DynamicProperty {
+public struct _LazyState<Value>: _SwiftUIZ_DynamicProperty {
     @usableFromInline
     class Storage: ObservableObject {
         var makeValue: (() -> Value)?

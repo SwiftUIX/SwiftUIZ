@@ -10,7 +10,7 @@ import SwiftUI
 /// From [Engine](http://github.com/nathantannar4/Engine).
 @propertyWrapper
 @frozen
-public struct _UpdatePhase: DynamicProperty {
+public struct _UpdatePhase: _SwiftUIZ_DynamicProperty {
     @frozen
     public struct Value: Hashable {
         @usableFromInline

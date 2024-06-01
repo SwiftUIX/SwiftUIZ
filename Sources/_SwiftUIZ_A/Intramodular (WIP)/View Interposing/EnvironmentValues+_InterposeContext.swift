@@ -7,13 +7,13 @@ import SwiftUI
 
 extension EnvironmentValues {
     public protocol _InterposeContextProtocol: EnvironmentValues._opaque_InterposeContextProtocol {
-        var _graph: (any _AnyDynamicViewGraphType)? { get set }
+        var _graph: (any _AnyViewHypergraphType)? { get set }
     }
 
     public struct _InterposeContext: EnvironmentValues._InterposeContextProtocol {
         public var _isInvalidInstance: Bool = true
         
-        public weak var _graph: (any _AnyDynamicViewGraphType)? {
+        public weak var _graph: (any _AnyViewHypergraphType)? {
             didSet {
                 if _graph == nil {
                     assertionFailure()
@@ -21,19 +21,19 @@ extension EnvironmentValues {
             }
         }
         
-        public var _opaque_dynamicViewGraph: _SwiftUIZ_A._AnyDynamicViewGraph? {
+        public var _opaque_dynamicViewGraph: _SwiftUIZ_A._AnyViewHypergraph? {
             get {
                 self._graph
             } set {
-                self._graph = newValue.map({ $0 as! (any _AnyDynamicViewGraphType) })
+                self._graph = newValue.map({ $0 as! (any _AnyViewHypergraphType) })
             }
         }
         
         public var scope = _ViewInterposeScope()
-        public var _inheritance: [_AnyDynamicViewGraph.InterposeID] = []
+        public var _inheritance: [_AnyViewHypergraph.InterposeID] = []
         public var userInfo = UserInfo(_unscoped: ())
         
-        public var graph: any _AnyDynamicViewGraphType {
+        public var graph: any _AnyViewHypergraphType {
             get {
                 _graph!
             } set {
@@ -41,7 +41,7 @@ extension EnvironmentValues {
             }
         }
         
-        public init(graph: (any _AnyDynamicViewGraphType)?) {
+        public init(graph: (any _AnyViewHypergraphType)?) {
             self._graph = graph
         }
     }
@@ -72,7 +72,7 @@ extension EnvironmentValues._InterposeContext: ThrowingMergeOperatable {
 }
 
 extension EnvironmentValues._InterposeContext {
-    public var inheritance: [any _AnyDynamicViewGraph.InterposeProtocol] {
+    public var inheritance: [any _AnyViewHypergraph.InterposeProtocol] {
         precondition(!graph._isInvalidInstance)
         
         return _inheritance.map({ graph[$0] })

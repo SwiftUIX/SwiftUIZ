@@ -7,9 +7,9 @@ import Runtime
 import SwiftUIX
 @_spi(Internal) import _SwiftUIZ_A
 
-public protocol _InterposedViewBody_GraphInsertion: ObservableObject {
-    var graph: (any _AnyDynamicViewGraphType)? { get }
-    var node: any _AnyDynamicViewGraph.InterposeProtocol { get }
+public protocol _InterposedViewBody_ViewGraphInsertion: ObservableObject {
+    var graph: (any _AnyViewHypergraphType)? { get }
+    var insertedObject: any _AnyViewHypergraph.InterposeProtocol { get }
     
     func transformEnvironment(
         _ environment: inout EnvironmentValues
@@ -18,20 +18,20 @@ public protocol _InterposedViewBody_GraphInsertion: ObservableObject {
 
 extension _InterposedViewBody {
     @usableFromInline
-    final class GraphInsertion: _InterposedViewBody_GraphInsertion {
+    final class ViewGraphInsertion: _InterposedViewBody_ViewGraphInsertion {
         @usableFromInline
-        weak var graph: (any _AnyDynamicViewGraphType)?
+        weak var graph: (any _AnyViewHypergraphType)?
         
         @usableFromInline
-        var node: any _AnyDynamicViewGraph.InterposeProtocol
+        var insertedObject: any _AnyViewHypergraph.InterposeProtocol
         
         public var staticViewTypeDescriptor: _StaticViewTypeDescriptor {
-            node.staticViewTypeDescriptor
+            insertedObject.staticViewTypeDescriptor
         }
         
         init<V: View>(
             for view: V,
-            in graph: (any _AnyDynamicViewGraphType)
+            in graph: (any _AnyViewHypergraphType)
         ) throws {
             assert(!graph._isInvalidInstance)
             
@@ -39,18 +39,18 @@ extension _InterposedViewBody {
             
             let typeDescriptor = try _StaticViewTypeDescriptor(from: type(of: view))
             
-            self.node = _DynamicViewGraphLite.Node(
+            self.insertedObject = _LightweightViewHypergraph.Interpose(
                 graph: graph,
                 typeDescriptor: typeDescriptor
             )
             
-            graph.insert(node)
+            graph.insert(insertedObject)
             
-            try graph.prepare(node)
+            try graph.prepare(insertedObject)
         }
         
         deinit {
-            graph?.remove(node)
+            graph?.remove(insertedObject)
         }
         
         @MainActor(unsafe)
@@ -60,13 +60,13 @@ extension _InterposedViewBody {
         ) {
             do {
                 environment._interposeContext.graph = graph!
-                environment._interposeContext._inheritance.append(node.id)
+                environment._interposeContext._inheritance.append(insertedObject.id)
                 
-                for (key, property) in node.elementProperties {
+                for (key, property) in insertedObject.elementProperties {
                     try property.update(id: key, context: &environment._interposeContext)
                 }
                 
-                try node.update()
+                try insertedObject.update()
             } catch {
                 assertionFailure(error)
             }
@@ -75,34 +75,34 @@ extension _InterposedViewBody {
 }
 
 extension _InterposedViewBodyProxy {
-    private var _dynamicViewGraphNode: (any _AnyDynamicViewGraph.InterposeProtocol)! {
-        _storage?.dynamicViewGraphInsertion.node
+    private var _dynamicViewGraphRepresentation: (any _AnyViewHypergraph.InterposeProtocol)! {
+        _storage?._viewGraphInsertion.insertedObject
     }
         
     var _isViewBodyResolved: Bool {
-        _dynamicViewGraphNode.state.contains(.resolved)
+        _dynamicViewGraphRepresentation.state.contains(.resolved)
     }
         
-    func _resolveViewBodyUsingDynamicViewGraph() throws {
-        guard !_dynamicViewGraphNode.state.contains(.resolved) else {
+    func _resolveViewBodyUsing_HeavyweightViewHypergraph() throws {
+        guard !_dynamicViewGraphRepresentation.state.contains(.resolved) else {
             return
         }
         
-        let node = try storage.dynamicViewGraphInsertion.node
+        let insertedObject = try storage._viewGraphInsertion.insertedObject
         
-        try storage.dynamicViewGraphInsertion.graph?.prepare(node)
+        try storage._viewGraphInsertion.graph?.prepare(insertedObject)
         
-        node.elementProperties = try _extractConsumableElementProperties()
+        insertedObject.elementProperties = try _extractConsumableElementProperties()
         
-        try node.update()
+        try insertedObject.update()
     }
 }
 
 extension _InterposedViewBodyProxy {
-    func _extractConsumableElementProperties() throws -> [_ViewAttributeID: any _ConsumableDynamicViewGraphElementProperty] {
+    func _extractConsumableElementProperties() throws -> [_ViewHyperpropertyID: any _ConsumableViewHypergraphElementProperty] {
         let mirror = InstanceMirror(root)!
         
-        var properties: [any _ConsumableDynamicViewGraphElementProperty] = try withMutableScope([]) {
+        var properties: [any _ConsumableViewHypergraphElementProperty] = try withMutableScope([]) {
             try mirror._collectConsumableElementProperties(into: &$0, context: _dynamicViewGraphContext)
         }
         
@@ -118,29 +118,29 @@ extension _InterposedViewBodyProxy {
 
 extension _InterposedViewBodyStorage {
     @AssociatedObject(.OBJC_ASSOCIATION_RETAIN)
-    var dynamicViewGraphInsertion: (any _InterposedViewBody_GraphInsertion)!
+    var _viewGraphInsertion: (any _InterposedViewBody_ViewGraphInsertion)!
 }
 
 extension InstanceMirror {
     // FIXME: SLOW
     @MainActor(unsafe)
     package func _collectConsumableElementProperties(
-        into result: inout [any _ConsumableDynamicViewGraphElementProperty],
+        into result: inout [any _ConsumableViewHypergraphElementProperty],
         context: EnvironmentValues._opaque_InterposeContextProtocol
     ) throws {
         return try forEachChild(
             conformingTo: (any PropertyWrapper).self
         ) { field in
-            if let fieldValue = field.value as? (any _ConsumableDynamicViewGraphElementProperty) {
-                guard !(type(of: fieldValue )._isHiddenConsumableDynamicViewElementProperty) else {
+            if let fieldValue = field.value as? (any _ConsumableViewHypergraphElementProperty) {
+                guard !(type(of: fieldValue )._isHiddenConsumable) else {
                     return
                 }
                 
-                let attribute: any _ConsumableDynamicViewGraphElementProperty = try fieldValue.__conversion(context: context)
+                let attribute: any _ConsumableViewHypergraphElementProperty = try fieldValue.__conversion(context: context)
                 
                 result.append(fieldValue)
                 
-                guard try attribute._isAttributeResolved else {
+                guard try attribute._isConsumableResolved else {
                     return
                 }
             } else if let wrappedValue = field.value.wrappedValue as? (any ObservableObject) {
@@ -149,7 +149,7 @@ extension InstanceMirror {
                 }
             }
         } ingoring: {
-            if $0 is (any _DynamicViewGraphElementRepresentingProperty) {
+            if $0 is (any _HeavyweightViewHypergraphElementRepresentingProperty) {
                 assertionFailure("Ignored \($0)")
             }
             

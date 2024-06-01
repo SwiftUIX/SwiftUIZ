@@ -4,7 +4,7 @@
 
 import SwiftUIX
 
-extension WindowGroup: _SceneX where Content: _InterposedSceneContent {
+extension WindowGroup: _ExtendedScene where Content: _InterposedSceneContent {
     public enum _DynamicWindowGroupKeyword {
         case dynamic
     }

@@ -31,6 +31,6 @@ extension _InterposedViewBodyProxy.HydrationSurface {
 
 extension _InterposedViewBodyBridge: _ShallowEnvironmentHydrationSurface {
     public var staticViewTypeDescriptor: _StaticViewTypeDescriptor {
-        bodyStorage.dynamicViewGraphInsertion.node.staticViewTypeDescriptor
+        bodyStorage._viewGraphInsertion.insertedObject.staticViewTypeDescriptor
     }
 }

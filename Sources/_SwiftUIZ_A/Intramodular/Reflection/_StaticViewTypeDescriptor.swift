@@ -9,7 +9,7 @@ import Swallow
 public struct _StaticViewTypeDescriptor {
     public let type: TypeMetadata
     public var base = HeterogeneousDictionary<_StaticViewTypeDescriptor>()
-    public var symbols: Set<_DynamicViewStaticElementID>
+    public var symbols: Set<_HeavyweightViewHypergraphStaticElementID>
     
     public init<V: View>(
         from view: V.Type
@@ -69,5 +69,21 @@ extension _StaticViewTypeDescriptor: Identifiable {
 extension _StaticViewTypeDescriptor {
     public struct UpdateContext {
         public let view: InstanceMirror<any View>
+    }
+}
+
+extension TypeMetadata {
+    fileprivate func _extractDynamicViewElementIDs() -> Set<_HeavyweightViewHypergraphStaticElementID> {
+        var result: Set<_HeavyweightViewHypergraphStaticElementID> = []
+        
+        for keyPath in _shallow_allKeyPathsByName.values {
+            if let keyPath = keyPath as? (any _HeavyweightViewHypergraphElementRepresentingPropertyKeyPath) {
+                result.insert(.viewProperty(.init(wrappedValue: keyPath)))
+            } else {
+                // assertionFailure()
+            }
+        }
+        
+        return result
     }
 }

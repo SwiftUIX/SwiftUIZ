@@ -24,7 +24,7 @@ extension ForEach where Content: View {
     }
 }
 
-public var __unsafe_ViewGraphType: _AnyDynamicViewGraph.Type!
+public var __unsafe_ViewGraphType: _AnyViewHypergraph.Type!
 
 public var __unsafe_EnvironmentValues_opaque_interposeContext_getter: (EnvironmentValues) -> (any EnvironmentValues._opaque_InterposeContextProtocol)? = { _ in
     nil
@@ -44,9 +44,9 @@ public var __unsafe_EnvironmentValues_opaque_interposeContext_setter: (inout Env
         environment._interposeContext = context
     }
     
-    if let type = NSClassFromString("_SwiftUIZ_type_DynamicViewGraph") as? _AnyDynamicViewGraph.Type {
+    if let type = NSClassFromString("_SwiftUIZ_type_HeavyweightViewHypergraph") as? _AnyViewHypergraph.Type {
         __unsafe_ViewGraphType = type
-    } else if let type = NSClassFromString("_SwiftUIZ_type_DynamicViewGraphLite") as? _AnyDynamicViewGraph.Type {
+    } else if let type = NSClassFromString("_SwiftUIZ_type_LightweightViewHypergraph") as? _AnyViewHypergraph.Type {
         __unsafe_ViewGraphType = type.self
     } else {
         runtimeIssue("Failed to resolve `__unsafe_ViewGraphType`.")

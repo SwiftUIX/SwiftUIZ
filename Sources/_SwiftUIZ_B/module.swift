@@ -7,7 +7,7 @@
 @_exported import _SwiftUIZ_A
 
 extension _TaskLocalValues {
-    public struct _DynamicViewGraph {
+    public struct _HeavyweightViewHypergraph {
         struct _InterposeViewBody {
             let root: Any.Type
             let content: Any.Type
@@ -16,5 +16,5 @@ extension _TaskLocalValues {
         var _managedDynamicViewBodyModifier: _InterposeViewBody?
     }
     
-    @TaskLocal package static var _dynamicViewGraph = _DynamicViewGraph()
+    @TaskLocal package static var _dynamicViewGraph = _HeavyweightViewHypergraph()
 }
