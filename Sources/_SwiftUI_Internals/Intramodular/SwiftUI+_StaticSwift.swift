@@ -6,7 +6,7 @@ import SwiftUI
 import Swallow
 
 extension Button: _StaticSwift_CanHavePlaceholderGenericTypeParameters where Label == Never {
-    public enum _StaticSwift_GenericTypeParameterName: _StaticSwift_GenericTypeParameterNameProtocol {
+    public enum _StaticSwift_GenericTypeParameterName: _StaticSwift.GenericTypeParameterNameProtocol {
         case label
     }
 }
@@ -58,7 +58,7 @@ extension LazyVStack: _StaticSwift_HasPlaceholderedGenericTypeParameters  {
 }
 
 extension Label: _StaticSwift_CanHavePlaceholderGenericTypeParameters where Title == Never, Icon == Never {
-    public enum _StaticSwift_GenericTypeParameterName: _StaticSwift_GenericTypeParameterNameProtocol {
+    public enum _StaticSwift_GenericTypeParameterName: _StaticSwift.GenericTypeParameterNameProtocol {
         case title
         case icon
     }
