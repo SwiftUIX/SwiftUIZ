@@ -19,7 +19,7 @@ extension _ShallowEnvironmentKeyDescriptor {
             context: _StaticViewTypeDescriptor.UpdateContext
         ) throws {
             for field in context.view {
-                if field.key == "_preternatural" {
+                if field.key.stringValue.hasSuffix("_dynamicReplacementObserver") {
                     continue
                 }
 

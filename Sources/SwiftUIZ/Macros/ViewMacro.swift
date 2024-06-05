@@ -13,7 +13,7 @@ public struct _ViewMacroKeyword {
 @attached(
     member,
     names: named(init),
-    named(preternatural),
+    named(_dynamicReplacementObserver),
     named(Require),
     named(Provide),
     named(Text)

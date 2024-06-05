@@ -15,9 +15,9 @@ extension ViewMacro: MemberMacro {
         }
         
         return [
-            DeclSyntax("public typealias Provide<T, U> = _View_Provide<Self, T, U>"),
-            DeclSyntax("public typealias Require<T> = _View_Require<T>"),
-            DeclSyntax("@_DynamicReplacementObserver public var preternatural"),
+            // DeclSyntax("public typealias Provide<T, U> = _View_Provide<Self, T, U>"),
+            // DeclSyntax("public typealias Require<T> = _View_Require<T>"),
+            DeclSyntax("@_DynamicReplacementObserver public var _dynamicReplacementObserver"),
         ]
     }
 }
