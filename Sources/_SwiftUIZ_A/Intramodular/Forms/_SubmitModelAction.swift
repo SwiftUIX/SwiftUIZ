@@ -6,8 +6,13 @@ import Swallow
 import SwiftUIX
 
 public struct _FormSubmitModelAction {
-    public let type: Any.Type
-    public let action: (Any) -> Void
+    public private(set)  var type: Any.Type
+    public private(set) var action: (Any) -> Void
+    
+    init(type: Any.Type, action: @escaping (Any) -> Void) {
+        self.type = type
+        self.action = action
+    }
     
     public init() {
         self.type = Any.self
@@ -16,7 +21,9 @@ public struct _FormSubmitModelAction {
         }
     }
     
-    public init<T>(_ action: @escaping (T) -> Void) {
+    public init<T>(
+        _ action: @escaping (T) -> Void
+    ) {
         let type = T.self
         
         self.type = type
@@ -36,12 +43,36 @@ public struct _FormSubmitModelAction {
     }
 }
 
+extension _FormSubmitModelAction {
+    public func disabled(
+        _ disabled: Bool
+    ) -> Self {
+        var result = self
+        
+        let oldAction = self.action
+        
+        result.action = {
+            guard !disabled else {
+                return
+            }
+            
+            oldAction($0)
+        }
+        
+        return result
+    }
+}
+
 extension EnvironmentValues {
+    struct _FormSubmitModelActionKey: EnvironmentKey {
+        static let defaultValue = _FormSubmitModelAction()
+    }
+    
     public var _submit: _FormSubmitModelAction {
         get {
-            self[DefaultEnvironmentKey<_FormSubmitModelAction>.self] ?? .init()
+            self[_FormSubmitModelActionKey.self]
         } set {
-            self[DefaultEnvironmentKey<_FormSubmitModelAction>.self] = newValue
+            self[_FormSubmitModelActionKey.self] = newValue
         }
     }
 }
@@ -51,6 +82,14 @@ extension View {
         of model: Model.Type,
         perform action: @escaping (Model) -> Void
     ) -> some View {
-        _environment(_FormSubmitModelAction.self, _FormSubmitModelAction(action))
+        environment(\._submit, _FormSubmitModelAction(action))
+    }
+    
+    public func submitDisabled(
+        _ disabled: Bool
+    ) -> some View {
+        transformEnvironment(\._submit) {
+            $0 = $0.disabled(disabled)
+        }
     }
 }
