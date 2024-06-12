@@ -6,6 +6,62 @@
 # SwiftUIZ
 Ambitious additions to SwiftUI. Work-in-progress, public API surface is production-ready.
 
+## Features
+
+### PreviewCatalogGroup
+Instantly create a simple List Navigation UI in any Mac app for multiple views without managing the NavigationView.
+
+<img width="890" alt="Screenshot 2024-06-12 at 10 17 10 AM" src="https://github.com/SwiftUIX/SwiftUIZ/assets/1157147/0aeae7e8-2f47-4d0e-a41a-6c36745fd717"><br />
+
+Simply `import SwiftUIZ` and add `PreviewCatalogGroup()` to your main `App` file: 
+```swift
+import SwiftUIZ
+
+@main
+struct MyProjectApp: App {
+    var body: some Scene {
+         // replace the WidowsGroup code with PreviewCatalogGroup()
+         // WindowGroup {
+         //     ContentView()
+         // }
+        PreviewCatalogGroup()
+    }
+}
+```
+
+Now just add the `@RuntimeDiscoverable` property wrapper to any view with a `ViewPreview` (instead of `View`) conformance:
+
+```swift
+import SwiftUIZ
+
+@RuntimeDiscoverable // property wrapper
+struct MyView1: ViewPreview { // conforms to ViewPreview instead of View
+    // Optional - set custom title
+    // Name of the view (e.g. MyView1) is default
+    static var title: String {
+        "Custom Title for My View 1"
+    }
+    
+    var body: some View {
+        Text("My View 1")
+    }
+}
+
+@RuntimeDiscoverable
+struct MyView2: ViewPreview {
+    var body: some View {
+        Text("My View 2")
+    }
+}
+
+@RuntimeDiscoverable
+struct MyView3: ViewPreview {
+    var body: some View {
+        Text("My View 3")
+    }
+}
+```
+
 # Acknowledgments
 
 This library wouldn't be possible without these incredible OSS projects that I'm building upon.
