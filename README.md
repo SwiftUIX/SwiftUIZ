@@ -9,7 +9,7 @@ Ambitious additions to SwiftUI. Work-in-progress, public API surface is producti
 ## Features
 
 ### PreviewCatalogGroup
-Instantly create a simple List Navigation UI in any Mac app for multiple views without managing the NavigationView.
+Instantly create a simple List Navigation UI in any app for multiple views without managing the NavigationView.
 
 <img width="890" alt="Screenshot 2024-06-12 at 10 17 10 AM" src="https://github.com/SwiftUIX/SwiftUIZ/assets/1157147/0aeae7e8-2f47-4d0e-a41a-6c36745fd717"><br />
 
