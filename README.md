@@ -1,19 +1,20 @@
-> [!IMPORTANT]
-> This package is presently in its alpha stage of development. 
+> [!WARNING]
+> While a large portion of this package is production ready, the package and its documentation is still in alpha. 
 >
-> Please contact @vmanot directly for any queries.
+> Directly contact [@vmanot](http://twitter.com/vatsal_manot) for any queries related to this package.
 
 # SwiftUIZ
-Ambitious additions to SwiftUI. Work-in-progress, public API surface is production-ready.
+A framework to support ambitious expansions to SwiftUI. Public API surface is production-ready.
 
-## Features
+# Usage
 
-### PreviewCatalogGroup
-Instantly create a simple List Navigation UI in any app for multiple views without managing the NavigationView.
+### `PreviewCatalogGroup`
+
+`PreviewCatalogGroup` is a `Scene` that automatically generates a navigated list of previews. 
 
 <img width="890" alt="Screenshot 2024-06-12 at 10 17 10 AM" src="https://github.com/SwiftUIX/SwiftUIZ/assets/1157147/0aeae7e8-2f47-4d0e-a41a-6c36745fd717"><br />
 
-Simply `import SwiftUIZ` and add `PreviewCatalogGroup()` to your main `App` file: 
+Simply `import SwiftUIZ` and add `PreviewCatalogGroup()` to your `App`: 
 ```swift
 import SwiftUIZ
 
@@ -29,7 +30,9 @@ struct MyProjectApp: App {
 }
 ```
 
-Now just add the `@RuntimeDiscoverable` property wrapper to any view with a `ViewPreview` (instead of `View`) conformance:
+To make a SwiftUI view discoverable, annotate it with the `@RuntimeDiscoverable` macro. 
+
+Runtime discoverable conform to `ViewPreview` instead of `View`. For example:
 
 ```swift
 import SwiftUIZ
