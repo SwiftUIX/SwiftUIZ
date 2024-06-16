@@ -12,12 +12,6 @@ public struct Emoji: Hashable, RawRepresentable, Sendable {
     }
 }
 
-extension Emoji: ExpressibleByStringLiteral {
-    public init(stringLiteral value: StringLiteralType) {
-        self.rawValue = value
-    }
-}
-
 // MARK: - Conformances
 
 extension Emoji: CaseIterable {
@@ -35,6 +29,18 @@ extension Emoji: Codable {
     
     public func encode(to encoder: Encoder) throws {
         try rawValue.encode(to: encoder)
+    }
+}
+
+extension Emoji: CustomStringConvertible {
+    public var description: String {
+        rawValue
+    }
+}
+
+extension Emoji: ExpressibleByStringLiteral {
+    public init(stringLiteral value: StringLiteralType) {
+        self.rawValue = value
     }
 }
 
