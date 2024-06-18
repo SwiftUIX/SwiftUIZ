@@ -3,7 +3,6 @@
 //
 
 import MacroBuilder
-import Diagnostics
 import Swallow
 import SwiftSyntax
 
