@@ -28,14 +28,27 @@ extension ViewPreview {
     }
 }
 
-public struct _ViewPreviewsContent: View {
+public struct _ViewPreviewsContent: Logging, View {
     @UserStorage("selection") public var selection: _PreviewProviderDescriptor.ID?
+    
+    init() {
+        if let selection {
+            print(selection)
+        }
+    }
+    
+    var data: [_PreviewProviderDescriptor] {
+        _PreviewProviderDescriptor.allCases.sorted(by: { $0.title < $1.title })
+    }
     
     public var body: some View {
         NavigationSplitView {
             List(selection: $selection) {
-                ForEach(_PreviewProviderDescriptor.allCases.sorted(by: { $0.title < $1.title })) { item in
-                    Text(item.title)
+                ForEach(data) { item in
+                    NavigationLink(value: item.id) {
+                        Text(item.title)
+                            .id(item.id)
+                    }
                 }
             }
             .frame(minWidth: 256)

@@ -9,7 +9,7 @@ extension EnvironmentValues {
     public protocol _InterposeContextProtocol: EnvironmentValues._opaque_InterposeContextProtocol {
         var _graph: (any _AnyViewHypergraphType)? { get set }
     }
-
+    
     public struct _InterposeContext: EnvironmentValues._InterposeContextProtocol {
         public var _isInvalidInstance: Bool = true
         
@@ -35,7 +35,11 @@ extension EnvironmentValues {
         
         public var graph: any _AnyViewHypergraphType {
             get {
-                _graph!
+                guard let result = _graph else {
+                    fatalError(_ViewInterposeError.viewGraphMissing)
+                }
+                
+                return result
             } set {
                 _graph = newValue
             }
