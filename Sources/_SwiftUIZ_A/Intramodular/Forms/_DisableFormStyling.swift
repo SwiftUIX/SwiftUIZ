@@ -29,32 +29,26 @@ extension View {
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
 extension View {
-    public func _noListItemModification() -> some View {
-        self._noListItemBackgroundOrTint()
-            .listRowSeparator(.hidden)
-            .listSectionSeparator(.hidden)
-            .listRowInsets(.zero)
+    public func _stripAllListOrListItemStyling() -> some View {
+        self.modifier(_StipAllListItemStyling(insetsIncluded: false))
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+    }
+}
+
+public struct _StipAllListItemStyling: ViewModifier {
+    public let insetsIncluded: Bool
+    
+    public init(insetsIncluded: Bool) {
+        self.insetsIncluded = insetsIncluded
     }
     
-    public func _noListItemBackgroundOrTint() -> some View {
-        self
+    public func body(content: Content) -> some View {
+        content
+            .listRowSeparator(.hidden)
+            .listSectionSeparator(.hidden)
+            .listRowInsets(insetsIncluded ? .zero : nil)
             .listItemTint(Optional<Color>.none)
             .listRowBackground(Color.clear)
-            .introspect(.table) { (tableView: AppKitOrUIKitTableView) in
-                #if os(iOS)
-                _assignIfNotEqual(.clear, to: &tableView.backgroundColor)
-                #elseif os(macOS)
-                _assignIfNotEqual(.none, to: &tableView.focusRingType)
-                _assignIfNotEqual(.none, to: &tableView.selectionHighlightStyle)
-                #endif
-            }
-            .introspect(.listCell) { (cell: AppKitOrUIKitTableViewCell) in
-                #if os(iOS)
-                _assignIfNotEqual(.clear, to: &cell.backgroundColor)
-                _assignIfNotEqual(.none, to: &cell.selectionStyle)
-                #elseif os(macOS)
-                _assignIfNotEqual(.none, to: &cell.focusRingType)
-                #endif
-            }
     }
 }

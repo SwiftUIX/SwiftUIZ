@@ -8,7 +8,7 @@ public struct Padding: View {
     public var body: some View {
         ZeroSizeView()
             .padding(.extraSmall)
-            ._noListItemModification()
+            .modifier(_StipAllListItemStyling(insetsIncluded: false))
             .accessibilityHidden(true)
             .opacity(0)
     }

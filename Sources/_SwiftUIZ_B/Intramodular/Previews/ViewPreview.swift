@@ -29,7 +29,8 @@ extension ViewPreview {
 }
 
 public struct _ViewPreviewsContent: Logging, View {
-    @UserStorage("selection") public var selection: _PreviewProviderDescriptor.ID?
+    //@UserStorage("selection")
+    @State public var selection: _PreviewProviderDescriptor.ID?
     
     init() {
         if let selection {
