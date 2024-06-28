@@ -26,6 +26,14 @@ extension Pasteboard {
     public func setString(_ string: String) {
         base.string = string
     }
+    
+    public func clearContents() {
+        base.setObjects([])
+    }
+    
+    public func writeObjects(_ objects: [any NSItemProviderWriting]) {
+        base.setObjects(objects)
+    }
 }
 #elseif os(macOS)
 @available(tvOS, unavailable)
@@ -34,6 +42,14 @@ extension Pasteboard {
         base.clearContents()
         base.writeObjects([string as NSPasteboardWriting])
         base.setString(string, forType: .string)
+    }
+    
+    public func clearContents() {
+        base.clearContents()
+    }
+    
+    public func writeObjects(_ objects: [any NSPasteboardWriting]) {
+        base.writeObjects(objects)
     }
 }
 #endif
