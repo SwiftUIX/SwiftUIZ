@@ -11,6 +11,7 @@ public protocol ViewPreview: Initiable, DynamicView {
     static var title: String { get }
 }
 
+@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
 extension ViewPreview {
     public static var title: String {
         let description = _ReadableCustomStringConvertible(from: Self.self).description
@@ -28,6 +29,7 @@ extension ViewPreview {
     }
 }
 
+@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
 public struct _ViewPreviewsContent: Logging, View {
     //@UserStorage("selection")
     @State public var selection: _PreviewProviderDescriptor.ID?
@@ -44,11 +46,17 @@ public struct _ViewPreviewsContent: Logging, View {
     
     public var body: some View {
         NavigationSplitView {
-            List(selection: $selection) {
-                ForEach(data) { item in
-                    NavigationLink(value: item.id) {
-                        Text(item.title)
-                            .id(item.id)
+            Group {
+                if data.isEmpty {
+                    ContentUnavailableView("No Previews")
+                } else {
+                    List(selection: $selection) {
+                        ForEach(data) { item in
+                            NavigationLink(value: item.id) {
+                                Text(item.title)
+                                    .id(item.id)
+                            }
+                        }
                     }
                 }
             }
@@ -67,6 +75,7 @@ public struct _ViewPreviewsContent: Logging, View {
 }
 
 /// A scene for all instances of `ViewPreview` that are discoverable at runtime.
+@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
 public struct PreviewCatalogGroup: Initiable, _ExtendedScene {
     private var contentModifier: AnyViewModifier?
     

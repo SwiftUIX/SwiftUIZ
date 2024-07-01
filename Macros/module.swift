@@ -10,6 +10,7 @@ struct Plugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
         EnvironmentValuesMacro.self,
         EnvironmentValueMacro.self,
+        PreviewMacro.self,
         ViewBodyMacro.self,
         ViewMacro.self,
         _ViewTraitKeyMacro.self,
