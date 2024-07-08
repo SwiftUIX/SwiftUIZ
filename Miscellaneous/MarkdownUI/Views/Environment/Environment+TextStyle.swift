@@ -34,6 +34,16 @@ extension View {
     }
 }
 
+extension Text {
+    func _useTextStyleAttributesReader() -> TextStyleAttributesReader<Text> {
+        TextStyleAttributesReader { attributes in
+            self
+                .font(attributes.fontProperties.map(Font.withProperties))
+                .foregroundColor(attributes.foregroundColor)
+        }
+    }
+}
+
 extension TextStyle {
     @TextStyleBuilder
     fileprivate consuming func appending<S: TextStyle>(

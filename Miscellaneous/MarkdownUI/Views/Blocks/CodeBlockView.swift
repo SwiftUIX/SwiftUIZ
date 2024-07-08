@@ -21,7 +21,7 @@ struct CodeBlockView: View {
             configuration: .init(
                 language: self.fenceInfo,
                 content: self.content,
-                label: .init(self.label)
+                label: CodeBlockConfiguration.Label(self.label)
             )
         )
     }
@@ -29,7 +29,6 @@ struct CodeBlockView: View {
     private var label: some View {
         self.codeSyntaxHighlighter
             .highlightCode(self.content, language: self.fenceInfo)
-            .textStyleFont()
-            .textStyleForegroundColor()
+            ._useTextStyleAttributesReader()
     }
 }

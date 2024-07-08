@@ -14,6 +14,10 @@ public struct _InterposeSceneContent<Content: View>: View, _InterposedSceneConte
         self.content = content()
     }
     
+    public init(_ content: Content) {
+        self.content = content
+    }
+    
     public var body: some View {
         content
             ._modifier(_SetViewInterposeScope())

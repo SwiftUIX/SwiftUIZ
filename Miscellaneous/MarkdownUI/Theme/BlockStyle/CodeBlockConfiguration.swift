@@ -7,11 +7,11 @@ import SwiftUI
 public struct CodeBlockConfiguration {
     /// A type-erased view of a Markdown code block.
     public struct Label: View {
+        public let body: AnyView
+        
         init<L: View>(_ label: L) {
             self.body = AnyView(label)
         }
-        
-        public let body: AnyView
     }
     
     /// The code block language, if present.

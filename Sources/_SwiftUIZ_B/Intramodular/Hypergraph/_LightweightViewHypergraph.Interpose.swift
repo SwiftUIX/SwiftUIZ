@@ -21,11 +21,7 @@ extension _LightweightViewHypergraph {
         public var staticViewDescription = _ViewTypeDescription()
         
         public weak var parent: Interpose?
-        
-        public var swizzledViewBody: (any View)? {
-            nil
-        }
-        
+                
         package init(
             graph: any _AnyViewHypergraphType,
             typeDescriptor: _StaticViewTypeDescriptor
@@ -33,15 +29,21 @@ extension _LightweightViewHypergraph {
             self.graph = graph
             self.staticViewTypeDescriptor = typeDescriptor
         }
+    }
+}
+
+extension _LightweightViewHypergraph.Interpose {
+    public var swizzledViewBody: (any View)? {
+        nil
+    }
+
+    public func update() throws {
+        let attributesResolved = try !elementProperties.values.contains(where: { try !$0._isConsumableResolved })
         
-        public func update() throws {
-            let attributesResolved = try !elementProperties.values.contains(where: { try !$0._isConsumableResolved })
-            
-            if attributesResolved {
-                state.insert(.resolved)
-            } else {
-                state.remove(.resolved)
-            }
+        if attributesResolved {
+            state.insert(.resolved)
+        } else {
+            state.remove(.resolved)
         }
     }
 }

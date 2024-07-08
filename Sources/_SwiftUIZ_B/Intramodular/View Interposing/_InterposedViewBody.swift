@@ -79,7 +79,7 @@ public struct _InterposedViewBody<Root: DynamicView, Content: View>: View {
             
             _storage._viewGraphInsertion = _viewGraphInsertion
             
-            DispatchQueue.main.async {
+            Task.detached { @MainActor in
                 _dynamicViewBridge.objectWillChange.send()
             }
         }
