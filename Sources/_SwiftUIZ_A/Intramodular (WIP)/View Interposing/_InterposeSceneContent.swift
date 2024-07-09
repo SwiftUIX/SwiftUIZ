@@ -27,6 +27,10 @@ public struct _InterposeSceneContent<Content: View>: View, _InterposedSceneConte
             }
             .background {
                 _InvisibleAppViewIndexer()
+                    .transformEnvironment(\._opaque_interposeContext) { context in
+                        context?._isInvalidInstance = false
+                        context?._opaque_dynamicViewGraph = graph
+                    }
             }
     }
 }
