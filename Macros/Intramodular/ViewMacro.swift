@@ -12,7 +12,7 @@ extension ViewMacro: MemberMacro {
         providingMembersOf declaration: Declaration,
         in context: Context
     ) throws -> [DeclSyntax] {
-        guard [SwiftSyntax.SyntaxKind.classDecl, .structDecl].contains(declaration.kind) else {
+        guard Array<SwiftSyntax.SyntaxKind>([.classDecl, .extensionDecl, .structDecl]).contains(declaration.kind) else {
             throw _Error()
         }
         

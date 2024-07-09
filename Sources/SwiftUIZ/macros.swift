@@ -23,6 +23,16 @@ public macro View(_ keyword: _SwiftUIZ_ViewMacroKeyword) = #externalMacro(
     type: "ViewMacro"
 )
 
+@attached(
+    member,
+    names: named(init), named(_actualViewBody), named(_dynamicReplacementObserver), named(Body), named(Require), named(Provide), named(Text)
+)
+@attached(peer, names: overloaded)
+public macro ViewExtension(_ keyword: _SwiftUIZ_ViewMacroKeyword) = #externalMacro(
+    module: "SwiftUIZ_Macros",
+    type: "ViewMacro"
+)
+
 // MARK: - `@Preview`
 
 @attached(peer, names: suffixed(_RuntimeTypeDiscovery))
