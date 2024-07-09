@@ -6,6 +6,7 @@ import Runtime
 import SwiftUI
 
 /// A view that's loaded invisibly in the background.
+@_alwaysEmitConformanceMetadata
 public protocol _InvisibleAppView: Initiable, View {
     
 }
