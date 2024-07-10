@@ -20,13 +20,6 @@ public struct Markdown: View {
         .environment(\.baseURL, self.baseURL)
         .environment(\.imageBaseURL, self.imageBaseURL)
         .markdownTextStyle(self.text)
-        .modify { content in
-            if #available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *) {
-                content.geometryGroup()
-            } else {
-                content
-            }
-        }
     }
 }
 

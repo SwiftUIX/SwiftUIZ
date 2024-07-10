@@ -23,7 +23,7 @@ private struct _InlineText: View {
     @Environment(\.imageBaseURL) private var imageBaseURL
     @Environment(\.theme) private var theme
     
-    @State private var inlineImages: [String: Image] = [:]
+    @ViewStorage private var inlineImages: [String: Image] = [:]
     
     private let inlines: [InlineNode]
     
@@ -32,22 +32,30 @@ private struct _InlineText: View {
     }
     
     var body: some View {
-        TextStyleAttributesReader { attributes in
-            self.inlines.renderText(
-                baseURL: self.baseURL,
-                textStyles: InlineTextStyles(
-                    code: self.theme.code,
-                    emphasis: self.theme.emphasis,
-                    strong: self.theme.strong,
-                    strikethrough: self.theme.strikethrough,
-                    link: self.theme.link
-                ),
-                images: self.inlineImages,
-                attributes: attributes
-            )
-        }
+        _UnaryViewAdaptor(
+            TextStyleAttributesReader { attributes in
+                self.inlines.renderText(
+                    baseURL: self.baseURL,
+                    textStyles: InlineTextStyles(
+                        code: self.theme.code,
+                        emphasis: self.theme.emphasis,
+                        strong: self.theme.strong,
+                        strikethrough: self.theme.strikethrough,
+                        link: self.theme.link
+                    ),
+                    images: self.inlineImages,
+                    attributes: attributes
+                )
+            }
+        )
         .task(id: self.inlines) {
-            self.inlineImages = (try? await self.loadInlineImages()) ?? [:]
+            let images = (try? await self.loadInlineImages()) ?? [:]
+            
+            if inlineImages.isEmpty && images.isEmpty {
+                return
+            }
+            
+            inlineImages = images
         }
     }
     

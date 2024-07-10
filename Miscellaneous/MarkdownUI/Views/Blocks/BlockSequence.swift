@@ -58,20 +58,15 @@ struct BlockSequence<Data: Hashable & RandomAccessCollection, Content>: View whe
     
     var body: some View {
         ForEach(items) { (item: Item) in
-            VStack(alignment: .leading, spacing: 0) {
-                TopPadding(data: data, item: item)
-                    .equatable()
-                    .allowsHitTesting(false)
-                    .hidden()
-                    .accessibilityHidden(true)
-                
-                self.content(item.index, item.element)
-                    .onPreferenceChange(BlockMarginsPreference.self) { (value: _BlockMargin) in
-                        BlockSequenceCache.shared[marginsFor: item.index, in: data] = value
-                    }
-                    .preference(key: BlockMarginsPreference.self, value: .unspecified)
-            }
-            .id(item.id)
+            TopPadding(data: data, item: item)
+                .equatable()
+                .accessibilityHidden(true)
+            
+            self.content(item.index, item.element)
+                .onPreferenceChange(BlockMarginsPreference.self) { (value: _BlockMargin) in
+                    BlockSequenceCache.shared[marginsFor: item.index, in: data] = value
+                }
+                .preference(key: BlockMarginsPreference.self, value: .unspecified)
         }
     }
     
@@ -84,10 +79,12 @@ struct BlockSequence<Data: Hashable & RandomAccessCollection, Content>: View whe
         let item: Item
         
         var body: some View {
-            let height: CGFloat? = self.topPaddingLength()
+            let height: CGFloat = self.topPaddingLength() ?? 0
             
             Rectangle()
                 .frame(width: 0, height: height)
+                .allowsHitTesting(false)
+                .hidden()
         }
         
         private func topPaddingLength() -> CGFloat? {
