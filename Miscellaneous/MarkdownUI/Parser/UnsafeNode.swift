@@ -19,73 +19,61 @@ extension UnsafeNode {
     }
     
     @_optimize(speed)
-    @_transparent
     var children: UnsafeNodeSequence {
         .init(cmark_node_first_child(self))
     }
     
     @_optimize(speed)
-    @_transparent
     var literal: String? {
         cmark_node_get_literal(self).map(String.init(cString:))
     }
     
     @_optimize(speed)
-    @_transparent
     var url: String? {
         cmark_node_get_url(self).map(String.init(cString:))
     }
     
     @_optimize(speed)
-    @_transparent
     var isTaskListItem: Bool {
         self.nodeType == .taskListItem
     }
     
     @_optimize(speed)
-    @_transparent
     var listType: cmark_list_type {
         cmark_node_get_list_type(self)
     }
     
     @_optimize(speed)
-    @_transparent
     var listStart: Int {
         Int(cmark_node_get_list_start(self))
     }
     
     @_optimize(speed)
-    @_transparent
     var isTaskListItemChecked: Bool {
         cmark_gfm_extensions_get_tasklist_item_checked(self)
     }
     
     @_optimize(speed)
-    @_transparent
     var isTightList: Bool {
         cmark_node_get_list_tight(self) != 0
     }
     
     @_optimize(speed)
-    @_transparent
     var fenceInfo: String? {
         cmark_node_get_fence_info(self).map(String.init(cString:))
     }
     
     @_optimize(speed)
-    @_transparent
     var headingLevel: Int {
         Int(cmark_node_get_heading_level(self))
     }
     
     @_optimize(speed)
-    @_transparent
     var tableColumns: Int {
         Int(cmark_gfm_extensions_get_table_columns(self))
     }
     
     @_optimize(speed)
-    @_transparent
     var tableAlignments: [RawTableColumnAlignment] {
         (0..<self.tableColumns).map { column in
             let ascii = cmark_gfm_extensions_get_table_alignments(self)[column]
@@ -96,7 +84,6 @@ extension UnsafeNode {
     }
     
     @_optimize(speed)
-    @_transparent
     static func parseMarkdown<ResultType>(
         _ markdown: String,
         body: (UnsafeNode) throws -> ResultType
@@ -235,7 +222,6 @@ extension UnsafeNode {
     }
     
     @_optimize(speed)
-    @_transparent
     static func make(
         _ tableRow: RawTableRow
     ) -> UnsafeNode? {
@@ -251,7 +237,6 @@ extension UnsafeNode {
     }
     
     @_optimize(speed)
-    @_transparent
     static func make(
         _ tableCell: RawTableCell
     ) -> UnsafeNode? {
@@ -358,14 +343,12 @@ struct UnsafeNodeSequence: Sequence {
         var node: UnsafeNode?
         
         @_optimize(speed)
-        @_transparent
-        init(_ node: UnsafeNode?) {
+            init(_ node: UnsafeNode?) {
             self.node = node
         }
         
         @_optimize(speed)
-        @_transparent
-        mutating func next() -> UnsafeNode? {
+            mutating func next() -> UnsafeNode? {
             guard let node else {
                 return nil
             }
@@ -383,7 +366,6 @@ struct UnsafeNodeSequence: Sequence {
     
     @usableFromInline
     @_optimize(speed)
-    @_transparent
     init(_ node: UnsafeNode?) {
         self.node = node
     }
@@ -434,9 +416,7 @@ extension UnsafeNode {
         return customNode
     }
     
-    
     @_optimize(speed)
-    @_transparent
     static func utf16Range(
         fromLine startLine: Int,
         startColumn: Int,

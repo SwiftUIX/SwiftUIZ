@@ -32,3 +32,9 @@ struct BulletedListView: View {
             .environment(\.tightSpacingEnabled, self.isTight)
     }
 }
+
+extension BulletedListView: Equatable {
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.isTight == rhs.isTight && lhs.items == rhs.items
+    }
+}

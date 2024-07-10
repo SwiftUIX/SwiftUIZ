@@ -36,7 +36,7 @@ struct ListItemView: View {
     
     private var label: some View {
         Label {
-            BlockSequence(self.item.children)
+            BlockSequence(self.item.children) 
         } icon: {
             self.markerStyle
                 .makeBody(configuration: .init(listLevel: self.listLevel, itemNumber: self.number))

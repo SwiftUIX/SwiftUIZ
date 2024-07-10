@@ -1,7 +1,7 @@
 import Foundation
 
 /// A text style that adjusts the font to use alternate glyphs for capital letters.
-public struct FontCapsVariant: TextStyle {
+public struct FontCapsVariant: Hashable, TextStyle {
     private let capsVariant: FontProperties.CapsVariant
     
     /// Creates a font caps variant text style.

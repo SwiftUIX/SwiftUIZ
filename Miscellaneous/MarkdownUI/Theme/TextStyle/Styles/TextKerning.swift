@@ -1,7 +1,7 @@
 import Foundation
 
 /// A text style that sets the spacing, or kerning, between the characters of the text.
-public struct TextKerning: TextStyle {
+public struct TextKerning: Hashable, TextStyle {
     private let kern: CGFloat?
     
     /// Creates a text kerning text style.

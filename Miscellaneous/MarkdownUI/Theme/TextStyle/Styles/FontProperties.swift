@@ -45,7 +45,7 @@ public struct FontProperties: Hashable {
     }
     
     /// The font style.
-    public enum Style {
+    public enum Style: Hashable {
         /// Don't use a font style.
         case normal
         

@@ -1,7 +1,7 @@
 import Foundation
 
 /// A text style that doesn't apply any text style.
-public struct EmptyTextStyle: TextStyle {
+public struct EmptyTextStyle: Hashable, TextStyle {
     /// Creates an empty text style.
     public init() {}
     

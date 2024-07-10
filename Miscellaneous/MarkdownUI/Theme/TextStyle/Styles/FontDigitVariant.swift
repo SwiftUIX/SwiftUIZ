@@ -1,7 +1,7 @@
 import Foundation
 
 /// A text style that adjusts the font to use alternate glyphs for digits.
-public struct FontDigitVariant: TextStyle {
+public struct FontDigitVariant: Hashable, TextStyle {
     private let digitVariant: FontProperties.DigitVariant
     
     /// Creates a font digit variant text style.

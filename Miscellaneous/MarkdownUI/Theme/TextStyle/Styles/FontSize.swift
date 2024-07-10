@@ -1,7 +1,7 @@
 import Foundation
 
 /// A text style that sets the font size.
-public struct FontSize: TextStyle {
+public struct FontSize: Hashable, TextStyle {
     private enum Size: Hashable {
         case points(CGFloat)
         case relative(RelativeSize)

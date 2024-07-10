@@ -2,8 +2,8 @@
 // Copyright (c) Vatsal Manot
 //
 
-import Swift
 import Foundation
+import Swallow
 
 /// A protocol that represents any Markdown content.
 public protocol MarkdownContentProtocol {
@@ -32,7 +32,9 @@ public struct MarkdownContent: Hashable, MarkdownContentProtocol {
     /// Creates a Markdown content value from a Markdown-formatted string.
     /// - Parameter markdown: A Markdown-formatted string.
     public init(_ markdown: String) {
-        self.init(blocks: Array<BlockNode>(markdown: markdown))
+        self = _memoize(uniquingWith: markdown) {
+            Self(blocks: Array<BlockNode>(markdown: markdown))
+        }
     }
 }
 
@@ -46,7 +48,7 @@ extension MarkdownContent {
         let children = self.blocks.map(\.children).flatMap { $0 }
         return children.isEmpty ? nil : .init(blocks: children)
     }
-
+    
     /// Renders this Markdown content value as a Markdown-formatted text.
     public func renderMarkdown() -> String {
         let result = self.blocks.renderMarkdown()

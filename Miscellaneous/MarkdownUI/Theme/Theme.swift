@@ -99,7 +99,7 @@ import SwiftUI
 ///   }
 ///   // More block styles...
 /// ```
-public struct Theme {
+public struct Theme: Hashable {
     /// The default text style.
     public var text: AnyTextStyle = AnyTextStyle(erasing: EmptyTextStyle())
     

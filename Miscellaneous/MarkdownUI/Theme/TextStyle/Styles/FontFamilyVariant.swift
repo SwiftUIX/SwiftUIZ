@@ -1,7 +1,7 @@
 import Foundation
 
 /// A text style that adjusts the font to use an alternate variant.
-public struct FontFamilyVariant: TextStyle {
+public struct FontFamilyVariant: Hashable, TextStyle {
     private let familyVariant: FontProperties.FamilyVariant
     
     /// Creates a font family variant text style.

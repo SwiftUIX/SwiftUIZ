@@ -2,6 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
+import Swallow
 import SwiftUI
 
 @frozen
@@ -39,18 +40,19 @@ extension AttributeDynamicLookup {
 }
 
 extension AttributedString {
-    @_transparent
     func resolvingFonts() -> AttributedString {
-        var output = self
-        
-        for run in output.runs {
-            guard let fontProperties = run.fontProperties else {
-                continue
+        _memoize(uniquingWith: self) {
+            var output = self
+            
+            for run in output.runs {
+                guard let fontProperties = run.fontProperties else {
+                    continue
+                }
+                output[run.range].font = .withProperties(fontProperties)
+                output[run.range].fontProperties = nil
             }
-            output[run.range].font = .withProperties(fontProperties)
-            output[run.range].fontProperties = nil
+            
+            return output
         }
-        
-        return output
     }
 }

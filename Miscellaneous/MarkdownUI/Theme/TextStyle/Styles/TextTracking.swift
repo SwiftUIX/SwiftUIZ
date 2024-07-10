@@ -1,7 +1,7 @@
 import Foundation
 
 /// A text style that sets the tracking of the text.
-public struct TextTracking: TextStyle {
+public struct TextTracking: Hashable, TextStyle {
     private let tracking: CGFloat?
     
     /// Creates a text tracking text style.

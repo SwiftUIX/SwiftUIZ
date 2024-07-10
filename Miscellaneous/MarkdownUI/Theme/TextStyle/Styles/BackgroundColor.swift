@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// A text style that sets the text background color.
-public struct BackgroundColor: TextStyle {
+public struct BackgroundColor: Hashable, TextStyle {
     private let backgroundColor: Color?
     
     /// Creates a background color text style.

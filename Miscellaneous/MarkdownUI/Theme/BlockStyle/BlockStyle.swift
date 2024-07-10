@@ -41,7 +41,8 @@ import SwiftUI
 /// ```
 ///
 /// ![](CustomBlockquote)
-public struct BlockStyle<Configuration> {
+public struct BlockStyle<Configuration>: Hashable {
+    private let id: UUID = UUID()
     private let body: (Configuration) -> AnyView
     
     /// Creates a block style that customizes a block by applying the given body.
@@ -52,6 +53,14 @@ public struct BlockStyle<Configuration> {
     
     func makeBody(configuration: Configuration) -> AnyView {
         self.body(configuration)
+    }
+    
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }
 

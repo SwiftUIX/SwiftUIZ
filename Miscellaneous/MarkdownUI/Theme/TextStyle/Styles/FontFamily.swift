@@ -1,7 +1,7 @@
 import Foundation
 
 /// A text style that sets the text font family.
-public struct FontFamily: TextStyle {
+public struct FontFamily: Hashable, TextStyle {
     private let family: FontProperties.Family
     
     /// Creates a font family text style.

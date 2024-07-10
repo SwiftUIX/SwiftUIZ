@@ -1,7 +1,7 @@
 import Foundation
 
 /// A text style that sets whether the font should be styled with a normal or italic face from its font family.
-public struct FontStyle: TextStyle {
+public struct FontStyle: Hashable, TextStyle {
     private let style: FontProperties.Style
     
     /// Creates a font style text style.

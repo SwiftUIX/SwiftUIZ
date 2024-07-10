@@ -9,7 +9,6 @@ import Foundation
 
 extension Array where Element == BlockNode {
     @_optimize(speed)
-    @_transparent
     init(markdown: String) {
         let blocks = UnsafeNode.parseMarkdown(markdown) { document in
             document.children.compactMap(BlockNode.init(unsafeNode:))
@@ -19,7 +18,6 @@ extension Array where Element == BlockNode {
     }
     
     @_optimize(speed)
-    @_transparent
     func renderMarkdown() -> String {
         UnsafeNode.makeDocument(self) { document in
             String(cString: cmark_render_commonmark(document, CMARK_OPT_DEFAULT, 0))
@@ -27,7 +25,6 @@ extension Array where Element == BlockNode {
     }
     
     @_optimize(speed)
-    @_transparent
     func renderPlainText() -> String {
         UnsafeNode.makeDocument(self) { document in
             String(cString: cmark_render_plaintext(document, CMARK_OPT_DEFAULT, 0))

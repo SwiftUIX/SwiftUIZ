@@ -25,7 +25,7 @@ struct ParagraphView: View {
         self.paragraph.makeBody(
             configuration: .init(
                 label: .init(self.label),
-                content: .init(block: .paragraph(content: self.content))
+                content: MarkdownContent(block: .paragraph(content: self.content))
             )
         )
     }

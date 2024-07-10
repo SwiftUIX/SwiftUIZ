@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// A text style that adjusts the font weight.
-public struct FontWeight: TextStyle {
+public struct FontWeight: Hashable, TextStyle {
     private let weight: Font.Weight
     
     /// Creates a font weight text style.
