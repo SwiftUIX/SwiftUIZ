@@ -97,6 +97,16 @@ extension _UnaryViewTraitReader {
         self.content = content()
         self.action = action
     }
+    
+    public init(
+        _ type: KeyPath<_ViewTraitKeys, Key.Type>,
+        @ViewBuilder content: () -> Content,
+        action: @escaping (Key.Value) -> Void
+    ) {
+        self.key =  Key.self
+        self.content = content()
+        self.action = action
+    }
 }
 
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)

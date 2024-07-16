@@ -3,7 +3,12 @@
 //
 
 import Runtime
-import SwiftUI
+import SwiftUIX
+import SwallowMacrosClient
+
+#once {
+    _ = _InvisibleAppViewIndex.shared
+}
 
 /// A view that's loaded invisibly in the background.
 @_alwaysEmitConformanceMetadata
@@ -11,32 +16,96 @@ public protocol _InvisibleAppView: Initiable, View {
     
 }
 
+@_alwaysEmitConformanceMetadata
+public protocol _InvisibleAppWindow: Initiable, View {
+    
+}
+
 private class _InvisibleAppViewIndex: ObservableObject {
     static let shared = _InvisibleAppViewIndex()
     
-    @_StaticMirrorQuery(type: (any _InvisibleAppView).self)
-    private static var allCases: [any _InvisibleAppView.Type]
+    @_StaticMirrorQuery(#metatype((any _InvisibleAppView).self))
+    private static var allViewTypes: [any _InvisibleAppView.Type]
+    @_StaticMirrorQuery(#metatype((any _InvisibleAppWindow).self))
+    private static var allWindowTypes: [any _InvisibleAppWindow.Type]
+
+    private(set) var views: [View]!
+    private(set) var windows: [Window]!
+
+    private init() {
+        self.views = _InvisibleAppViewIndex.allViewTypes.map({ View(owner: self, swiftType: $0) })
+        self.windows = _InvisibleAppViewIndex.allWindowTypes.map({ Window(owner: self, swiftType: $0) })
+    }
+}
+
+public struct _InvisibleAppViewIndexer: View {
+    @ObservedObject private var index: _InvisibleAppViewIndex = .shared
     
-    final class Item: Identifiable, ObservableObject {
-        let id = _AutoIncrementingIdentifier<Item>()
+    @ViewStorage private var views: IdentifierIndexingArrayOf<_InvisibleAppViewIndex.ViewHost> = []
+    
+    public init() {
         
-        @Published var host: ItemHost.ID?
+    }
+    
+    public var body: some View {
+        ZStack {
+            ForEach(index.views) { (element: _InvisibleAppViewIndex.View) in
+                Group {
+                    if let hostedItem = self[element] {
+                        ZeroSizeView().background {
+                            ZStack {
+                                hostedItem.item.swiftType.init().eraseToAnyView()
+                            }
+                        }
+                    }
+                }
+                .id(element.host)
+            }
+        }
+        .clipped()
+        .hidden()
+    }
+    
+    private subscript(
+        _ item: _InvisibleAppViewIndex.View
+    ) -> _InvisibleAppViewIndex.ViewHost? {
+        get {
+            if let host = item.host {
+                return views[id: host]
+            } else {
+                let result = _InvisibleAppViewIndex.ViewHost(item: item)
+                
+                self.views.append(result)
+                
+                return result
+            }
+        }
+    }
+}
+extension _InvisibleAppViewIndex {
+    final class View: Identifiable, ObservableObject {
+        let id = _AutoIncrementingIdentifier<View>()
+        
+        @Published var host: ViewHost.ID?
         
         let owner: _InvisibleAppViewIndex
-        let view: any _InvisibleAppView.Type
+        let swiftType: any _InvisibleAppView.Type
         
-        init(owner: _InvisibleAppViewIndex, _ view: any _InvisibleAppView.Type) {
+        init(
+            owner: _InvisibleAppViewIndex,
+            swiftType: any _InvisibleAppView.Type
+        ) {
             self.owner = owner
-            self.view = view
+            self.swiftType = swiftType
         }
     }
     
-    class ItemHost: Identifiable {
-        let id: AnyHashable = _AutoIncrementingIdentifier<ItemHost>()
+    class ViewHost: Identifiable {
+        let id: AnyHashable = _AutoIncrementingIdentifier<ViewHost>()
         
-        var item: _InvisibleAppViewIndex.Item
+        var item: _InvisibleAppViewIndex.View
         
-        init(item: _InvisibleAppViewIndex.Item) {
+        init(item: _InvisibleAppViewIndex.View) {
             self.item = item
             
             if item.host == nil {
@@ -46,63 +115,142 @@ private class _InvisibleAppViewIndex: ObservableObject {
         
         deinit {
             let item = item
+                        
+            DispatchQueue.main.async {
+                item.owner.objectWillChange.send()
+                item.host = nil
+            }
+        }
+    }
+    
+    final class Window: Identifiable, ObservableObject {
+        let id = _AutoIncrementingIdentifier<Window>()
+                
+        let owner: _InvisibleAppViewIndex
+        let swiftType: any _InvisibleAppWindow.Type
+        
+        private var host: WindowHost!
+
+        init(
+            owner: _InvisibleAppViewIndex,
+            swiftType: any _InvisibleAppWindow.Type
+        ) {
+            self.owner = owner
+            self.swiftType = swiftType
             
-            item.host = nil
+            self.host = WindowHost(item: self)
+        }
+    }
+
+    class WindowHost: Identifiable {
+        let id: AnyHashable = _AutoIncrementingIdentifier<ViewHost>()
+        
+        var item: _InvisibleAppViewIndex.Window
+        
+        private var windowController: _WindowPresentationController<_HostedWindowContent>?
+        
+        init(item: _InvisibleAppViewIndex.Window) {
+            self.item = item
+                        
+            host()
+        }
+        
+        fileprivate struct _HostedWindowContent: SwiftUI.View {
+            let host: WindowHost
+            let content: AnyView
             
+            @FocusState private var isFocused: Bool
+            @State private var foo: Bool = false
+            
+            var proxy: _InvisibleViewProxy {
+                .init(_update: {
+                    foo.toggle()
+                })
+            }
+                        
+            var body: some SwiftUI.View {
+                _InterposeSceneContent {
+                    content
+                        .environment(\._invisibleViewProxy, proxy)
+                        .background(ZeroSizeView().id(foo))
+                        .frame(width: 1, height: 1)
+                        .clipped()
+                        .fixedSize()
+                        .opacity(0)
+                        .allowsHitTesting(false)
+                        .accessibility(hidden: true)
+                }
+                ._disableInvisibleAppViewIndexing()
+            }
+        }
+        
+        func host() {
+            let windowController = _WindowPresentationController(style: .plain) {
+                _HostedWindowContent(
+                    host: self,
+                    content: item.swiftType.init().eraseToAnyView()
+                )
+            }
+            
+            self.windowController = windowController
+            
+            Task(priority: .userInitiated) { @MainActor in
+                windowController.show()
+                windowController.moveToBack()
+                windowController.contentWindow.alphaValue = 0.0
+                windowController.contentWindow.isHidden = true
+                
+                Task.detached(priority: .userInitiated) { @MainActor in
+                    windowController.contentWindow.alphaValue = 0.0
+                    windowController.contentWindow.isHidden = true
+                }
+            }
+        }
+        
+        deinit {
+            let item = item
+                        
             DispatchQueue.main.async {
                 item.owner.objectWillChange.send()
             }
         }
     }
+}
+
+public struct _InvisibleViewProxy {
+    let _update: () -> Void
     
-    private(set) var items: [Item]!
-    
-    private init() {
-        self.items = _InvisibleAppViewIndex.allCases.map({ Item(owner: self, $0) })
+    public func update() {
+        _update()
     }
 }
 
-public struct _InvisibleAppViewIndexer: View {
-    @ObservedObject private var index: _InvisibleAppViewIndex = .shared
-    
-    @ViewStorage private var items: IdentifierIndexingArrayOf<_InvisibleAppViewIndex.ItemHost> = []
-    
-    public init() {
+extension EnvironmentValues {
+    struct _InvisibleViewProxyKey: EnvironmentKey {
+        typealias Value = _InvisibleViewProxy?
         
+        static let defaultValue: _InvisibleViewProxy? = nil
+    }
+    
+    var _invisibleViewProxy: _InvisibleViewProxy? {
+        get {
+            self[_InvisibleViewProxyKey.self]
+        } set {
+            self[_InvisibleViewProxyKey.self] = newValue
+        }
+    }
+}
+
+public struct _InvisibleViewReader<Content: View>: View {
+    @Environment(\._invisibleViewProxy) var _invisibleViewProxy
+    
+    let content: (_InvisibleViewProxy) -> Content
+    
+    public init(content: @escaping (_InvisibleViewProxy) -> Content) {
+        self.content = content
     }
     
     public var body: some View {
-        ZStack {
-            ForEach(index.items) { (item: _InvisibleAppViewIndex.Item) in
-                Group {
-                    if let hostedItem = self[item] {
-                        ZeroSizeView().background {
-                            ZStack {
-                                hostedItem.item.view.init().eraseToAnyView()
-                            }
-                        }
-                    }
-                }
-                .id(item.host)
-            }
-        }
-        .clipped()
-        .hidden()
-    }
-    
-    private subscript(
-        _ item: _InvisibleAppViewIndex.Item
-    ) -> _InvisibleAppViewIndex.ItemHost? {
-        get {
-            if let host = item.host {
-                return items[id: host]
-            } else {
-                let result = _InvisibleAppViewIndex.ItemHost(item: item)
-                
-                self.items.append(result)
-                
-                return result
-            }
-        }
+        content(_invisibleViewProxy!)
     }
 }
