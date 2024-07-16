@@ -21,6 +21,7 @@ public protocol _InvisibleAppWindow: Initiable, View {
     
 }
 
+@MainActor
 private class _InvisibleAppViewIndex: ObservableObject {
     static let shared = _InvisibleAppViewIndex()
     
@@ -28,10 +29,11 @@ private class _InvisibleAppViewIndex: ObservableObject {
     private static var allViewTypes: [any _InvisibleAppView.Type]
     @_StaticMirrorQuery(#metatype((any _InvisibleAppWindow).self))
     private static var allWindowTypes: [any _InvisibleAppWindow.Type]
-
+    
     private(set) var views: [View]!
     private(set) var windows: [Window]!
-
+    
+    @MainActor
     private init() {
         self.views = _InvisibleAppViewIndex.allViewTypes.map({ View(owner: self, swiftType: $0) })
         self.windows = _InvisibleAppViewIndex.allWindowTypes.map({ Window(owner: self, swiftType: $0) })
@@ -115,7 +117,7 @@ extension _InvisibleAppViewIndex {
         
         deinit {
             let item = item
-                        
+            
             DispatchQueue.main.async {
                 item.owner.objectWillChange.send()
                 item.host = nil
@@ -125,12 +127,13 @@ extension _InvisibleAppViewIndex {
     
     final class Window: Identifiable, ObservableObject {
         let id = _AutoIncrementingIdentifier<Window>()
-                
+        
         let owner: _InvisibleAppViewIndex
         let swiftType: any _InvisibleAppWindow.Type
         
         private var host: WindowHost!
-
+        
+        @MainActor
         init(
             owner: _InvisibleAppViewIndex,
             swiftType: any _InvisibleAppWindow.Type
@@ -141,7 +144,7 @@ extension _InvisibleAppViewIndex {
             self.host = WindowHost(item: self)
         }
     }
-
+    
     class WindowHost: Identifiable {
         let id: AnyHashable = _AutoIncrementingIdentifier<ViewHost>()
         
@@ -149,17 +152,17 @@ extension _InvisibleAppViewIndex {
         
         private var windowController: _WindowPresentationController<_HostedWindowContent>?
         
+        @MainActor
         init(item: _InvisibleAppViewIndex.Window) {
             self.item = item
-                        
+            
             host()
         }
         
         fileprivate struct _HostedWindowContent: SwiftUI.View {
             let host: WindowHost
             let content: AnyView
-            
-            @FocusState private var isFocused: Bool
+                        
             @State private var foo: Bool = false
             
             var proxy: _InvisibleViewProxy {
@@ -167,7 +170,7 @@ extension _InvisibleAppViewIndex {
                     foo.toggle()
                 })
             }
-                        
+            
             var body: some SwiftUI.View {
                 _InterposeSceneContent {
                     content
@@ -184,6 +187,7 @@ extension _InvisibleAppViewIndex {
             }
         }
         
+        @MainActor
         func host() {
             let windowController = _WindowPresentationController(style: .plain) {
                 _HostedWindowContent(
@@ -194,22 +198,20 @@ extension _InvisibleAppViewIndex {
             
             self.windowController = windowController
             
-            Task(priority: .userInitiated) { @MainActor in
-                windowController.show()
-                windowController.moveToBack()
+            windowController.show()
+            windowController.moveToBack()
+            windowController.contentWindow.alphaValue = 0.0
+            windowController.contentWindow.isHidden = true
+            
+            Task.detached(priority: .userInitiated) { @MainActor in
                 windowController.contentWindow.alphaValue = 0.0
                 windowController.contentWindow.isHidden = true
-                
-                Task.detached(priority: .userInitiated) { @MainActor in
-                    windowController.contentWindow.alphaValue = 0.0
-                    windowController.contentWindow.isHidden = true
-                }
             }
         }
         
         deinit {
             let item = item
-                        
+            
             DispatchQueue.main.async {
                 item.owner.objectWillChange.send()
             }

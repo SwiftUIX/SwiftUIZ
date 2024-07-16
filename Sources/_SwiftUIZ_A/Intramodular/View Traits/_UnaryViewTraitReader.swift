@@ -53,7 +53,7 @@ public struct _UnaryViewTraitReader<Key: SwiftUI._ViewTraitKey, Content: View>: 
                 let trait = view[key]
                 let _: Void = action(trait)
                 
-                self.content
+                content
             }
         }
     }

@@ -53,6 +53,10 @@ extension _SwiftUIZ_Scene {
     }
 }
 
+extension Window: _SwiftUIZ_MaybePrimitiveScene {
+    
+}
+
 extension WindowGroup: _SwiftUIZ_MaybePrimitiveScene {
     
 }
