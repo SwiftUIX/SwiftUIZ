@@ -7,7 +7,9 @@ import SwiftUIX
 import SwallowMacrosClient
 
 #once {
-    _ = _InvisibleAppViewIndex.shared
+    Task(priority: .userInitiated) { @MainActor in
+        _ = _InvisibleAppViewIndex.shared
+    }
 }
 
 /// A view that's loaded invisibly in the background.
@@ -162,7 +164,7 @@ extension _InvisibleAppViewIndex {
         fileprivate struct _HostedWindowContent: SwiftUI.View {
             let host: WindowHost
             let content: AnyView
-                        
+            
             @State private var foo: Bool = false
             
             var proxy: _InvisibleViewProxy {

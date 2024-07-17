@@ -53,9 +53,11 @@ extension _SwiftUIZ_Scene {
     }
 }
 
+#if os(macOS)
 extension Window: _SwiftUIZ_MaybePrimitiveScene {
     
 }
+#endif
 
 extension WindowGroup: _SwiftUIZ_MaybePrimitiveScene {
     
