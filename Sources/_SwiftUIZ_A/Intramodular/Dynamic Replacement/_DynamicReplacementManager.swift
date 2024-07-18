@@ -7,17 +7,14 @@ import Swallow
 import SwiftUIX
 
 fileprivate class _DynamicReplacementManager: ObservableObject {
-    @MainActor(unsafe)
     static let shared = _DynamicReplacementManager()
     
-    @MainActor
     @Published package(set) public var generation = 0
-    @MainActor
+
     let publisher = PassthroughSubject<Void, Never>()
-    @MainActor
+
     private var cancellable: AnyCancellable? = nil
     
-    @MainActor
     init() {
         cancellable = NotificationCenter.default
             .publisher(
