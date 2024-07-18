@@ -4,7 +4,7 @@
 
 import Foundation
 
-enum InlineNode: Hashable {
+public enum InlineNode: Hashable {
     case text(String)
     case softBreak
     case lineBreak
@@ -17,40 +17,3 @@ enum InlineNode: Hashable {
     case image(source: String, children: [InlineNode])
 }
 
-extension InlineNode {
-    var children: [InlineNode] {
-        get {
-            switch self {
-                case .emphasis(let children):
-                    return children
-                case .strong(let children):
-                    return children
-                case .strikethrough(let children):
-                    return children
-                case .link(_, let children):
-                    return children
-                case .image(_, let children):
-                    return children
-                default:
-                    return []
-            }
-        }
-        
-        set {
-            switch self {
-                case .emphasis:
-                    self = .emphasis(children: newValue)
-                case .strong:
-                    self = .strong(children: newValue)
-                case .strikethrough:
-                    self = .strikethrough(children: newValue)
-                case .link(let destination, _):
-                    self = .link(destination: destination, children: newValue)
-                case .image(let source, _):
-                    self = .image(source: source, children: newValue)
-                default:
-                    break
-            }
-        }
-    }
-}

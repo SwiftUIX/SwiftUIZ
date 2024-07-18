@@ -22,11 +22,13 @@ public struct _ShallowEnvironment<Value>: _ShallowEnvironmentType {
     
     public var wrappedValue: Value {
         get {
-            #try(.optimistic) {
+            do {
                 let key = _ShallowEnvironmentProvider.EnvironmentKey(id: id!, key: key)
                 
                 return try _shallowEnvironmentProvider[key, as: Value.self].unwrap()
-            }!
+            } catch {
+                fatalError(error)
+            }
         }
     }
     

@@ -13,6 +13,7 @@ public struct _WindowDrawerConfiguration<Content: View> {
     let windowEdge: Edge
 }
 
+@MainActor
 struct _InsertWindowDrawerPresenter<DrawerContent: View>: ViewModifier {
     let configuration: _WindowDrawerConfiguration<DrawerContent>
     

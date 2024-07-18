@@ -4,10 +4,10 @@
 
 import SwiftUI
 
-public protocol ModifiedContentProtocol<Content> {
-    associatedtype Content
+public protocol ModifiedContentProtocol<ContentType> {
+    associatedtype ContentType
     
-    var content: Content { get }
+    var content: ContentType { get }
 }
 
 extension ModifiedContent: ModifiedContentProtocol {

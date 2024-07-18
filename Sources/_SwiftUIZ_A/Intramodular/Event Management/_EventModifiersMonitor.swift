@@ -42,8 +42,11 @@ public class _EventModifiersMonitor: ObservableObject {
 
 // MARK: - Supplementary
 
+@MainActor
 extension View {
-    public func disablesHitTesting(forModifiers modifiers: EventModifiers = []) -> some View {
+    public func disablesHitTesting(
+        forModifiers modifiers: EventModifiers = []
+    ) -> some View {
         withInlineObservedObject(_EventModifiersMonitor.shared) { monitor in
             allowsHitTesting(monitor.modifiers.intersection(modifiers).isEmpty)
         }

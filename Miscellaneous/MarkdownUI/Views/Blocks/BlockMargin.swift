@@ -3,20 +3,6 @@
 //
 
 import SwiftUI
-private import SwiftUIZ
-
-@_ViewTrait
-public struct _BlockMargin: Equatable {
-    var top: CGFloat?
-    var bottom: CGFloat?
-    
-    static let unspecified = _BlockMargin()
-}
-
-@_ViewTraitKey(for: _BlockMargin.self, named: "_blockMargin")
-extension _ViewTraitKeys {
-    
-}
 
 extension View {
     /// Sets the preferred top margin for the block content in this view.

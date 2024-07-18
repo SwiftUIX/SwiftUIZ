@@ -33,7 +33,7 @@ extension Binding {
 
 // MARK: - Implemented Conformances
 
-extension Merge.PublishedAsyncBinding: _SwiftUIX_BindingType {
+extension Merge.PublishedAsyncBinding: _SwiftUIZ_A._SwiftUIX_BindingType {
     @_disfavoredOverload
     public subscript<Subject>(
         _dynamicMember keyPath: WritableKeyPath<Value, Subject>
@@ -42,7 +42,7 @@ extension Merge.PublishedAsyncBinding: _SwiftUIX_BindingType {
     }
 }
 
-extension Merge.PublishedBinding: _SwiftUIX_BindingType {
+extension Merge.PublishedBinding: _SwiftUIZ_A._SwiftUIX_BindingType {
     @_disfavoredOverload
     public subscript<Subject>(
         _dynamicMember keyPath: WritableKeyPath<Value, Subject>
@@ -51,7 +51,7 @@ extension Merge.PublishedBinding: _SwiftUIX_BindingType {
     }
 }
 
-extension Swallow.Inout: _SwiftUIX_BindingType {
+extension Swallow.Inout: _SwiftUIZ_A._SwiftUIX_BindingType {
     @_disfavoredOverload
     public subscript<Subject>(
         _dynamicMember keyPath: WritableKeyPath<Value, Subject>
@@ -60,7 +60,7 @@ extension Swallow.Inout: _SwiftUIX_BindingType {
     }
 }
 
-extension SwiftUI.Binding: _SwiftUIX_BindingType {
+extension SwiftUI.Binding: _SwiftUIZ_A._SwiftUIX_BindingType {
     @_disfavoredOverload
     public subscript<Subject>(
         _dynamicMember keyPath: WritableKeyPath<Value, Subject>

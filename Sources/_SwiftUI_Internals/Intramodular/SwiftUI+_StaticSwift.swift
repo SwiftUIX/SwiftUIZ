@@ -5,157 +5,157 @@
 import SwiftUI
 import Swallow
 
-extension Button: _StaticSwift_CanHavePlaceholderGenericTypeParameters where Label == Never {
+extension Button: Swallow._StaticSwift_IsPlaceholderedVariantOfGenericType where Label == Never {
     public enum _StaticSwift_GenericTypeParameterName: _StaticSwift.GenericTypeParameterNameProtocol {
         case label
     }
 }
 
-extension Button: _StaticSwift_HasPlaceholderedGenericTypeParameters {
-    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_CanHavePlaceholderGenericTypeParameters.Type {
+extension Button: Swallow._StaticSwift_HasPlaceholderedVariantOfGenericSelf {
+    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_IsPlaceholderedVariantOfGenericType.Type {
         SwiftUI.Button.self
     }
 }
 
-extension ForEach: _StaticSwift_CanHavePlaceholderGenericTypeParameters where Data == AnyRandomAccessCollection<Never>, ID == Never, Content == Never {
+extension ForEach: Swallow._StaticSwift_IsPlaceholderedVariantOfGenericType where Data == AnyRandomAccessCollection<Never>, ID == Never, Content == Never {
     
 }
 
-extension ForEach: _StaticSwift_HasPlaceholderedGenericTypeParameters {
-    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_CanHavePlaceholderGenericTypeParameters.Type {
+extension ForEach: Swallow._StaticSwift_HasPlaceholderedVariantOfGenericSelf {
+    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_IsPlaceholderedVariantOfGenericType.Type {
         SwiftUI.ForEach.self
     }
 }
 
-extension Form: _StaticSwift_CanHavePlaceholderGenericTypeParameters where Content == Never {
+extension Form: Swallow._StaticSwift_IsPlaceholderedVariantOfGenericType where Content == Never {
     
 }
 
-extension Form: _StaticSwift_HasPlaceholderedGenericTypeParameters  {
-    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_CanHavePlaceholderGenericTypeParameters.Type {
+extension Form: Swallow._StaticSwift_HasPlaceholderedVariantOfGenericSelf  {
+    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_IsPlaceholderedVariantOfGenericType.Type {
         SwiftUI.Form.self
     }
 }
 
-extension HStack: _StaticSwift_CanHavePlaceholderGenericTypeParameters where Content == Never {
+extension HStack: Swallow._StaticSwift_IsPlaceholderedVariantOfGenericType where Content == Never {
     
 }
 
-extension HStack: _StaticSwift_HasPlaceholderedGenericTypeParameters  {
-    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_CanHavePlaceholderGenericTypeParameters.Type {
+extension HStack: Swallow._StaticSwift_HasPlaceholderedVariantOfGenericSelf  {
+    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_IsPlaceholderedVariantOfGenericType.Type {
         SwiftUI.HStack.self
     }
 }
   
-extension LazyVStack: _StaticSwift_CanHavePlaceholderGenericTypeParameters where Content == Never {
+extension LazyVStack: Swallow._StaticSwift_IsPlaceholderedVariantOfGenericType where Content == Never {
     
 }
 
-extension LazyVStack: _StaticSwift_HasPlaceholderedGenericTypeParameters  {
-    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_CanHavePlaceholderGenericTypeParameters.Type {
+extension LazyVStack: Swallow._StaticSwift_HasPlaceholderedVariantOfGenericSelf  {
+    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_IsPlaceholderedVariantOfGenericType.Type {
         SwiftUI.LazyVStack.self
     }
 }
 
-extension Label: _StaticSwift_CanHavePlaceholderGenericTypeParameters where Title == Never, Icon == Never {
+extension Label: Swallow._StaticSwift_IsPlaceholderedVariantOfGenericType where Title == Never, Icon == Never {
     public enum _StaticSwift_GenericTypeParameterName: _StaticSwift.GenericTypeParameterNameProtocol {
         case title
         case icon
     }
 }
 
-extension Label: _StaticSwift_HasPlaceholderedGenericTypeParameters  {
-    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_CanHavePlaceholderGenericTypeParameters.Type {
+extension Label: Swallow._StaticSwift_HasPlaceholderedVariantOfGenericSelf  {
+    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_IsPlaceholderedVariantOfGenericType.Type {
         SwiftUI.Label.self
     }
 }
 
-extension List: _StaticSwift_CanHavePlaceholderGenericTypeParameters where SelectionValue == Never, Content == Never {
+extension List: _StaticSwift_IsPlaceholderedVariantOfGenericType where SelectionValue == Never, Content == Never {
     
 }
 
-extension List: _StaticSwift_HasPlaceholderedGenericTypeParameters  {
-    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_CanHavePlaceholderGenericTypeParameters.Type {
+extension List: Swallow._StaticSwift_HasPlaceholderedVariantOfGenericSelf  {
+    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_IsPlaceholderedVariantOfGenericType.Type {
         SwiftUI.List.self
     }
 }
 
-extension NavigationView: _StaticSwift_CanHavePlaceholderGenericTypeParameters where Content == Never {
+extension NavigationView: Swallow._StaticSwift_IsPlaceholderedVariantOfGenericType where Content == Never {
     
 }
 
-extension NavigationView: _StaticSwift_HasPlaceholderedGenericTypeParameters  {
-    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_CanHavePlaceholderGenericTypeParameters.Type {
+extension NavigationView: Swallow._StaticSwift_HasPlaceholderedVariantOfGenericSelf  {
+    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_IsPlaceholderedVariantOfGenericType.Type {
         SwiftUI.NavigationView.self
     }
 }
 
-extension NavigationStack: _StaticSwift_CanHavePlaceholderGenericTypeParameters where Data == [NavigationPath], Root == Never {
+extension NavigationStack: Swallow._StaticSwift_IsPlaceholderedVariantOfGenericType where Data == [NavigationPath], Root == Never {
     
 }
 
-extension NavigationStack: _StaticSwift_HasPlaceholderedGenericTypeParameters  {
-    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_CanHavePlaceholderGenericTypeParameters.Type {
+extension NavigationStack: Swallow._StaticSwift_HasPlaceholderedVariantOfGenericSelf  {
+    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_IsPlaceholderedVariantOfGenericType.Type {
         SwiftUI.NavigationStack.self
     }
 }
 
-extension NavigationSplitView: _StaticSwift_CanHavePlaceholderGenericTypeParameters where Sidebar == Never, Content == Never, Detail == Never {
+extension NavigationSplitView: Swallow._StaticSwift_IsPlaceholderedVariantOfGenericType where Sidebar == Never, Content == Never, Detail == Never {
     
 }
 
-extension NavigationSplitView: _StaticSwift_HasPlaceholderedGenericTypeParameters  {
-    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_CanHavePlaceholderGenericTypeParameters.Type {
+extension NavigationSplitView: Swallow._StaticSwift_HasPlaceholderedVariantOfGenericSelf  {
+    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_IsPlaceholderedVariantOfGenericType.Type {
         SwiftUI.NavigationSplitView.self
     }
 }
 
-extension Picker: _StaticSwift_CanHavePlaceholderGenericTypeParameters where Label == Never, SelectionValue == Never, Content == Never {
+extension Picker: _StaticSwift_IsPlaceholderedVariantOfGenericType where Label == Never, SelectionValue == Never, Content == Never {
     
 }
 
-extension Picker: _StaticSwift_HasPlaceholderedGenericTypeParameters  {
-    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_CanHavePlaceholderGenericTypeParameters.Type {
+extension Picker: Swallow._StaticSwift_HasPlaceholderedVariantOfGenericSelf  {
+    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_IsPlaceholderedVariantOfGenericType.Type {
         SwiftUI.Picker.self
     }
 }
 
-extension ScrollView: _StaticSwift_CanHavePlaceholderGenericTypeParameters where Content == Never {
+extension ScrollView: Swallow._StaticSwift_IsPlaceholderedVariantOfGenericType where Content == Never {
     
 }
 
-extension ScrollView: _StaticSwift_HasPlaceholderedGenericTypeParameters {
-    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_CanHavePlaceholderGenericTypeParameters.Type {
+extension ScrollView: Swallow._StaticSwift_HasPlaceholderedVariantOfGenericSelf {
+    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_IsPlaceholderedVariantOfGenericType.Type {
         SwiftUI.ScrollView.self
     }
 }
 
-extension Text: _StaticSwift_CanHavePlaceholderGenericTypeParameters {
+extension Text: Swallow._StaticSwift_IsPlaceholderedVariantOfGenericType {
     
 }
 
-extension Text: _StaticSwift_HasPlaceholderedGenericTypeParameters {
-    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_CanHavePlaceholderGenericTypeParameters.Type {
+extension Text: Swallow._StaticSwift_HasPlaceholderedVariantOfGenericSelf {
+    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_IsPlaceholderedVariantOfGenericType.Type {
         SwiftUI.Text.self
     }
 }
 
-extension VStack: _StaticSwift_CanHavePlaceholderGenericTypeParameters where Content == Never {
+extension VStack: Swallow._StaticSwift_IsPlaceholderedVariantOfGenericType where Content == Never {
     
 }
 
-extension VStack: _StaticSwift_HasPlaceholderedGenericTypeParameters {
-    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_CanHavePlaceholderGenericTypeParameters.Type {
+extension VStack: Swallow._StaticSwift_HasPlaceholderedVariantOfGenericSelf {
+    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_IsPlaceholderedVariantOfGenericType.Type {
         SwiftUI.VStack.self
     }
 }
 
-extension ZStack: _StaticSwift_CanHavePlaceholderGenericTypeParameters where Content == Never {
+extension ZStack: Swallow._StaticSwift_IsPlaceholderedVariantOfGenericType where Content == Never {
     
 }
 
-extension ZStack: _StaticSwift_HasPlaceholderedGenericTypeParameters {
-    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_CanHavePlaceholderGenericTypeParameters.Type {
+extension ZStack: Swallow._StaticSwift_HasPlaceholderedVariantOfGenericSelf {
+    public static var _StaticSwift_replacingGenericTypeParametersWithPlaceholders: any _StaticSwift_IsPlaceholderedVariantOfGenericType.Type {
         SwiftUI.ZStack.self
     }
 }
