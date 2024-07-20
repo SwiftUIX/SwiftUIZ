@@ -54,3 +54,25 @@ public struct _PreferenceKeyValueReader<Key: PreferenceKey, Content: View>: View
         }
     }
 }
+
+/// A view whose child is defined as a function of a preference value read from within the child.
+public struct _PreferenceReader<Key: SwiftUI.PreferenceKey, Content: View>: View where Key.Value: Equatable {
+    private let content: (Key.Value) -> Content
+    
+    @State var value: Key.Value?
+    
+    public init(
+        _ keyType: Key.Type = Key.self,
+        @ViewBuilder content: @escaping (Key.Value) -> Content
+    ) {
+        self.content = content
+    }
+    
+    public var body: some View {
+        _PreferenceKeyReader(Key.self) { key in
+            _PreferenceKeyValueReader(key) { value in
+                content(value)
+            }
+        }
+    }
+}

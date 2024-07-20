@@ -70,7 +70,7 @@ extension Label: Swallow._StaticSwift_HasPlaceholderedVariantOfGenericSelf  {
     }
 }
 
-extension List: _StaticSwift_IsPlaceholderedVariantOfGenericType where SelectionValue == Never, Content == Never {
+extension List: Swallow._StaticSwift_IsPlaceholderedVariantOfGenericType where SelectionValue == Never, Content == Never {
     
 }
 

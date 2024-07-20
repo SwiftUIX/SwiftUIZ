@@ -47,4 +47,12 @@ extension View {
     ) -> some View {
         modifier(_AddFocusActivatingBackground(background: content()))
     }
+    
+    public func _focusActivatingBackground() -> some View {
+        _focusActivatingBackground {
+            Rectangle()
+                .fill(Color.almostClear)
+                .contentShape(Rectangle())
+        }
+    }
 }

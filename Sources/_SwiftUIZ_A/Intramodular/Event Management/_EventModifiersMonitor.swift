@@ -23,7 +23,7 @@ extension EventModifiers {
 public class _EventModifiersMonitor: ObservableObject {
     public static let shared = _EventModifiersMonitor()
     
-    @Published private(set) var modifiers: EventModifiers = ._currentlyActive
+    @Published public private(set) var modifiers: EventModifiers = ._currentlyActive
     
     #if os(macOS)
     private var monitor: NSEventMonitor!
@@ -31,7 +31,7 @@ public class _EventModifiersMonitor: ObservableObject {
     
     private init() {
         #if os(macOS)
-        monitor = NSEventMonitor(context: .local, matching: .flagsChanged) { event -> NSEvent? in
+        monitor = NSEventMonitor(context: .global, matching: .flagsChanged) { event -> NSEvent? in
             self.modifiers = ._currentlyActive
             
             return event

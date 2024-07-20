@@ -158,7 +158,9 @@ extension _InvisibleAppViewIndex {
         init(item: _InvisibleAppViewIndex.Window) {
             self.item = item
             
-            host()
+            Task { @MainActor in
+                host()
+            }
         }
         
         fileprivate struct _HostedWindowContent: SwiftUI.View {

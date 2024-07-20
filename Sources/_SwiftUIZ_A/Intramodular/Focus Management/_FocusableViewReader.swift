@@ -47,7 +47,7 @@ public struct _FocusableViewProxy: Hashable, Sequence {
 public struct _FocusableViewReader<Content: View>: View {
     private let content: (_FocusableViewProxy) -> Content
     private var configuration = _FocusableViewReaderConfiguration()
-
+    
     @State private var readProxy = _FocusableViewProxy()
     
     private var resolvedProxy: _FocusableViewProxy {
@@ -65,7 +65,7 @@ public struct _FocusableViewReader<Content: View>: View {
         self.content = content
         self.configuration.assignedTopLevelNamespace = namespace
     }
-
+    
     public var body: some View {
         content(resolvedProxy)
             ._assignTopLevelFocusableRepresentationNamespace(configuration.assignedTopLevelNamespace)

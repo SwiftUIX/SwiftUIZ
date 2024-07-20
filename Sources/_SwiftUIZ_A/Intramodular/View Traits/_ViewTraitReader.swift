@@ -51,9 +51,13 @@ public struct _ViewTraitReader<Source: View, Trait: SwiftUI._ViewTraitKey, Trait
                         focusRepresentation: self.focusRepresentations[key],
                         propagateFocusRepresentation: { focusProxy in
                             if let focusProxy {
-                                self.focusRepresentations[key] = focusProxy
+                                if self.focusRepresentations[key] != focusProxy {
+                                    self.focusRepresentations[key] = focusProxy
+                                }
                             } else {
-                                self.focusRepresentations[key] = nil
+                                if self.focusRepresentations[key] != nil {
+                                    self.focusRepresentations[key] = nil
+                                }
                             }
                         }
                     )
@@ -65,7 +69,7 @@ public struct _ViewTraitReader<Source: View, Trait: SwiftUI._ViewTraitKey, Trait
                 ._compactMap(\.1, { element -> (_VariadicViewChildren.Element, TraitValue?) in
                     (element, element[trait: trait])
                 })
-                .map({ _ArbitrarilyIdentifiedValue(value: $0, id: { self.id($0.0, $0.1) }) })
+                .map({ _ArbitrarilyIdentifiedValue(value: $0, id: self.id($0.0, $0.1)) })
             
             ZStack {
                 ZeroSizeView()

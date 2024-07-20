@@ -18,6 +18,7 @@ let package = Package(
                 "_SwiftUIZ_NukeUI",
                 "_SwiftUIZ_A",
                 "_SwiftUIZ_B",
+                "Engine",
                 "MarkdownUI",
                 "Emoji",
                 "SwiftUIZ"
@@ -25,6 +26,7 @@ let package = Package(
         ),
     ],
     dependencies: [
+        .package(url: "https://github.com/apple/swift-syntax.git", from: "510.0.0"),
         .package(url: "https://github.com/siteline/SwiftUI-Introspect", from: "0.2.3"),
         .package(url: "https://github.com/SwiftUIX/SwiftUIX.git", branch: "master"),
         .package(url: "https://github.com/vmanot/CorePersistence.git", branch: "main"),
@@ -72,6 +74,40 @@ let package = Package(
             swiftSettings: [
                 .enableExperimentalFeature("AccessLevelOnImport")
             ]
+        ),
+        .target(
+            name: "Engine",
+            dependencies: [
+                "EngineCore",
+            ],
+            path: "Dependencies/Engine/Engine"
+        ),
+        .target(
+            name: "EngineCore",
+            dependencies: [
+                "EngineCoreC",
+            ],
+            path: "Dependencies/Engine/EngineCore"
+        ),
+        .target(
+            name: "EngineCoreC",
+            path: "Dependencies/Engine/EngineCoreC"
+        ),
+        .target(
+            name: "EngineMacros",
+            dependencies: [
+                "Engine",
+                "EngineMacrosCore",
+            ],
+            path: "Dependencies/Engine/EngineMacros"
+        ),
+        .macro(
+            name: "EngineMacrosCore",
+            dependencies: [
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax")
+            ],
+            path: "Dependencies/Engine/EngineMacrosCore"
         ),
         .target(
             name: "MarkdownUI",
