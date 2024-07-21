@@ -6,7 +6,7 @@ import Foundation
 
 /// Fetches original image from the data loader (`DataLoading`) and stores it
 /// in the disk cache (`DataCaching`).
-final class TaskFetchOriginalImageData: ImagePipelineTask<(Data, URLResponse?)> {
+final class TaskFetchOriginalImageData: ImagePipelineTask<(Data, URLResponse?)>, @unchecked Sendable {
     private var urlResponse: URLResponse?
     private var resumableData: ResumableData?
     private var resumedDataCount: Int64 = 0
