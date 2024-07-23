@@ -5,7 +5,7 @@
 import SwiftUIX
 
 #if os(macOS)
-extension Window: _ExtendedScene where Content: _InterposedSceneContent {
+extension Window: _SwiftUIZ_A._ExtendedScene where Content: _InterposedSceneContent {
     public enum _DynamicWindowGroupKeyword {
         case dynamic
     }
@@ -34,7 +34,7 @@ extension Window: _ExtendedScene where Content: _InterposedSceneContent {
 }
 #endif
 
-extension WindowGroup: _ExtendedScene where Content: _InterposedSceneContent {
+extension WindowGroup: _SwiftUIZ_A._ExtendedScene where Content: _InterposedSceneContent {
     public enum _DynamicWindowGroupKeyword {
         case dynamic
     }

@@ -30,7 +30,7 @@ extension _GraphInputs {
             }
         }
     }
-
+    
     mutating func withCustomInputs<ReturnType>(
         do body: (inout PropertyList) -> ReturnType
     ) -> ReturnType {
@@ -40,7 +40,7 @@ extension _GraphInputs {
             }
         }
     }
-
+    
     public subscript<Input: ViewInputKey>(
         _ : Input.Type
     ) -> Input.Value {
@@ -53,7 +53,7 @@ extension _GraphInputs {
             }
         }
     }
-
+    
     @_disfavoredOverload
     public subscript<Input: ViewInputKey>(
         _ : Input.Type
@@ -67,7 +67,7 @@ extension _GraphInputs {
             }
         }
     }
-
+    
     public subscript<Value>(
         key: String,
         _: Value.Type
@@ -85,15 +85,15 @@ extension _GraphInputs {
 /// - Resetting Context (such as NavigationStack)
 @frozen
 public struct _ViewInputsBridgeModifier: ViewModifier {
-
+    
     @inlinable
     public init() { }
-
+    
     public func body(content: Content) -> some View {
         content
             .modifier(Modifier())
     }
-
+    
     private struct Modifier: GraphInputsModifier {
         static func makeInputs(
             modifier: _GraphValue<Self>,
@@ -109,9 +109,13 @@ public struct _ViewInputsBridgeModifier: ViewModifier {
 extension PropertyList {
     fileprivate mutating func detach() {
         var ptr = elements
+        var hasMatchedGeometryScope = false
         while let p = ptr {
-            let key = _typeName(ptr!.keyType, qualified: true)
+            let key = _typeName(p.keyType, qualified: true)
             var isMatch = key.hasSuffix(".MatchedGeometryScope")
+            if isMatch {
+                hasMatchedGeometryScope = true
+            }
             #if !os(macOS)
             let branchKey: String
             if #available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *) {
@@ -139,16 +143,22 @@ extension PropertyList {
                 return
             }
         }
-
+        
         let tail = ptr!
         var last = tail.after
         tail.after = nil
         while let p = last?.after {
+            if !hasMatchedGeometryScope {
+                let key = _typeName(p.keyType, qualified: true)
+                if key.hasSuffix(".MatchedGeometryScope") {
+                    break
+                }
+            }
             last = p
         }
-
+        
         ptr = elements
-        let offset = tail.length - (last == nil ? 1 : 2)
+        let offset = tail.length - ((last?.length ?? 0) + 1)
         while offset > 0, let p = ptr {
             p.length -= offset
             ptr = p.after

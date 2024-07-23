@@ -110,7 +110,7 @@ extension NavigationSplitView: Swallow._StaticSwift_HasPlaceholderedVariantOfGen
     }
 }
 
-extension Picker: _StaticSwift_IsPlaceholderedVariantOfGenericType where Label == Never, SelectionValue == Never, Content == Never {
+extension Picker: Swallow._StaticSwift_IsPlaceholderedVariantOfGenericType where Label == Never, SelectionValue == Never, Content == Never {
     
 }
 

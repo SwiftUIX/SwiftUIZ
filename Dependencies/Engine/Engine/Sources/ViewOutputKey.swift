@@ -28,7 +28,7 @@ extension ViewOutputKey where Value == ViewOutputList<Content> {
         value: inout Value,
         nextValue: () -> Value
     ) {
-        value.elements += nextValue().elements
+        value.mergeInPlace(with: nextValue())
     }
 }
 
@@ -43,16 +43,19 @@ public struct ViewOutputList<Content: View>: View, RandomAccessCollection {
         }
 
         public var id: ID
+        public var explicitID: AnyHashable?
         public var content: Content
 
         var phase: UpdatePhase.Value
 
         init(
             id: Namespace.ID,
+            explicitID: AnyHashable?,
             phase: UpdatePhase.Value,
             content: Content
         ) {
             self.id = ID(value: id)
+            self.explicitID = explicitID
             self.phase = phase
             self.content = content
         }
@@ -62,7 +65,24 @@ public struct ViewOutputList<Content: View>: View, RandomAccessCollection {
         }
     }
 
-    public var elements: [Subview]
+    public private(set) var elements: [Subview]
+    public private(set) var elementsByExplicitID: [AnyHashable: Subview]
+
+    public init(elements: [Subview]) {
+        self.elements = elements
+        self.elementsByExplicitID = Dictionary(uniqueKeysWithValues: elements.compactMap {
+            if let id = $0.explicitID {
+                return (id, $0)
+            } else {
+                return nil
+            }
+        })
+    }
+    
+    public mutating func mergeInPlace(with other: Self) {
+        self.elements.append(contentsOf: other.elements)
+        self.elementsByExplicitID.merge(other.elementsByExplicitID, uniquingKeysWith: { lhs, rhs in rhs })
+    }
 
     public var body: some View {
         ForEach(elements, id: \.id) { child in
@@ -104,7 +124,8 @@ public struct ViewOutputSourceModifier<
     Key: ViewOutputKey,
     Source: View
 >: ViewModifier where Key.Content == Source {
-
+    @usableFromInline
+    var id: AnyHashable?
     @usableFromInline
     var source: Source
 
@@ -114,8 +135,10 @@ public struct ViewOutputSourceModifier<
     @inlinable
     public init(
         _ key: Key.Type = Key.self,
+        id: AnyHashable?,
         source: Source
     ) {
+        self.id = id
         self.source = source
     }
 
@@ -128,6 +151,7 @@ public struct ViewOutputSourceModifier<
                             elements: [
                                 ViewOutputList<Key.Content>.Element(
                                     id: namespace,
+                                    explicitID: id,
                                     phase: phase,
                                     content: source
                                 )
@@ -154,6 +178,7 @@ extension View {
         modifier(
             ViewOutputSourceModifier(
                 Key.self,
+                id: nil,
                 source: source()
             )
         )
@@ -172,6 +197,28 @@ extension View {
         modifier(
             ViewOutputSourceModifier(
                 Key.self,
+                id: nil,
+                source: AnyView(source())
+            )
+        )
+    }
+    
+    /// A modifier that writes a `Source` view to a ``ViewOutputKey``
+    @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
+    @inlinable
+    public func viewOutput<
+        Key: ViewOutputKey,
+        ID: Hashable,
+        Source: View
+    >(
+        _ : Key.Type,
+        id: ID,
+        @ViewBuilder source: () -> Source
+    ) -> some View where Key.Content == AnyView {
+        modifier(
+            ViewOutputSourceModifier(
+                Key.self,
+                id: id,
                 source: AnyView(source())
             )
         )
@@ -272,6 +319,42 @@ public struct ViewOutputKeyValueReader<
     public var body: some View {
         PreferenceKeyValueReader(value.value) { view in
             content(view.list)
+        }
+    }
+}
+
+// SwiftUIZ
+@frozen
+@available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
+public struct _UnaryViewOutputKeyValueReader<
+    Key: ViewOutputKey,
+    ID: Hashable,
+    Content: View
+>: View {
+    
+    @usableFromInline
+    var value: ViewOutputKeyValueProxy<Key>
+    @usableFromInline
+    var id: AnyHashable
+    @usableFromInline
+    var content: (ViewOutputList<Key.Content>.Subview) -> Content
+    
+    @inlinable
+    public init(
+        _ value: ViewOutputKeyValueProxy<Key>,
+        id: AnyHashable,
+        @ViewBuilder content: @escaping (ViewOutputList<Key.Content>.Subview) -> Content
+    ) {
+        self.value = value
+        self.id = id
+        self.content = content
+    }
+    
+    public var body: some View {
+        PreferenceKeyValueReader(value.value) { view in
+            if let view = view.list.elementsByExplicitID[id] {
+                content(view)
+            }
         }
     }
 }
