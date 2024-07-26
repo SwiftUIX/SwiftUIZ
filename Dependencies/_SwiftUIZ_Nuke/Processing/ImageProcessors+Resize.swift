@@ -18,11 +18,11 @@ extension ImageProcessors {
         private let contentMode: ImageProcessingOptions.ContentMode
         private let crop: Bool
         private let upscale: Bool
-
+        
         // Deprecated in Nuke 12.0
         @available(*, deprecated, message: "Renamed to `ImageProcessingOptions.ContentMode")
         public typealias ContentMode = ImageProcessingOptions.ContentMode
-
+        
         /// Initializes the processor with the given size.
         ///
         /// - parameters:
@@ -38,7 +38,7 @@ extension ImageProcessors {
             self.crop = crop
             self.upscale = upscale
         }
-
+        
         /// Scales an image to the given width preserving aspect ratio.
         ///
         /// - parameters:
@@ -48,7 +48,7 @@ extension ImageProcessors {
         public init(width: CGFloat, unit: ImageProcessingOptions.Unit = .points, upscale: Bool = false) {
             self.init(size: CGSize(width: width, height: 9999), unit: unit, contentMode: .aspectFit, crop: false, upscale: upscale)
         }
-
+        
         /// Scales an image to the given height preserving aspect ratio.
         ///
         /// - parameters:
@@ -58,18 +58,18 @@ extension ImageProcessors {
         public init(height: CGFloat, unit: ImageProcessingOptions.Unit = .points, upscale: Bool = false) {
             self.init(size: CGSize(width: 9999, height: height), unit: unit, contentMode: .aspectFit, crop: false, upscale: upscale)
         }
-
+        
         public func process(_ image: PlatformImage) -> PlatformImage? {
             if crop && contentMode == .aspectFill {
                 return image.processed.byResizingAndCropping(to: size.cgSize)
             }
             return image.processed.byResizing(to: size.cgSize, contentMode: contentMode, upscale: upscale)
         }
-
+        
         public var identifier: String {
             "com.github.kean/nuke/resize?s=\(size.cgSize),cm=\(contentMode),crop=\(crop),upscale=\(upscale)"
         }
-
+        
         public var description: String {
             "Resize(size: \(size.cgSize) pixels, contentMode: \(contentMode), crop: \(crop), upscale: \(upscale))"
         }
@@ -79,17 +79,20 @@ extension ImageProcessors {
 // Adds Hashable without making changes to public CGSize API
 struct ImageTargetSize: Hashable {
     let cgSize: CGSize
-
+    
     /// Creates the size in pixels by scaling to the input size to the screen scale
     /// if needed.
-    @MainActor(unsafe)
     init(size: CGSize, unit: ImageProcessingOptions.Unit) {
         switch unit {
-        case .pixels: self.cgSize = size // The size is already in pixels
-        case .points: self.cgSize = size.scaled(by: Screen.scale)
+            case .pixels:
+                self.cgSize = size // The size is already in pixels
+            case .points:
+                self.cgSize = MainActor.assumeIsolated {
+                    size.scaled(by: Screen.scale)
+                }
         }
     }
-
+    
     func hash(into hasher: inout Hasher) {
         hasher.combine(cgSize.width)
         hasher.combine(cgSize.height)

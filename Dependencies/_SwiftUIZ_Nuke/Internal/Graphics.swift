@@ -11,12 +11,12 @@ import WatchKit.WKInterfaceDevice
 #endif
 
 #if canImport(UIKit)
- import UIKit
- #endif
+import UIKit
+#endif
 
- #if canImport(AppKit)
- import AppKit
- #endif
+#if canImport(AppKit)
+import AppKit
+#endif
 
 extension PlatformImage {
     var processed: ImageProcessingExtensions {
@@ -26,7 +26,7 @@ extension PlatformImage {
 
 struct ImageProcessingExtensions {
     let image: PlatformImage
-
+    
     func byResizing(to targetSize: CGSize,
                     contentMode: ImageProcessingOptions.ContentMode,
                     upscale: Bool) -> PlatformImage? {
@@ -43,7 +43,7 @@ struct ImageProcessingExtensions {
         let size = cgImage.size.scaled(by: scale).rounded()
         return image.draw(inCanvasWithSize: size)
     }
-
+    
     /// Crops the input image to the given size and resizes it if needed.
     /// - note: this method will always upscale.
     func byResizingAndCropping(to targetSize: CGSize) -> PlatformImage? {
@@ -58,7 +58,7 @@ struct ImageProcessingExtensions {
         let drawRect = scaledSize.centeredInRectWithSize(targetSize)
         return image.draw(inCanvasWithSize: targetSize, drawRect: drawRect)
     }
-
+    
     func byDrawingInCircle(border: ImageProcessingOptions.Border?) -> PlatformImage? {
         guard let squared = byCroppingToSquare(), let cgImage = squared.cgImage else {
             return nil
@@ -66,18 +66,18 @@ struct ImageProcessingExtensions {
         let radius = CGFloat(cgImage.width) // Can use any dimension since image is a square
         return squared.processed.byAddingRoundedCorners(radius: radius / 2.0, border: border)
     }
-
+    
     /// Draws an image in square by preserving an aspect ratio and filling the
     /// square if needed. If the image is already a square, returns an original image.
     func byCroppingToSquare() -> PlatformImage? {
         guard let cgImage = image.cgImage else {
             return nil
         }
-
+        
         guard cgImage.width != cgImage.height else {
             return image // Already a square
         }
-
+        
         let imageSize = cgImage.size
         let side = min(cgImage.width, cgImage.height)
         let targetSize = CGSize(width: side, height: side)
@@ -90,7 +90,7 @@ struct ImageProcessingExtensions {
         }
         return PlatformImage.make(cgImage: cropped, source: image)
     }
-
+    
     /// Adds rounded corners with the given radius to the image.
     /// - parameter radius: Radius in pixels.
     /// - parameter border: Optional stroke border.
@@ -106,7 +106,7 @@ struct ImageProcessingExtensions {
         ctx.addPath(path)
         ctx.clip()
         ctx.draw(cgImage, in: CGRect(origin: CGPoint.zero, size: cgImage.size))
-
+        
         if let border = border {
             ctx.setStrokeColor(border.color.cgColor)
             ctx.addPath(path)
@@ -143,7 +143,7 @@ extension PlatformImage {
         }
         return PlatformImage.make(cgImage: outputCGImage, source: self)
     }
-
+    
     /// Decompresses the input image by drawing in the the `CGContext`.
     func decompressed(isUsingPrepareForDisplay: Bool) -> PlatformImage? {
 #if os(iOS) || os(tvOS) || os(visionOS)
@@ -161,7 +161,7 @@ extension PlatformImage {
 private extension CGContext {
     static func make(_ image: CGImage, size: CGSize, alphaInfo: CGImageAlphaInfo? = nil) -> CGContext? {
         let alphaInfo: CGImageAlphaInfo = alphaInfo ?? (image.isOpaque ? .noneSkipLast : .premultipliedLast)
-
+        
         // Create the context which matches the input image.
         if let ctx = CGContext(
             data: nil,
@@ -174,7 +174,7 @@ private extension CGContext {
         ) {
             return ctx
         }
-
+        
         // In case the combination of parameters (color space, bits per component, etc)
         // is nit supported by Core Graphics, switch to default context.
         // - Quartz 2D Programming Guide
@@ -192,11 +192,14 @@ private extension CGContext {
 }
 
 extension CGFloat {
-    @MainActor(unsafe)
     func converted(to unit: ImageProcessingOptions.Unit) -> CGFloat {
         switch unit {
-        case .pixels: return self
-        case .points: return self * Screen.scale
+            case .pixels:
+                return self
+            case .points:
+                return MainActor.assumeIsolated {
+                    self * Screen.scale
+                }
         }
     }
 }
@@ -205,15 +208,15 @@ extension CGSize {
     func getScale(targetSize: CGSize, contentMode: ImageProcessingOptions.ContentMode) -> CGFloat {
         let scaleHor = targetSize.width / width
         let scaleVert = targetSize.height / height
-
+        
         switch contentMode {
-        case .aspectFill:
-            return max(scaleHor, scaleVert)
-        case .aspectFit:
-            return min(scaleHor, scaleVert)
+            case .aspectFill:
+                return max(scaleHor, scaleVert)
+            case .aspectFit:
+                return min(scaleHor, scaleVert)
         }
     }
-
+    
     /// Calculates a rect such that the output rect will be in the center of
     /// the rect of the input size (assuming origin: .zero)
     func centeredInRectWithSize(_ targetSize: CGSize) -> CGRect {
@@ -229,15 +232,15 @@ extension CGSize {
 extension CGImagePropertyOrientation {
     init(_ orientation: UIImage.Orientation) {
         switch orientation {
-        case .up: self = .up
-        case .upMirrored: self = .upMirrored
-        case .down: self = .down
-        case .downMirrored: self = .downMirrored
-        case .left: self = .left
-        case .leftMirrored: self = .leftMirrored
-        case .right: self = .right
-        case .rightMirrored: self = .rightMirrored
-        @unknown default: self = .up
+            case .up: self = .up
+            case .upMirrored: self = .upMirrored
+            case .down: self = .down
+            case .downMirrored: self = .downMirrored
+            case .left: self = .left
+            case .leftMirrored: self = .leftMirrored
+            case .right: self = .right
+            case .rightMirrored: self = .rightMirrored
+            @unknown default: self = .up
         }
     }
 }
@@ -247,21 +250,21 @@ extension CGImagePropertyOrientation {
 private extension CGSize {
     func rotatedForOrientation(_ imageOrientation: CGImagePropertyOrientation) -> CGSize {
         switch imageOrientation {
-        case .left, .leftMirrored, .right, .rightMirrored:
-            return CGSize(width: height, height: width) // Rotate 90 degrees
-        case .up, .upMirrored, .down, .downMirrored:
-            return self
+            case .left, .leftMirrored, .right, .rightMirrored:
+                return CGSize(width: height, height: width) // Rotate 90 degrees
+            case .up, .upMirrored, .down, .downMirrored:
+                return self
         }
     }
-
+    
     func rotatedForOrientation(_ imageOrientation: UIImage.Orientation) -> CGSize {
         switch imageOrientation {
-        case .left, .leftMirrored, .right, .rightMirrored:
-            return CGSize(width: height, height: width) // Rotate 90 degrees
-        case .up, .upMirrored, .down, .downMirrored:
-            return self
-        @unknown default:
-            return self
+            case .left, .leftMirrored, .right, .rightMirrored:
+                return CGSize(width: height, height: width) // Rotate 90 degrees
+            case .up, .upMirrored, .down, .downMirrored:
+                return self
+            @unknown default:
+                return self
         }
     }
 }
@@ -272,15 +275,15 @@ extension NSImage {
     var cgImage: CGImage? {
         cgImage(forProposedRect: nil, context: nil, hints: nil)
     }
-
+    
     var ciImage: CIImage? {
         cgImage.map { CIImage(cgImage: $0) }
     }
-
+    
     static func make(cgImage: CGImage, source: NSImage) -> NSImage {
         NSImage(cgImage: cgImage, size: .zero)
     }
-
+    
     convenience init(cgImage: CGImage) {
         self.init(cgImage: cgImage, size: .zero)
     }
@@ -299,7 +302,7 @@ extension CGImage {
         let alpha = alphaInfo
         return alpha == .none || alpha == .noneSkipFirst || alpha == .noneSkipLast
     }
-
+    
     var size: CGSize {
         CGSize(width: width, height: height)
     }
@@ -309,7 +312,7 @@ extension CGSize {
     func scaled(by scale: CGFloat) -> CGSize {
         CGSize(width: width * scale, height: height * scale)
     }
-
+    
     func rounded() -> CGSize {
         CGSize(width: CGFloat(round(width)), height: CGFloat(round(height)))
     }
@@ -353,7 +356,7 @@ func makeThumbnail(data: Data, options: ImageRequest.ThumbnailOptions) -> Platfo
     guard let source = CGImageSourceCreateWithData(data as CFData, [kCGImageSourceShouldCache: false] as CFDictionary) else {
         return nil
     }
-
+    
     let maxPixelSize = getMaxPixelSize(for: source, options: options)
     let options = [
         kCGImageSourceCreateThumbnailFromImageAlways: options.createThumbnailFromImageAlways,
@@ -369,25 +372,25 @@ func makeThumbnail(data: Data, options: ImageRequest.ThumbnailOptions) -> Platfo
 
 private func getMaxPixelSize(for source: CGImageSource, options thumbnailOptions: ImageRequest.ThumbnailOptions) -> CGFloat {
     switch thumbnailOptions.targetSize {
-    case .fixed(let size):
-        return CGFloat(size)
-    case let .flexible(size, contentMode):
-        var targetSize = size.cgSize
-        let options = [kCGImageSourceShouldCache: false] as CFDictionary
-        guard let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, options) as? [CFString: Any],
-              let width = properties[kCGImagePropertyPixelWidth] as? CGFloat,
-              let height = properties[kCGImagePropertyPixelHeight] as? CGFloat else {
-            return max(targetSize.width, targetSize.height)
-        }
-
-        let orientation = (properties[kCGImagePropertyOrientation] as? UInt32).flatMap(CGImagePropertyOrientation.init) ?? .up
+        case .fixed(let size):
+            return CGFloat(size)
+        case let .flexible(size, contentMode):
+            var targetSize = size.cgSize
+            let options = [kCGImageSourceShouldCache: false] as CFDictionary
+            guard let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, options) as? [CFString: Any],
+                  let width = properties[kCGImagePropertyPixelWidth] as? CGFloat,
+                  let height = properties[kCGImagePropertyPixelHeight] as? CGFloat else {
+                return max(targetSize.width, targetSize.height)
+            }
+            
+            let orientation = (properties[kCGImagePropertyOrientation] as? UInt32).flatMap(CGImagePropertyOrientation.init) ?? .up
 #if canImport(UIKit)
-        targetSize = targetSize.rotatedForOrientation(orientation)
+            targetSize = targetSize.rotatedForOrientation(orientation)
 #endif
-
-        let imageSize = CGSize(width: width, height: height)
-        let scale = imageSize.getScale(targetSize: targetSize, contentMode: contentMode)
-        let size = imageSize.scaled(by: scale).rounded()
-        return max(size.width, size.height)
+            
+            let imageSize = CGSize(width: width, height: height)
+            let scale = imageSize.getScale(targetSize: targetSize, contentMode: contentMode)
+            let size = imageSize.scaled(by: scale).rounded()
+            return max(size.width, size.height)
     }
 }
