@@ -44,7 +44,7 @@ public var __unsafe_EnvironmentValues_opaque_interposeContext_setter: (inout Env
         environment._interposeContext = context
     }
     
-    if let type = NSClassFromString("_SwiftUIZ_type_HeavyweightViewHypergraph") as? _AnyViewHypergraph.Type {
+    if let type = NSClassFromString("_SwiftUIZ_type_Ferrofluid.ViewHypergraph") as? _AnyViewHypergraph.Type {
         __unsafe_ViewGraphType = type
     } else if let type = NSClassFromString("_SwiftUIZ_type_LightweightViewHypergraph") as? _AnyViewHypergraph.Type {
         __unsafe_ViewGraphType = type.self

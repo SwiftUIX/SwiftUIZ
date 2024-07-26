@@ -4,7 +4,7 @@
 
 import CoreGraphics
 import SwiftUI
-private import SwiftUIZ
+internal import SwiftUIZ
 
 public struct _BlockMargin: Equatable {
     var top: CGFloat?

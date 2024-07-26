@@ -5,7 +5,7 @@
 import Swallow
 import SwiftUI
 
-public struct _ViewHyperpropertyID: Hashable {
+public struct _PGElementID: Hashable {
     private let localKey: AnyHashable
     private let swiftType: ObjectIdentifier
     private let interposeScope: _ViewInterposeScope?
@@ -31,7 +31,7 @@ public struct _ViewHyperpropertyID: Hashable {
 
 // MARK: - Conformances
 
-extension _ViewHyperpropertyID: CustomStringConvertible {
+extension _PGElementID: CustomStringConvertible {
     public var description: String {
         if let interposeScope {
             return name() + "-override:\(interposeScope)"

@@ -5,7 +5,7 @@
 import Swallow
 import SwallowMacrosClient
 import SwiftUI
-private import SwiftUIX
+internal import SwiftUIX
 
 @Singleton
 class BlockSequenceCache: ObservableObject {

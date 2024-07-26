@@ -3,7 +3,7 @@
 //
 
 import SwiftUI
-private import SwiftUIZ
+internal import SwiftUIZ
 
 public struct Markdown: View {
     @Environment(\._markdownUnsafeFlags) var _markdownUnsafeFlags

@@ -19,9 +19,19 @@ let package = Package(
                 "_SwiftUIZ_A",
                 "_SwiftUIZ_B",
                 "Engine",
-                "MarkdownUI",
-                "Emoji",
                 "SwiftUIZ"
+            ]
+        ),
+        .library(
+            name: "MarkdownUI",
+            targets: [
+                "MarkdownUI",
+            ]
+        ),
+        .library(
+            name: "Emoji",
+            targets: [
+                "Emoji",
             ]
         ),
     ],

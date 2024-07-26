@@ -2,9 +2,9 @@
 // Copyright (c) Vatsal Manot
 //
 
-private import _SwiftUIZ_Nuke
+internal import _SwiftUIZ_Nuke
 import SwiftUI
-private import SwiftUIX
+internal import SwiftUIX
 
 public struct DefaultInlineImageProvider: InlineImageProvider {
     private let urlSession: URLSession

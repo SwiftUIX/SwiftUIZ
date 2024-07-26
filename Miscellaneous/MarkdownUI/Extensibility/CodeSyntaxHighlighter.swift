@@ -3,7 +3,7 @@
 //
 
 import SwiftUI
-private import SwiftUIZ
+internal import SwiftUIZ
 
 /// A type that provides syntax highlighting to code blocks in a Markdown view.
 ///

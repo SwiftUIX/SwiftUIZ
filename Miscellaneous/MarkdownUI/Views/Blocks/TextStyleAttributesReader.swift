@@ -3,7 +3,7 @@
 //
 
 import SwiftUI
-private import SwiftUIZ
+internal import SwiftUIZ
 
 struct TextStyleAttributesReader<Content: View>: View {
     @Environment(\.textStyle) private var textStyle

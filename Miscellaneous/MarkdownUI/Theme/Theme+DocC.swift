@@ -3,7 +3,7 @@
 //
 
 import SwiftUI
-private import SwiftUIX
+internal import SwiftUIX
 
 extension Theme {
     /// A theme that mimics the DocC style.

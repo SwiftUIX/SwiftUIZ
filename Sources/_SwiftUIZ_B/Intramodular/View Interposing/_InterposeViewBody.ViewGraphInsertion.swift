@@ -53,7 +53,6 @@ extension _InterposedViewBody {
             graph?.remove(insertedObject)
         }
         
-        @MainActor(unsafe)
         @usableFromInline
         func transformEnvironment(
             _ environment: inout EnvironmentValues
@@ -99,10 +98,10 @@ extension _InterposedViewBodyProxy {
 }
 
 extension _InterposedViewBodyProxy {
-    func _extractConsumableElementProperties() throws -> [_ViewHyperpropertyID: any _ConsumableViewHypergraphElementProperty] {
+    func _extractConsumableElementProperties() throws -> [_PGElementID: any _PropertyGraph.Consumable] {
         let mirror = InstanceMirror(root)!
         
-        var properties: [any _ConsumableViewHypergraphElementProperty] = try withMutableScope([]) {
+        var properties: [any _PropertyGraph.Consumable] = try withMutableScope([]) {
             try mirror._collectConsumableElementProperties(into: &$0, context: _dynamicViewGraphContext)
         }
         
@@ -123,20 +122,19 @@ extension _InterposedViewBodyStorage {
 
 extension InstanceMirror {
     // FIXME: SLOW
-    @MainActor(unsafe)
     package func _collectConsumableElementProperties(
-        into result: inout [any _ConsumableViewHypergraphElementProperty],
+        into result: inout [any _PropertyGraph.Consumable],
         context: EnvironmentValues._opaque_InterposeContextProtocol
     ) throws {
         return try forEachChild(
             conformingTo: (any PropertyWrapper).self
         ) { field in
-            if let fieldValue = field.value as? (any _ConsumableViewHypergraphElementProperty) {
+            if let fieldValue = field.value as? (any _PropertyGraph.Consumable) {
                 guard !(type(of: fieldValue )._isHiddenConsumable) else {
                     return
                 }
                 
-                let attribute: any _ConsumableViewHypergraphElementProperty = try fieldValue.__conversion(context: context)
+                let attribute: any _PropertyGraph.Consumable = try fieldValue.__conversion(context: context)
                 
                 result.append(fieldValue)
                 

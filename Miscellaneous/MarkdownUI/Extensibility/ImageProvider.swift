@@ -3,7 +3,7 @@
 //
 
 import SwiftUI
-private import SwiftUIZ
+internal import SwiftUIZ
 
 /// A type that provides a view that asynchronously loads and displays an image in a Markdown view.
 ///

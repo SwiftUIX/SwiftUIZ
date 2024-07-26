@@ -4,7 +4,7 @@
 
 import Foundation
 import SwiftUI
-private import SwiftUIX
+internal import SwiftUIX
 
 /// An image provider that loads images from resources located in an app or a module.
 ///

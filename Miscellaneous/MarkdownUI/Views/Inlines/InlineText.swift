@@ -3,7 +3,7 @@
 //
 
 import SwiftUI
-private import SwiftUIX
+internal import SwiftUIX
 
 struct InlineText: Equatable, View {
     private let inlines: [InlineNode]

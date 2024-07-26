@@ -15,7 +15,7 @@ extension _LightweightViewHypergraph {
         
         public let id = _AnyViewHypergraph.InterposeID()
         public var state: ViewInterpositionState = []
-        public var elementProperties: [_ViewHyperpropertyID: any _ConsumableViewHypergraphElementProperty] = [:]
+        public var elementProperties: [_PGElementID: any _PropertyGraph.Consumable] = [:]
         public var elements = IdentifierIndexingArray<any _HeavyweightViewHypergraphElement, _HeavyweightViewHypergraphElementID>(id: \._viewGraphElementID)
         
         public var staticViewDescription = _ViewTypeDescription()

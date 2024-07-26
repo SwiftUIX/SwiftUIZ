@@ -2,9 +2,9 @@
 // Copyright (c) Vatsal Manot
 //
 
-private import _SwiftUIZ_NukeUI
+internal import _SwiftUIZ_NukeUI
 import SwiftUI
-private import SwiftUIX
+internal import SwiftUIX
 
 /// The default image provider, which loads images from the network.
 public struct DefaultImageProvider: ImageProvider {

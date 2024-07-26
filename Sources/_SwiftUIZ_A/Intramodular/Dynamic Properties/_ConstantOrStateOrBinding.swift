@@ -88,8 +88,8 @@ public struct _ConstantOrStateOrBinding<Value>: _SwiftUIZ_DynamicProperty  {
     }
     
     public static func binding(
-        get: @escaping () -> Value,
-        set: @escaping (Value) -> Void
+        get: @escaping @Sendable () -> Value,
+        set: @escaping @Sendable (Value) -> Void
     ) -> Self {
         binding(Binding(get: get, set: set))
     }

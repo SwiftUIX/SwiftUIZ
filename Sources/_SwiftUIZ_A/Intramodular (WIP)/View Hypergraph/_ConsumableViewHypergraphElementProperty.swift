@@ -4,29 +4,32 @@
 
 import SwiftUI
 
-public protocol _ConsumableViewHypergraphElementProperty {
-    static var _isHiddenConsumable: Bool { get }
+public enum _PropertyGraph {
     
-    var _isConsumableResolved: Bool { get throws }
-    
-    @MainActor
-    dynamic func __conversion(
-        context: EnvironmentValues._opaque_InterposeContextProtocol
-    ) throws -> any _ConsumableViewHypergraphElementProperty
-    
-    @MainActor
-    func _resolveShallowIdentifier(
-        in context: some EnvironmentValues._opaque_InterposeContextProtocol
-    ) throws -> _ViewHyperpropertyID
-    
-    @MainActor
-    func update<Context: EnvironmentValues._opaque_InterposeContextProtocol>(
-        id: _ViewHyperpropertyID,
-        context: inout Context
-    ) throws
 }
 
-extension _ConsumableViewHypergraphElementProperty {
+extension _PropertyGraph {
+    public protocol Consumable {
+        static var _isHiddenConsumable: Bool { get }
+        
+        var _isConsumableResolved: Bool { get throws }
+        
+        dynamic func __conversion(
+            context: EnvironmentValues._opaque_InterposeContextProtocol
+        ) throws -> any _PropertyGraph.Consumable
+        
+        func _resolveShallowIdentifier(
+            in context: some EnvironmentValues._opaque_InterposeContextProtocol
+        ) throws -> _PGElementID
+        
+        func update<Context: EnvironmentValues._opaque_InterposeContextProtocol>(
+            id: _PGElementID,
+            context: inout Context
+        ) throws
+    }
+}
+
+extension _PropertyGraph.Consumable {
     public static var _isHiddenConsumable: Bool {
         false
     }

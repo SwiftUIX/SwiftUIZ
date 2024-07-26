@@ -17,7 +17,7 @@ extension _AnyViewHypergraph {
     public protocol InterposeProtocol: AnyObject, HashEquatable, Identifiable where ID == _AnyViewHypergraph.InterposeID {
         var parent: Self? { get }
         var id: _AnyViewHypergraph.InterposeID { get }
-        var elementProperties: [_ViewHyperpropertyID: any _ConsumableViewHypergraphElementProperty] { get set }
+        var elementProperties: [_PGElementID: any _PropertyGraph.Consumable] { get set }
         var state: ViewInterpositionState { get set }
         
         var staticViewTypeDescriptor: _StaticViewTypeDescriptor { get }

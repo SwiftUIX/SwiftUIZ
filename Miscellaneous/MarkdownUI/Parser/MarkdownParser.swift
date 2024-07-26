@@ -2,7 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
-@_spi(Internal) private import SwiftUIX
+@_spi(Internal) internal import SwiftUIX
 import Foundation
 
 @_implementationOnly import cmark_gfm
