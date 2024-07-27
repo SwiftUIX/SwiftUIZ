@@ -4,10 +4,14 @@
 
 import SwiftUI
 
-struct PropertyList {
-    struct ElementLayout<Fields> {
+public struct PropertyList {
+    public struct ElementLayout<Fields>: CustomStringConvertible {
         var metadata: (Any.Type, UInt)
         var fields: Fields
+        
+        public var description: String {
+            String(describing: fields)
+        }
         
         mutating func withUnsafeValuePointer<T, ReturnType>(
             _ type: T.Type,
@@ -23,7 +27,7 @@ struct PropertyList {
         }
     }
     
-    struct ElementFieldsV1: CustomReflectable {
+    public struct ElementFieldsV1: CustomReflectable, CustomStringConvertible {
         var keyType: Any.Type
         var before: UnsafeMutablePointer<ElementLayout<ElementFieldsV1>>?
         var after: UnsafeMutablePointer<ElementLayout<ElementFieldsV1>>?
@@ -31,7 +35,11 @@ struct PropertyList {
         var keyFilter: UInt
         var id: Int
         
-        var customMirror: Mirror {
+        public var description: String {
+            String(describing: keyType)
+        }
+        
+        public var customMirror: Mirror {
             Mirror(self, children: [
                 "keyType": keyType,
                 "length": length,
@@ -41,7 +49,7 @@ struct PropertyList {
         }
     }
     
-    struct ElementFieldsV6 {
+    public struct ElementFieldsV6: CustomReflectable, CustomStringConvertible {
         var keyType: Any.Type
         var before: UnsafeMutablePointer<ElementLayout<ElementFieldsV6>>?
         var after: UnsafeMutablePointer<ElementLayout<ElementFieldsV6>>?
@@ -50,18 +58,40 @@ struct PropertyList {
         var skipCount: UInt32
         var keyFilter: UInt
         var id: Int
+        
+        public var description: String {
+            String(describing: keyType)
+        }
+        
+        public var customMirror: Mirror {
+            Mirror(self, children: [
+                "keyType": keyType,
+                "length": length,
+                "keyFilter": keyFilter,
+                "id": id,
+            ])
+        }
     }
     
-    struct TypedElementLayout<Fields, Value> {
+    public struct TypedElementLayout<Fields, Value> {
         var base: ElementLayout<Fields>
         var value: Value
     }
     
-    enum ElementPointer: CustomReflectable {
+    public enum ElementPointer: CustomReflectable, CustomStringConvertible {
         case v1(UnsafeMutablePointer<ElementLayout<ElementFieldsV1>>)
         case v6(UnsafeMutablePointer<ElementLayout<ElementFieldsV6>>)
         
-        var customMirror: Mirror {
+        public var description: String {
+            switch self {
+                case .v1(let pointer):
+                    String(describing: pointer.pointee)
+                case .v6(let pointer):
+                    String(describing: pointer.pointee)
+            }
+        }
+        
+        public var customMirror: Mirror {
             Mirror(self, children: [
                 "object": object,
                 "metadata": metadata,
@@ -256,17 +286,17 @@ struct PropertyList {
 }
 
 extension PropertyList: CustomDebugStringConvertible, CustomStringConvertible {
-    var debugDescription: String {
+    public var debugDescription: String {
         description
     }
     
-    var description: String {
+    public var description: String {
         Array(self).description
     }
 }
 
 extension PropertyList: Sequence {
-    func makeIterator() -> AnyIterator<ElementPointer> {
+    public func makeIterator() -> AnyIterator<ElementPointer> {
         guard let elements else {
             return AnyIterator(EmptyCollection<ElementPointer>().makeIterator())
         }

@@ -23,7 +23,7 @@ private struct GraphInputsLayout {
 }
 
 extension _GraphInputs {
-    var customInputs: PropertyList {
+    public var customInputs: PropertyList {
         withUnsafePointer(to: self) { ptr -> PropertyList in
             ptr.withMemoryRebound(to: GraphInputsLayout.self, capacity: 1) { ptr -> PropertyList in
                 ptr.pointee.customInputs
@@ -31,7 +31,7 @@ extension _GraphInputs {
         }
     }
     
-    mutating func withCustomInputs<ReturnType>(
+    public mutating func withCustomInputs<ReturnType>(
         do body: (inout PropertyList) -> ReturnType
     ) -> ReturnType {
         withUnsafeMutablePointer(to: &self) { ptr -> ReturnType in

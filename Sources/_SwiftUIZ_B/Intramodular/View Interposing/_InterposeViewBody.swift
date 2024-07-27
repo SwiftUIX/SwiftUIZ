@@ -3,6 +3,7 @@
 //
 
 import _SwiftUI_Internals
+import _SwiftUIZ_A
 @_spi(Internal) import SwiftUIX
 
 public struct _InterposeViewBody<Root: DynamicView, Content: View>: Initiable, _ThinForceViewModifier {

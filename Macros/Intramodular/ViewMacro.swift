@@ -46,8 +46,9 @@ extension ViewMacro: MemberMacro {
             DeclSyntax(
                 """
                 @_implements(View, body)
+                @inline(never)
                 @ViewBuilder
-                public var _actualViewBody: AnyView {
+                public dynamic var _actualViewBody: AnyView {
                     Group {
                         \(declaration)
                     }

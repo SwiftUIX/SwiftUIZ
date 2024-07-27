@@ -54,6 +54,11 @@ extension View {
     public typealias _ObserveDynamicReplacementManager = _View_ObserveDynamicReplacementManager
 }
 
+extension ViewModifier {
+    public typealias _DynamicReplacementObserver = _View_DynamicReplacementObserver
+    public typealias _ObserveDynamicReplacementManager = _View_ObserveDynamicReplacementManager
+}
+
 // MARK: - Auxiliary
 
 @propertyWrapper

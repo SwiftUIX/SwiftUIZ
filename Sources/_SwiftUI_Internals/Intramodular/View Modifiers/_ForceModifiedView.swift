@@ -4,6 +4,7 @@
 
 import SwiftUIX
 import Swallow
+import Engine
 
 public protocol _AnyForceModifiedView: DynamicProperty, View {
     static var _disableForceModifiedViewModification: Bool { get }
@@ -281,7 +282,7 @@ struct _RecursiveThinModifiedView<Content: View, Modifier: _ThinViewModifier<Con
 struct _RecursiveThinForceModifiedView<Content: View, Modifier: _ThinForceViewModifier<Content, Content.Body>>: View {
     public let content: Content
     public let modifier: Modifier
-    
+        
     public init(content: Content, modifier: Modifier) {
         self.content = content
         self.modifier = modifier
