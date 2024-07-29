@@ -76,7 +76,7 @@ extension TypeMetadata {
     fileprivate func _extractDynamicViewElementIDs() -> Set<_HeavyweightViewHypergraphStaticElementID> {
         var result: Set<_HeavyweightViewHypergraphStaticElementID> = []
         
-        for keyPath in _shallow_allKeyPathsByName.values {
+        for keyPath in _allTopLevelKeyPathsByName.values {
             if let keyPath = keyPath as? (any _HeavyweightViewHypergraphElementRepresentingPropertyKeyPath) {
                 result.insert(.viewProperty(.init(wrappedValue: keyPath)))
             } else {

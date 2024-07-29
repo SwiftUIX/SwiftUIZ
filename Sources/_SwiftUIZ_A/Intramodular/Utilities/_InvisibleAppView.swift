@@ -32,13 +32,20 @@ private class _InvisibleAppViewIndex: ObservableObject {
     @_StaticMirrorQuery(#metatype((any _InvisibleAppWindow).self))
     private static var allWindowTypes: [any _InvisibleAppWindow.Type]
     
-    private(set) var views: [View]!
-    private(set) var windows: [Window]!
+    @Published private(set) var views: [View] = []
+    @Published private(set) var windows: [Window] = []
     
     @MainActor
     private init() {
-        self.views = _InvisibleAppViewIndex.allViewTypes.map({ View(owner: self, swiftType: $0) })
-        self.windows = _InvisibleAppViewIndex.allWindowTypes.map({ Window(owner: self, swiftType: $0) })
+        Task { @MainActor in
+            await Task.yield()
+            
+            self.views = _InvisibleAppViewIndex.allViewTypes.map({ View(owner: self, swiftType: $0) })
+            
+            await Task.yield()
+
+            self.windows = _InvisibleAppViewIndex.allWindowTypes.map({ Window(owner: self, swiftType: $0) })
+        }
     }
 }
 
