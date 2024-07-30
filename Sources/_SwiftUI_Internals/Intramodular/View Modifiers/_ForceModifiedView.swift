@@ -4,7 +4,6 @@
 
 import SwiftUIX
 import Swallow
-import Engine
 
 public protocol _AnyForceModifiedView: DynamicProperty, View {
     static var _disableForceModifiedViewModification: Bool { get }
