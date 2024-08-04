@@ -24,7 +24,7 @@ public struct _StaticViewTypeDescriptor {
         let view = try InstanceMirror(reflecting: view)
         let context = _StaticViewTypeDescriptor.UpdateContext(view: view)
         
-        let descriptorUpdatingTypes: [any _StaticViewTypeDescriptor.StaticUpdater.Type] = try TypeMetadata._queryAll(
+        let descriptorUpdatingTypes: [any _StaticViewTypeDescriptor.StaticUpdater.Type] = try TypeMetadata._query(
             .conformsTo((any _StaticViewTypeDescriptor.StaticUpdater).self),
             .nonAppleFramework,
             .pureSwift

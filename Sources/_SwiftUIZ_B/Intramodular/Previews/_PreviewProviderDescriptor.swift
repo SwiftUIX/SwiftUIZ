@@ -7,7 +7,7 @@ import Runtime
 import Swallow
 
 public struct _PreviewProviderDescriptor: Identifiable {
-    public let type: _SerializedTypeIdentity
+    public let type: _CodableSwiftType
     public let title: String
     public let content: AnyView
     
@@ -16,7 +16,7 @@ public struct _PreviewProviderDescriptor: Identifiable {
     }
     
     public init<Content: View>(
-        type: _SerializedTypeIdentity,
+        type: _CodableSwiftType,
         title: String,
         _ content: Content
     ) {
@@ -29,7 +29,7 @@ public struct _PreviewProviderDescriptor: Identifiable {
 extension _PreviewProviderDescriptor {
     init(from view: any ViewPreview.Type) {        
         self.init(
-            type: _SerializedTypeIdentity(from: view),
+            type: _CodableSwiftType(from: view),
             title: view.title,
             view.init().eraseToAnyView()
         )

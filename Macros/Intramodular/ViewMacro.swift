@@ -6,14 +6,48 @@ import MacroBuilder
 import Swallow
 import SwiftSyntax
 
+public struct ViewMacro {
+    
+}
+
+extension ViewMacro: ExtensionMacro {
+    public static func expansion(
+        of node: AttributeSyntax,
+        attachedTo declaration: some DeclGroupSyntax,
+        providingExtensionsOf type: some TypeSyntaxProtocol,
+        conformingTo protocols: [TypeSyntax],
+        in context: some MacroExpansionContext
+    ) throws -> [ExtensionDeclSyntax] {
+        guard let declaration = declaration.as(StructDeclSyntax.self) else {
+            return []
+        }
+        
+        let alreadyHasViewConformance: Bool = declaration.inheritanceClause?.inheritedTypes.contains(where: { $0.trimmedDescription == "View" }) ?? false
+        
+        let newConformances: ExprSyntax = alreadyHasViewConformance ? "DynamicView" : "View, DynamicView"
+        
+        let result = try ExtensionDeclSyntax(
+            """
+            extension \(type.trimmed): CustomSourceDeclarationReflectable, \(newConformances) {
+                public static nonisolated var customSourceDeclarationMirror: _StaticSwift.SourceDeclarationMirror {
+                    .init(file: #file, function: #function, line: #line, column: nil)
+                }
+            }
+            """
+        )
+        
+        return [result]
+    }
+}
+
 extension ViewMacro: MemberMacro {
-    static func expansion<Declaration: DeclGroupSyntax, Context: MacroExpansionContext>(
+    public static func expansion<Declaration: DeclGroupSyntax, Context: MacroExpansionContext>(
         of node: AttributeSyntax,
         providingMembersOf declaration: Declaration,
         in context: Context
     ) throws -> [DeclSyntax] {
         guard Array<SwiftSyntax.SyntaxKind>([.classDecl, .extensionDecl, .structDecl]).contains(declaration.kind) else {
-            throw _Error()
+            throw ViewMacroError()
         }
         
         guard let declaration = declaration.as(StructDeclSyntax.self) else {
@@ -60,36 +94,6 @@ extension ViewMacro: MemberMacro {
     }
 }
 
-extension ViewMacro: ExtensionMacro {
-    public static func expansion(
-        of node: AttributeSyntax,
-        attachedTo declaration: some DeclGroupSyntax,
-        providingExtensionsOf type: some TypeSyntaxProtocol,
-        conformingTo protocols: [TypeSyntax],
-        in context: some MacroExpansionContext
-    ) throws -> [ExtensionDeclSyntax] {
-        guard let declaration = declaration.as(StructDeclSyntax.self) else {
-            return []
-        }
-        
-        let alreadyHasViewConformance: Bool = declaration.inheritanceClause?.inheritedTypes.contains(where: { $0.trimmedDescription == "View" }) ?? false
-        
-        let newConformances: ExprSyntax = alreadyHasViewConformance ? "DynamicView" : "View, DynamicView"
-        
-        let result = try ExtensionDeclSyntax(
-            """
-            extension \(type.trimmed): CustomSourceDeclarationReflectable, \(newConformances) {
-                public static var customSourceDeclarationMirror: _StaticSwift.SourceDeclarationMirror {
-                    .init(file: #file, function: #function, line: #line, column: nil)
-                }
-            }
-            """
-        )
-        
-        return [result]
-    }
-}
-
 extension ViewMacro: PeerMacro {
     public static func expansion(
         of node: AttributeSyntax,
@@ -100,8 +104,6 @@ extension ViewMacro: PeerMacro {
     }
 }
 
-struct ViewMacro {
-    struct _Error: Error {
-        
-    }
+struct ViewMacroError: Error {
+    
 }
