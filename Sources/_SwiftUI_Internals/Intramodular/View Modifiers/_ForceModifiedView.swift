@@ -90,9 +90,9 @@ extension _ThinForceModifiedView where ViewModifierType: _ThinViewModifier<Body>
         
         let keyPath: KeyPath<Self, _ThinModifiedBody> = \Self.[_lazilyModifiedBy: Metatype(ViewModifierType.self)]
         
-        let _modifiedView = view[keyPath]
+        let modifiedView = view[keyPath]
         
-        return _ThinModifiedBody._makeView(view: _modifiedView, inputs: inputs)
+        return _ThinModifiedBody._makeView(view: modifiedView, inputs: inputs)
     }
     
     public static func _makeViewList(
@@ -105,9 +105,9 @@ extension _ThinForceModifiedView where ViewModifierType: _ThinViewModifier<Body>
         
         let keyPath: KeyPath<Self, _ThinModifiedBody> = \Self.[_lazilyModifiedBy: Metatype(ViewModifierType.self)]
         
-        let _modifiedView = view[keyPath]
+        let modifiedView = view[keyPath]
         
-        return _ThinModifiedBody._makeViewList(view: _modifiedView, inputs: inputs)
+        return _ThinModifiedBody._makeViewList(view: modifiedView, inputs: inputs)
     }
     
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
@@ -140,9 +140,13 @@ extension _ThinForceModifiedView where ViewModifierType: _ThinForceViewModifier<
 
         let keyPath: KeyPath<Self, _ThinForceModifiedBody> = \Self.[_lazilyModifiedBy: Metatype(ViewModifierType.self)]
         
-        let _modifiedView = view[keyPath]
+        let modifiedView = view[keyPath]
         
-        return _ThinForceModifiedBody._makeView(view: _modifiedView, inputs: inputs)
+        let result: _ViewOutputs = _ThinForceModifiedBody._makeView(view: modifiedView, inputs: inputs)
+        
+        print(result)
+        
+        return result
     }
     
     public static func _makeViewList(
@@ -155,9 +159,11 @@ extension _ThinForceModifiedView where ViewModifierType: _ThinForceViewModifier<
 
         let keyPath: KeyPath<Self, _ThinForceModifiedBody> = \Self.[_lazilyModifiedBy: Metatype(ViewModifierType.self)]
         
-        let _modifiedView = view[keyPath]
+        let modifiedView = view[keyPath]
         
-        return _ThinForceModifiedBody._makeViewList(view: _modifiedView, inputs: inputs)
+        let result: _ViewListOutputs = _ThinForceModifiedBody._makeViewList(view: modifiedView, inputs: inputs)
+                
+        return result
     }
     
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
@@ -186,9 +192,9 @@ extension _ForceModifiedView where ViewModifierType: ViewModifier {
     ) -> _ViewOutputs {
         let keyPath: KeyPath<Self, _ModifiedBody> = \Self.[_lazilyModifiedBy: Metatype(ViewModifierType.self)]
         
-        let _modifiedView = view[keyPath]
+        let modifiedView = view[keyPath]
         
-        return _ModifiedBody._makeView(view: _modifiedView, inputs: inputs)
+        return _ModifiedBody._makeView(view: modifiedView, inputs: inputs)
     }
     
     public static func _makeViewList(
@@ -197,9 +203,9 @@ extension _ForceModifiedView where ViewModifierType: ViewModifier {
     ) -> _ViewListOutputs {
         let keyPath: KeyPath<Self, _ModifiedBody> = \Self.[_lazilyModifiedBy: Metatype(ViewModifierType.self)]
         
-        let _modifiedView = view[keyPath]
+        let modifiedView = view[keyPath]
         
-        return _ModifiedBody._makeViewList(view: _modifiedView, inputs: inputs)
+        return _ModifiedBody._makeViewList(view: modifiedView, inputs: inputs)
     }
     
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
