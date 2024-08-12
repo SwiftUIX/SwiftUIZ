@@ -3,7 +3,7 @@
 //
 
 import Swallow
-@_spi(Internal) import SwiftUIX
+import SwiftUIX
 
 /// A convenience protocol that allows building `<View>Proxy` style APIs quickly.
 public protocol _ViewProxyType: Equatable {
