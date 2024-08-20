@@ -40,7 +40,7 @@ extension _PreviewProviderDescriptor {
 
 extension _PreviewProviderDescriptor: CaseIterable {
     public static let allCases: [_PreviewProviderDescriptor] = {
-        RuntimeDiscoverableTypes
+        RuntimeDiscoveryIndex
             .enumerate(
                 typesConformingTo: (any ViewPreview).self
             )

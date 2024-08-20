@@ -8,7 +8,7 @@ import Runtime
 import Swallow
 import SwiftUIX
 
-/// Scenes discovered at runtime using `RuntimeDiscoverableTypes`.
+/// Scenes discovered at runtime using `RuntimeDiscoveryIndex`.
 public struct _RuntimeDiscoveredScenes: _ExtendedScene {
     @_StaticMirrorQuery(type: (any Scene).self)
     private static var allSceneTypes: [any Scene.Type]
