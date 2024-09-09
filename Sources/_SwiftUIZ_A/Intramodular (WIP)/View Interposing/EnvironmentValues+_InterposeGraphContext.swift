@@ -6,11 +6,20 @@ import CorePersistence
 import SwiftUI
 
 extension EnvironmentValues {
-    public protocol _InterposeContextProtocol: EnvironmentValues._opaque_InterposeContextProtocol {
+    public protocol _opaque_InterposeGraphContextProtocol {
+        var _isInvalidInstance: Bool { get set }
+        
+        var scope: _ViewInterposeScope { get set }
+        var _opaque_viewGraph: _AnyViewHypergraph? { get set }
+    }
+}
+
+extension EnvironmentValues {
+    public protocol _InterposeGraphContextProtocol: EnvironmentValues._opaque_InterposeGraphContextProtocol {
         var _graph: (any _AnyViewHypergraphType)? { get set }
     }
     
-    public struct _InterposeContext: EnvironmentValues._InterposeContextProtocol {
+    public struct _InterposeGraphContext: EnvironmentValues._InterposeGraphContextProtocol {
         public var _isInvalidInstance: Bool = true
         
         public weak var _graph: (any _AnyViewHypergraphType)? {
@@ -21,7 +30,7 @@ extension EnvironmentValues {
             }
         }
         
-        public var _opaque_dynamicViewGraph: _SwiftUIZ_A._AnyViewHypergraph? {
+        public var _opaque_viewGraph: _SwiftUIZ_A._AnyViewHypergraph? {
             get {
                 self._graph
             } set {
@@ -52,22 +61,22 @@ extension EnvironmentValues {
 }
 
 extension EnvironmentValues {
-    private struct _InterposeContextKey: SwiftUI.EnvironmentKey {
-        static let defaultValue = EnvironmentValues._InterposeContext(graph: nil)
+    private struct _InterposeGraphContextKey: SwiftUI.EnvironmentKey {
+        static let defaultValue = EnvironmentValues._InterposeGraphContext(graph: nil)
     }
     
-    public var _interposeContext: EnvironmentValues._InterposeContext {
+    public var _interposeContext: EnvironmentValues._InterposeGraphContext {
         get {
-            self[_InterposeContextKey.self]
+            self[_InterposeGraphContextKey.self]
         } set {
-            self[_InterposeContextKey.self] = newValue
+            self[_InterposeGraphContextKey.self] = newValue
         }
     }
 }
 
-extension EnvironmentValues._InterposeContext: ThrowingMergeOperatable {
+extension EnvironmentValues._InterposeGraphContext: ThrowingMergeOperatable {
     public mutating func mergeInPlace(
-        with other: EnvironmentValues._InterposeContext
+        with other: EnvironmentValues._InterposeGraphContext
     ) throws {
         assert(scope == other.scope)
         
@@ -75,10 +84,22 @@ extension EnvironmentValues._InterposeContext: ThrowingMergeOperatable {
     }
 }
 
-extension EnvironmentValues._InterposeContext {
+extension EnvironmentValues._InterposeGraphContext {
     public var inheritance: [any _AnyViewHypergraph.InterposeProtocol] {
         precondition(!graph._isInvalidInstance)
         
         return _inheritance.map({ graph[$0] })
+    }
+}
+
+// MARK: - Auxiliary
+
+extension EnvironmentValues {
+    public var _opaque_interposeContext: (any EnvironmentValues._opaque_InterposeGraphContextProtocol)? {
+        get {
+            __unsafe_EnvironmentValues_opaque_interposeContext_getter(self)
+        } set {
+            __unsafe_EnvironmentValues_opaque_interposeContext_setter(&self, newValue)
+        }
     }
 }

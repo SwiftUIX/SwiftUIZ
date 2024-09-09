@@ -6,6 +6,21 @@ import CorePersistence
 import Runtime
 import Swallow
 
+public protocol _HeavyweightViewHypergraphElement: DynamicProperty, Identifiable {
+    var _interposeContext: EnvironmentValues._InterposeGraphContext { get throws }
+    
+    var id: _HeavyweightViewHypergraphElementID { get }
+}
+
+public protocol _HeavyweightViewHypergraphElementRepresentingProperty: DynamicProperty, PropertyWrapper {
+    
+}
+
+public protocol _HeavyweightViewHypergraphElementRepresentingPropertyKeyPath<Root>: AnyKeyPath {
+    associatedtype Root: View
+    associatedtype Value: _HeavyweightViewHypergraphElementRepresentingProperty
+}
+
 public struct _HeavyweightViewHypergraphElementID: IdentifierProtocol, Sendable {
     private let base = _AutoIncrementingIdentifier<Self>()
     
@@ -31,37 +46,10 @@ public enum _HeavyweightViewHypergraphStaticElementID: Hashable, @unchecked Send
     }
 }
 
-public protocol _HeavyweightViewHypergraphElement: DynamicProperty, Identifiable {
-    var _interposeContext: EnvironmentValues._InterposeContext { get throws }
-    
-    var id: _HeavyweightViewHypergraphElementID { get }
-}
-
 extension _HeavyweightViewHypergraphElement {
     public var _viewGraphElementID: _HeavyweightViewHypergraphElementID {
         id
     }
-}
-
-public protocol _HeavyweightViewHypergraphElementRepresentingProperty: DynamicProperty, PropertyWrapper {
-    
-}
-
-public protocol _HeavyweightViewHypergraphElementRepresentingPropertyKeyPath<Root>: AnyKeyPath {
-    associatedtype Root: View
-    associatedtype Value: _HeavyweightViewHypergraphElementRepresentingProperty
-}
-
-extension _HeavyweightViewHypergraphElementRepresentingPropertyKeyPath {
-    static func _opaque_to_HeavyweightViewHypergraphSymbol(
-        _ id: _HeavyweightViewHypergraphStaticElementID
-    ) -> any _AnyViewHypergraph.SymbolType {
-        _AnyViewHypergraph.Symbol<Value>.staticElement(id)
-    }
-}
-
-extension KeyPath: _HeavyweightViewHypergraphElementRepresentingPropertyKeyPath where Root: View, Value: _HeavyweightViewHypergraphElementRepresentingProperty {
-    
 }
 
 extension _HeavyweightViewHypergraphStaticElementID {
@@ -73,11 +61,27 @@ extension _HeavyweightViewHypergraphStaticElementID {
     }
 }
 
+// MARK: - Implemented Conformances
+
+extension KeyPath: _HeavyweightViewHypergraphElementRepresentingPropertyKeyPath where Root: View, Value: _HeavyweightViewHypergraphElementRepresentingProperty {
+    
+}
+
+// MARK: - Auxiliary
+
 extension _HeavyweightViewHypergraphStaticElementID {
     public func _opaque_to_HeavyweightViewHypergraphSymbol() -> any _AnyViewHypergraph.SymbolType {
         switch self {
             case .viewProperty(let x):
                 return type(of: x.wrappedValue)._opaque_to_HeavyweightViewHypergraphSymbol(self)
         }
+    }
+}
+
+extension _HeavyweightViewHypergraphElementRepresentingPropertyKeyPath {
+    static func _opaque_to_HeavyweightViewHypergraphSymbol(
+        _ id: _HeavyweightViewHypergraphStaticElementID
+    ) -> any _AnyViewHypergraph.SymbolType {
+        _AnyViewHypergraph.Symbol<Value>.staticElement(id)
     }
 }

@@ -75,7 +75,7 @@ extension _InterposedViewBody {
 
 extension _InterposedViewBodyProxy {
     private var _dynamicViewGraphRepresentation: (any _AnyViewHypergraph.InterposeProtocol)! {
-        _storage?._viewGraphInsertion.insertedObject
+        _storage?.graphInsertion.insertedObject
     }
         
     var _isViewBodyResolved: Bool {
@@ -87,9 +87,9 @@ extension _InterposedViewBodyProxy {
             return
         }
         
-        let insertedObject = try storage._viewGraphInsertion.insertedObject
+        let insertedObject = try storage.graphInsertion.insertedObject
         
-        try storage._viewGraphInsertion.graph?.prepare(insertedObject)
+        try storage.graphInsertion.graph?.prepare(insertedObject)
         
         insertedObject.elementProperties = try _extractConsumableElementProperties()
         
@@ -102,13 +102,13 @@ extension _InterposedViewBodyProxy {
         let mirror = InstanceMirror(root)!
         
         var properties: [any _PropertyGraph.Consumable] = try withMutableScope([]) {
-            try mirror._collectConsumableElementProperties(into: &$0, context: _dynamicViewGraphContext)
+            try mirror._collectConsumableElementProperties(into: &$0, context: graphContext)
         }
         
-        properties = try properties.map({ try $0.__conversion(context: _dynamicViewGraphContext) })
+        properties = try properties.map({ try $0.__conversion(context: graphContext) })
         
         return try properties._mapToDictionaryWithUniqueKey {
-            try $0._resolveShallowIdentifier(in: _dynamicViewGraphContext)
+            try $0._resolveShallowIdentifier(in: graphContext)
         }
     }
 }
@@ -117,14 +117,14 @@ extension _InterposedViewBodyProxy {
 
 extension _InterposedViewBodyStorage {
     @AssociatedObject(.OBJC_ASSOCIATION_RETAIN)
-    var _viewGraphInsertion: (any _InterposedViewBody_ViewGraphInsertion)!
+    var graphInsertion: (any _InterposedViewBody_ViewGraphInsertion)!
 }
 
 extension InstanceMirror {
     // FIXME: SLOW
     package func _collectConsumableElementProperties(
         into result: inout [any _PropertyGraph.Consumable],
-        context: EnvironmentValues._opaque_InterposeContextProtocol
+        context: EnvironmentValues._opaque_InterposeGraphContextProtocol
     ) throws {
         return try forEachChild(
             conformingTo: (any PropertyWrapper).self

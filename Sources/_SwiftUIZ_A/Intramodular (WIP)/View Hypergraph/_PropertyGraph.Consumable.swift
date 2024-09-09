@@ -15,14 +15,14 @@ extension _PropertyGraph {
         var _isConsumableResolved: Bool { get throws }
         
         dynamic func __conversion(
-            context: EnvironmentValues._opaque_InterposeContextProtocol
+            context: EnvironmentValues._opaque_InterposeGraphContextProtocol
         ) throws -> any _PropertyGraph.Consumable
         
         func _resolveShallowIdentifier(
-            in context: some EnvironmentValues._opaque_InterposeContextProtocol
+            in context: some EnvironmentValues._opaque_InterposeGraphContextProtocol
         ) throws -> _PGElementID
         
-        func update<Context: EnvironmentValues._opaque_InterposeContextProtocol>(
+        func update<Context: EnvironmentValues._opaque_InterposeGraphContextProtocol>(
             id: _PGElementID,
             context: inout Context
         ) throws

@@ -26,11 +26,11 @@ extension ForEach where Content: View {
 
 public var __unsafe_ViewGraphType: _AnyViewHypergraph.Type!
 
-public var __unsafe_EnvironmentValues_opaque_interposeContext_getter: (EnvironmentValues) -> (any EnvironmentValues._opaque_InterposeContextProtocol)? = { _ in
+public var __unsafe_EnvironmentValues_opaque_interposeContext_getter: (EnvironmentValues) -> (any EnvironmentValues._opaque_InterposeGraphContextProtocol)? = { _ in
     nil
 }
 
-public var __unsafe_EnvironmentValues_opaque_interposeContext_setter: (inout EnvironmentValues, (any EnvironmentValues._opaque_InterposeContextProtocol)?) -> Void = { _, _ in
+public var __unsafe_EnvironmentValues_opaque_interposeContext_setter: (inout EnvironmentValues, (any EnvironmentValues._opaque_InterposeGraphContextProtocol)?) -> Void = { _, _ in
     fatalError()
 }
 
@@ -38,8 +38,8 @@ public var __unsafe_EnvironmentValues_opaque_interposeContext_setter: (inout Env
     __unsafe_EnvironmentValues_opaque_interposeContext_getter = { environment in
         environment._interposeContext
     }
-    __unsafe_EnvironmentValues_opaque_interposeContext_setter = { (environment: inout EnvironmentValues, newValue: (any EnvironmentValues._opaque_InterposeContextProtocol)?) in
-        let context: EnvironmentValues._InterposeContext = newValue.map({ $0 as! EnvironmentValues._InterposeContext })!
+    __unsafe_EnvironmentValues_opaque_interposeContext_setter = { (environment: inout EnvironmentValues, newValue: (any EnvironmentValues._opaque_InterposeGraphContextProtocol)?) in
+        let context: EnvironmentValues._InterposeGraphContext = newValue.map({ $0 as! EnvironmentValues._InterposeGraphContext })!
         
         environment._interposeContext = context
     }

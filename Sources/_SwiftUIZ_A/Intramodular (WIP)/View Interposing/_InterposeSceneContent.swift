@@ -12,13 +12,31 @@ public struct _InterposeSceneContent<Content: View>: View, _InterposedSceneConte
     public let content: Content
     
     var _invisibleAppViewIndexingDisabled: Bool = false
-    
-    public init(@ViewBuilder content: () -> Content) {
-        self.content = content()
+        
+    public init(content: Content) {
+        self.content = content
     }
     
-    public init(_ content: Content) {
-        self.content = content
+    public init(@ViewBuilder content: () -> Content) {
+        self.init(content: content())
+    }
+        
+    public var body: some View {
+        content
+            ._modifier(_SetViewInterposeScope())
+            .transformEnvironment(\._opaque_interposeContext) { context in
+                context?._isInvalidInstance = false
+                context?._opaque_viewGraph = graph
+            }
+            .background {
+                if !_invisibleAppViewIndexingDisabled {
+                    _InvisibleAppViewIndexer()
+                        .transformEnvironment(\._opaque_interposeContext) { context in
+                            context?._isInvalidInstance = false
+                            context?._opaque_viewGraph = graph
+                        }
+                }
+            }
     }
     
     public func _disableInvisibleAppViewIndexing() -> Self {
@@ -26,24 +44,4 @@ public struct _InterposeSceneContent<Content: View>: View, _InterposedSceneConte
             $0._invisibleAppViewIndexingDisabled = true
         }
     }
-    
-    public var body: some View {
-        content
-            ._modifier(_SetViewInterposeScope())
-            .transformEnvironment(\._opaque_interposeContext) { context in
-                context?._isInvalidInstance = false
-                context?._opaque_dynamicViewGraph = graph
-            }
-            .background {
-                if !_invisibleAppViewIndexingDisabled {
-                    _InvisibleAppViewIndexer()
-                        .transformEnvironment(\._opaque_interposeContext) { context in
-                            context?._isInvalidInstance = false
-                            context?._opaque_dynamicViewGraph = graph
-                        }
-                }
-            }
-    }
 }
-
-

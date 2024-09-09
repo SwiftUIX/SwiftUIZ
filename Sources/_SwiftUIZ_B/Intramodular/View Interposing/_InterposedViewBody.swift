@@ -12,16 +12,16 @@ import SwallowMacrosClient
 /// A view that interposes a target view's body.
 @frozen
 public struct _InterposedViewBody<Root: DynamicView, Content: View>: View {
-    @Environment(\._interposeContext) private var _interposeContext: EnvironmentValues._InterposeContext
+    @Environment(\._interposeContext) private var _interposeContext: EnvironmentValues._InterposeGraphContext
     
     @usableFromInline
     let root: Root
     @usableFromInline
     let content: Content
     
-    @ViewStorage private var _viewGraphInsertion: ViewGraphInsertion!
+    @ViewStorage private var graphInsertion: ViewGraphInsertion!
     @StateObject private var _storage = _InterposedViewBodyStorage()
-    @StateObject private var _dynamicViewBridge = _InterposedViewBodyBridge(
+    @StateObject private var _viewBridge = _InterposedViewBodyBridge(
         _swiftType: Root.self,
         _bodyStorage: nil
     )
@@ -32,7 +32,7 @@ public struct _InterposedViewBody<Root: DynamicView, Content: View>: View {
         }
         
         return _InterposedViewBodyProxy(
-            _dynamicViewBridge: _dynamicViewBridge,
+            _viewBridge: _viewBridge,
             _storage: _storage,
             root: root,
             content: content,
@@ -54,33 +54,33 @@ public struct _InterposedViewBody<Root: DynamicView, Content: View>: View {
         }
         
         ResolveBody(
-            _viewGraphInsertion: _viewGraphInsertion,
-            viewProxy: projectedProxy,
+            graphInsertion: graphInsertion,
+            viewBodyProxy: projectedProxy,
             content: content
         )
         .transformEnvironment(\.self) { environment in
-            _viewGraphInsertion.transformEnvironment(&environment)
+            graphInsertion.transformEnvironment(&environment)
         }
-        ._host(_dynamicViewBridge)
+        ._host(_viewBridge)
         ._SwiftUIX_trait(
             _InterposedViewBodyProxy.HydrationSurface.self,
-            _InterposedViewBodyProxy.HydrationSurface(bridge: _dynamicViewBridge)!
+            _InterposedViewBodyProxy.HydrationSurface(bridge: _viewBridge)!
         )
     }
     
     func initialize() throws {
-        _dynamicViewBridge._bodyStorage = _storage
+        _viewBridge._bodyStorage = _storage
         
-        if _viewGraphInsertion == nil {
-            _viewGraphInsertion = try ViewGraphInsertion(
+        if graphInsertion == nil {
+            graphInsertion = try ViewGraphInsertion(
                 for: root,
                 in: self._interposeContext.graph
             )
             
-            _storage._viewGraphInsertion = _viewGraphInsertion
+            _storage.graphInsertion = graphInsertion
             
             Task.detached { @MainActor in
-                _dynamicViewBridge.objectWillChange.send()
+                _viewBridge.objectWillChange.send()
             }
         }
     }
@@ -88,26 +88,26 @@ public struct _InterposedViewBody<Root: DynamicView, Content: View>: View {
 
 extension _InterposedViewBody {
     struct ResolveBody: View {
-        let _viewGraphInsertion: ViewGraphInsertion?
-        let viewProxy: _InterposedViewBodyProxy?
+        let graphInsertion: ViewGraphInsertion?
+        let viewBodyProxy: _InterposedViewBodyProxy?
         let content: Content
         
         var body: some View {
-            if let viewProxy {
+            if let viewBodyProxy {
                 let _: Void = {
                     #try(.optimistic) {
-                        try viewProxy._resolveViewBodyUsing_HeavyweightViewHypergraph()
+                        try viewBodyProxy._resolveViewBodyUsing_HeavyweightViewHypergraph()
                     }
                 }()
                 
-                if viewProxy._isViewBodyResolved {
-                    if let swizzledContent: any View = _viewGraphInsertion?.insertedObject.swizzledViewBody {
+                if viewBodyProxy._isViewBodyResolved {
+                    if let swizzledContent: any View = graphInsertion?.insertedObject.swizzledViewBody {
                         swizzledContent.eraseToAnyView()
                     } else {
                         content
                     }
                 } else {
-                    InterposeFailureDisclosure(proxy: viewProxy)
+                    InterposeFailureDisclosure(proxy: viewBodyProxy)
                 }
             } else {
                 content

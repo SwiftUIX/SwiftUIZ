@@ -8,7 +8,7 @@ import Runtime
 
 @MainActor
 public struct _InterposedViewBodyProxy: DynamicProperty {
-    weak var _dynamicViewBridge: _InterposedViewBodyBridge?
+    weak var _viewBridge: _InterposedViewBodyBridge?
     weak var _storage: _InterposedViewBodyStorage?
     
     var storage: _InterposedViewBodyStorage {
@@ -20,19 +20,19 @@ public struct _InterposedViewBodyProxy: DynamicProperty {
     package var root: any View
     package var content: any View
     
-    let _dynamicViewGraphContext: EnvironmentValues._InterposeContext
+    let graphContext: EnvironmentValues._InterposeGraphContext
     
     init(
-        _dynamicViewBridge: _InterposedViewBodyBridge,
+        _viewBridge: _InterposedViewBodyBridge,
         _storage: _InterposedViewBodyStorage?,
         root: any View,
         content: any View,
-        graphContext: EnvironmentValues._InterposeContext
+        graphContext: EnvironmentValues._InterposeGraphContext
     ) {
-        self._dynamicViewBridge = _dynamicViewBridge
+        self._viewBridge = _viewBridge
         self._storage = _storage
         self.root = root
         self.content = content
-        self._dynamicViewGraphContext = graphContext
+        self.graphContext = graphContext
     }
 }

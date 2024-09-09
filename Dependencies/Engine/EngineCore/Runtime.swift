@@ -205,19 +205,27 @@ private func swift_getField_slow(
     _ instanceType: Any.Type
 ) throws -> Field {
     let count = swift_reflectionMirror_recursiveCount(instanceType)
+    
     for i in 0..<count {
         var field = FieldReflectionMetadata()
         let fieldType = swift_reflectionMirror_recursiveChildMetadata(instanceType, index: i, fieldMetadata: &field)
-        defer { field.dealloc?(field.name) }
+        
+        defer {
+            field.dealloc?(field.name)
+        }
+        
         guard
             let name = field.name.map({ String(utf8String: $0) }),
             name == key
         else {
             continue
         }
+        
         let offset = swift_reflectionMirror_recursiveChildOffset(instanceType, index: i)
+        
         return Field(type: fieldType, offset: offset)
     }
+    
     throw SwiftFieldNotFoundError(key: key, instance: instanceType)
 }
 

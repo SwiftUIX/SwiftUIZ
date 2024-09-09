@@ -11,6 +11,7 @@ extension _LightweightViewHypergraph {
         public typealias ID = _AnyViewHypergraph.InterposeID
         
         unowned let graph: any _AnyViewHypergraphType
+      
         public let staticViewTypeDescriptor: _StaticViewTypeDescriptor
         
         public let id = _AnyViewHypergraph.InterposeID()

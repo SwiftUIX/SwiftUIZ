@@ -76,7 +76,7 @@ public struct _ViewPreviewsContent: Logging, View {
 
 /// A scene for all instances of `ViewPreview` that are discoverable at runtime.
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
-public struct PreviewCatalogGroup: Initiable, _ExtendedScene {
+public struct PreviewCatalogGroup: Initiable, _DynamicScene {
     private var contentModifier: AnyViewModifier?
     
     public var body: some Scene {
