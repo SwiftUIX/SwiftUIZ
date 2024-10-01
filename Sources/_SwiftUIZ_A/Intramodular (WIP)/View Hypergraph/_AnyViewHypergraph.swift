@@ -36,6 +36,10 @@ open class _AnyViewHypergraph: NSObject, ObservableObject {
     }
 }
 
+public final class _InvalidViewHypergraph: _AnyViewHypergraph {
+    
+}
+
 // MARK: - WIP
 
 extension _AnyViewHypergraph {

@@ -7,7 +7,7 @@ import SwiftUI
 import SwiftUIX
 
 public struct _InterposeSceneContent<Content: View>: View, _InterposedSceneContent {
-    @StateObject private var graph: _AnyViewHypergraph = __unsafe_ViewGraphType.init()
+    @StateObject private var graph: _AnyViewHypergraph = __unsafe_ViewGraphType?.init() ?? _InvalidViewHypergraph()
     
     public let content: Content
     
@@ -25,15 +25,13 @@ public struct _InterposeSceneContent<Content: View>: View, _InterposedSceneConte
         content
             ._modifier(_SetViewInterposeScope())
             .transformEnvironment(\._opaque_interposeContext) { context in
-                context?._isInvalidInstance = false
-                context?._opaque_viewGraph = graph
+                context?.setGraph(graph)
             }
             .background {
                 if !_invisibleAppViewIndexingDisabled {
                     _InvisibleAppViewIndexer()
                         .transformEnvironment(\._opaque_interposeContext) { context in
-                            context?._isInvalidInstance = false
-                            context?._opaque_viewGraph = graph
+                            context?.setGraph(graph)
                         }
                 }
             }
@@ -43,5 +41,16 @@ public struct _InterposeSceneContent<Content: View>: View, _InterposedSceneConte
         withMutableScope(self) {
             $0._invisibleAppViewIndexingDisabled = true
         }
+    }
+}
+
+extension EnvironmentValues._opaque_InterposeGraphContextProtocol {
+    mutating func setGraph(_ graph: _AnyViewHypergraph) {
+        if _opaque_viewGraph != nil {
+            assert(_opaque_viewGraph === graph)
+        }
+        
+        _isInvalidInstance = graph is _InvalidViewHypergraph
+        _opaque_viewGraph = graph
     }
 }

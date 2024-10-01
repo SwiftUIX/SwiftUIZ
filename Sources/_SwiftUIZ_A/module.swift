@@ -24,7 +24,7 @@ extension ForEach where Content: View {
     }
 }
 
-public var __unsafe_ViewGraphType: _AnyViewHypergraph.Type!
+public var __unsafe_ViewGraphType: _AnyViewHypergraph.Type?
 
 public var __unsafe_EnvironmentValues_opaque_interposeContext_getter: (EnvironmentValues) -> (any EnvironmentValues._opaque_InterposeGraphContextProtocol)? = { _ in
     nil
@@ -39,9 +39,11 @@ public var __unsafe_EnvironmentValues_opaque_interposeContext_setter: (inout Env
         environment._interposeContext
     }
     __unsafe_EnvironmentValues_opaque_interposeContext_setter = { (environment: inout EnvironmentValues, newValue: (any EnvironmentValues._opaque_InterposeGraphContextProtocol)?) in
-        let context: EnvironmentValues._InterposeGraphContext = newValue.map({ $0 as! EnvironmentValues._InterposeGraphContext })!
-        
-        environment._interposeContext = context
+        if let context: EnvironmentValues._InterposeGraphContext = newValue.flatMap({ $0 as? EnvironmentValues._InterposeGraphContext }) {
+            environment._interposeContext = context
+        } else {
+            runtimeIssue("Failed to initialize an interpose context.")
+        }
     }
     
     if let type = NSClassFromString("_SwiftUIZ_type_Ferrofluid.ViewHypergraph") as? _AnyViewHypergraph.Type {
