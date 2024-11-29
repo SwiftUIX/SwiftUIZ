@@ -31,7 +31,7 @@ extension Binding {
     }
 }
 
-// MARK: - Implemented Conformances
+// MARK: - Conformees
 
 extension Merge.PublishedAsyncBinding: _SwiftUIZ_A._SwiftUIX_BindingType {
     @_disfavoredOverload

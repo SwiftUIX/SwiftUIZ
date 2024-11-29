@@ -146,7 +146,7 @@ extension ViewOutputAlias {
     public static func _makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
-    ) -> _ViewOutputs {
+    ) -> SwiftUI._ViewOutputs {
         ViewOutputAliasKey<Self>._makeView(
             view: view[\.content],
             inputs: inputs
@@ -156,7 +156,7 @@ extension ViewOutputAlias {
     public static func _makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
-    ) -> _ViewListOutputs {
+    ) -> SwiftUI._ViewListOutputs {
         ViewOutputAliasKey<Self>._makeViewList(
             view: view[\.content],
             inputs: inputs
@@ -165,7 +165,7 @@ extension ViewOutputAlias {
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public static func _viewListCount(
-        inputs: _ViewListCountInputs
+        inputs: SwiftUI._ViewListCountInputs
     ) -> Int? {
         ViewOutputAliasKey<Self>._viewListCount(
             inputs: inputs

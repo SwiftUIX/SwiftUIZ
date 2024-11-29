@@ -215,7 +215,7 @@ public struct ViewTraitWritingModifier<Trait: ViewTraitKey>: ViewModifier {
         static func _makeView(
             view: _GraphValue<Self>,
             inputs: _ViewInputs
-        ) -> _ViewOutputs {
+        ) -> SwiftUI._ViewOutputs {
             let conformance = Trait.conformance!
             var visitor = ViewOutputsVisitor(
                 view: view[\.modifiedContent],
@@ -228,7 +228,7 @@ public struct ViewTraitWritingModifier<Trait: ViewTraitKey>: ViewModifier {
         static func _makeViewList(
             view: _GraphValue<Self>,
             inputs: _ViewListInputs
-        ) -> _ViewListOutputs {
+        ) -> SwiftUI._ViewListOutputs {
             let conformance = Trait.conformance!
             var visitor = ViewListOutputsVisitor(
                 view: view[\.modifiedContent],
@@ -240,7 +240,7 @@ public struct ViewTraitWritingModifier<Trait: ViewTraitKey>: ViewModifier {
 
         @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
         static func _viewListCount(
-            inputs: _ViewListCountInputs
+            inputs: SwiftUI._ViewListCountInputs
         ) -> Int? {
             let conformance = Trait.conformance!
             var visitor = ViewListCountVisitor(
@@ -286,7 +286,7 @@ public struct ViewTraitWritingModifier<Trait: ViewTraitKey>: ViewModifier {
 
         @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
         private struct ViewListCountVisitor: ViewTraitKeyVisitor {
-            var inputs: _ViewListCountInputs
+            var inputs: SwiftUI._ViewListCountInputs
             var outputs: Int?
 
             mutating func visit<Key>(type: Key.Type) where Key: _ViewTraitKey {

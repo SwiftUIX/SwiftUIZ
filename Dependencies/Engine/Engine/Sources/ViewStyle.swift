@@ -354,7 +354,7 @@ extension ViewStyledView {
     public static func makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
-    ) -> _ViewOutputs {
+    ) -> SwiftUI._ViewOutputs {
         if Body.self != Never.self,
             inputs[ViewStyleContext<Self>.self] != Self.self
         {
@@ -371,7 +371,7 @@ extension ViewStyledView {
     public static func makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
-    ) -> _ViewListOutputs {
+    ) -> SwiftUI._ViewListOutputs {
         if Body.self != Never.self,
             inputs[ViewStyleContext<Self>.self] != Self.self
         {
@@ -387,7 +387,7 @@ extension ViewStyledView {
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public static func viewListCount(
-        inputs: _ViewListCountInputs
+        inputs: SwiftUI._ViewListCountInputs
     ) -> Int? {
         if Body.self != Never.self,
             inputs[ViewStyleContext<Self>.self] != Self.self
@@ -446,7 +446,7 @@ private struct AnyViewStyledView<
     static func _makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
-    ) -> _ViewOutputs {
+    ) -> SwiftUI._ViewOutputs {
         var inputs = inputs
         var types = inputs[ViewStyleInput<StyledView>.self]
         let type = types.popLast()!
@@ -455,7 +455,7 @@ private struct AnyViewStyledView<
             inputs[ViewStyleContext<StyledView>.self] = nil
         }
 
-        func project<T>(_ type: T.Type) -> _ViewOutputs {
+        func project<T>(_ type: T.Type) -> SwiftUI._ViewOutputs {
             let conformance = ViewProtocolDescriptor.conformance(of: T.self)!
             var visitor = ViewOutputsVisitor(
                 view: view,
@@ -470,7 +470,7 @@ private struct AnyViewStyledView<
     static func _makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
-    ) -> _ViewListOutputs {
+    ) -> SwiftUI._ViewListOutputs {
         var inputs = inputs
         var types = inputs[ViewStyleInput<StyledView>.self]
         let type = types.popLast()!
@@ -479,7 +479,7 @@ private struct AnyViewStyledView<
             inputs[ViewStyleContext<StyledView>.self] = nil
         }
 
-        func project<T>(_ type: T.Type) -> _ViewListOutputs {
+        func project<T>(_ type: T.Type) -> SwiftUI._ViewListOutputs {
             let conformance = ViewProtocolDescriptor.conformance(of: T.self)!
             var visitor = ViewListOutputsVisitor(
                 view: view,
@@ -493,7 +493,7 @@ private struct AnyViewStyledView<
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     static func _viewListCount(
-        inputs: _ViewListCountInputs
+        inputs: SwiftUI._ViewListCountInputs
     ) -> Int? {
         var inputs = inputs
         var types = inputs[ViewStyleInput<StyledView>.self]
@@ -601,7 +601,7 @@ private struct ViewListOutputsVisitor<
 
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 private struct ViewListOutputsCountVisitor: ViewVisitor {
-    var inputs: _ViewListCountInputs
+    var inputs: SwiftUI._ViewListCountInputs
 
     var outputs: Int?
 

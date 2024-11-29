@@ -292,7 +292,7 @@ public final class ImagePipeline: @unchecked Sendable {
 
     private func startImageTask(
         _ task: ImageTask,
-        progress progressHandler: ((ImageResponse?, ImageTask.Progress) -> Void)?,
+        progress outputHandler: ((ImageResponse?, ImageTask.Progress) -> Void)?,
         completion: @escaping (Result<ImageResponse, Error>) -> Void
     ) {
         guard !isInvalidated else {
@@ -326,12 +326,12 @@ public final class ImagePipeline: @unchecked Sendable {
                             completion(.success(response))
                         } else {
                             self.delegate.imageTask(task, didReceivePreview: response, pipeline: self)
-                            progressHandler?(response, task.progress)
+                            outputHandler?(response, task.progress)
                         }
                     case let .progress(progress):
                         self.delegate.imageTask(task, didUpdateProgress: progress, pipeline: self)
                         task.progress = progress
-                        progressHandler?(nil, progress)
+                        outputHandler?(nil, progress)
                     case let .error(error):
                         self.delegate.imageTask(task, didCompleteWithResult: .failure(error), pipeline: self)
                         completion(.failure(error))
@@ -411,7 +411,7 @@ public final class ImagePipeline: @unchecked Sendable {
 
     private func startDataTask(
         _ task: ImageTask,
-        progress progressHandler: ((_ completed: Int64, _ total: Int64) -> Void)?,
+        progress outputHandler: ((_ completed: Int64, _ total: Int64) -> Void)?,
         completion: @escaping (Result<(data: Data, response: URLResponse?), Error>) -> Void
     ) {
         guard !isInvalidated else {
@@ -443,7 +443,7 @@ public final class ImagePipeline: @unchecked Sendable {
                         }
                     case let .progress(progress):
                         task.progress = progress
-                        progressHandler?(progress.completed, progress.total)
+                        outputHandler?(progress.completed, progress.total)
                     case let .error(error):
                         completion(.failure(error))
                     }

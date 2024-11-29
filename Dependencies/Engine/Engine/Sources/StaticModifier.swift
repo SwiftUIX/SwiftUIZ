@@ -31,9 +31,9 @@ public struct StaticModifier<Descriptor: TypeDescriptor>: ViewModifier {
     public static func _makeView(
         modifier: _GraphValue<Self>,
         inputs: _ViewInputs,
-        body: @escaping (_Graph, _ViewInputs) -> _ViewOutputs
-    ) -> _ViewOutputs {
-        func project<T>(_ type: T.Type) -> _ViewOutputs {
+        body: @escaping (_Graph, _ViewInputs) -> SwiftUI._ViewOutputs
+    ) -> SwiftUI._ViewOutputs {
+        func project<T>(_ type: T.Type) -> SwiftUI._ViewOutputs {
             let conformance = ViewModifierProtocolDescriptor.conformance(of: T.self)!
             var visitor = ViewOutputsVisitor(view: modifier[\.modifier], inputs: inputs, body: body)
             conformance.visit(visitor: &visitor)
@@ -46,9 +46,9 @@ public struct StaticModifier<Descriptor: TypeDescriptor>: ViewModifier {
     public static func _makeViewList(
         modifier: _GraphValue<Self>,
         inputs: _ViewListInputs,
-        body: @escaping (_Graph, _ViewListInputs) -> _ViewListOutputs
-    ) -> _ViewListOutputs {
-        func project<T>(_ type: T.Type) -> _ViewListOutputs {
+        body: @escaping (_Graph, _ViewListInputs) -> SwiftUI._ViewListOutputs
+    ) -> SwiftUI._ViewListOutputs {
+        func project<T>(_ type: T.Type) -> SwiftUI._ViewListOutputs {
             let conformance = ViewModifierProtocolDescriptor.conformance(of: T.self)!
             var visitor = ViewListOutputsVisitor(view: modifier[\.modifier], inputs: inputs, body: body)
             conformance.visit(visitor: &visitor)
@@ -60,7 +60,7 @@ public struct StaticModifier<Descriptor: TypeDescriptor>: ViewModifier {
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public static func _viewListCount(
-        inputs: _ViewListCountInputs,
+        inputs: SwiftUI._ViewListCountInputs,
         body: (_ViewListCountInputs) -> Int?
     ) -> Int? {
         func project<T>(_ type: T.Type) -> Int? {
@@ -87,7 +87,7 @@ private struct StaticModifierBody<Modifier: ViewModifier>: ViewModifier {
 private struct ViewOutputsVisitor: ViewModifierVisitor {
     var view: _GraphValue<Any>
     var inputs: _ViewInputs
-    var body: (_Graph, _ViewInputs) -> _ViewOutputs
+    var body: (_Graph, _ViewInputs) -> SwiftUI._ViewOutputs
 
     var outputs: _ViewOutputs!
 
@@ -100,7 +100,7 @@ private struct ViewOutputsVisitor: ViewModifierVisitor {
 private struct ViewListOutputsVisitor: ViewModifierVisitor {
     var view: _GraphValue<Any>
     var inputs: _ViewListInputs
-    var body: (_Graph, _ViewListInputs) -> _ViewListOutputs
+    var body: (_Graph, _ViewListInputs) -> SwiftUI._ViewListOutputs
 
     var outputs: _ViewListOutputs!
 
@@ -112,7 +112,7 @@ private struct ViewListOutputsVisitor: ViewModifierVisitor {
 
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 private struct ViewListOutputsCountVisitor: ViewModifierVisitor {
-    var inputs: _ViewListCountInputs
+    var inputs: SwiftUI._ViewListCountInputs
     var body: (_ViewListCountInputs) -> Int?
 
     var outputs: Int?

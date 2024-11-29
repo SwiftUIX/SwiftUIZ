@@ -12,7 +12,7 @@ public protocol _SceneContent: View {
     var body: Body { get }
 }
 
-// MARK: - Implemented Conformances
+// MARK: - Conformees
 
 public struct _AnySceneContent: _SceneContent {
     public let content: () -> AnyView

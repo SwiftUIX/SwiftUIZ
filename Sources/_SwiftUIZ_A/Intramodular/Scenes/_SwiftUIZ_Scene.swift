@@ -19,7 +19,7 @@ public protocol _SwiftUIZ_Scene: _SwiftUIZ_MaybePrimitiveScene where Body: _Swif
     var body: Body { get }
 }
 
-// MARK: - Implemented Conformances
+// MARK: - Conformees
 
 @MainActor
 public struct SceneThatMakesSense: _SwiftUIZ_PrimitiveScene, _SwiftUIZ_Scene {

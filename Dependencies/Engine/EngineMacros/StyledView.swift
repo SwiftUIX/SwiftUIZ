@@ -107,20 +107,20 @@ extension StyledView {
     public static func makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
-    ) -> _ViewOutputs {
+    ) -> SwiftUI._ViewOutputs {
         _Body._makeView(view: view[\._body], inputs: inputs)
     }
 
     public static func makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
-    ) -> _ViewListOutputs {
+    ) -> SwiftUI._ViewListOutputs {
         _Body._makeViewList(view: view[\._body], inputs: inputs)
     }
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public static func viewListCount(
-        inputs: _ViewListCountInputs
+        inputs: SwiftUI._ViewListCountInputs
     ) -> Int? {
         _Body._viewListCount(inputs: inputs)
     }

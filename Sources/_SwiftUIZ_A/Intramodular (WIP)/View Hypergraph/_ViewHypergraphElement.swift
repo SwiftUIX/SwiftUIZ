@@ -61,7 +61,7 @@ extension _HeavyweightViewHypergraphStaticElementID {
     }
 }
 
-// MARK: - Implemented Conformances
+// MARK: - Conformees
 
 extension KeyPath: _HeavyweightViewHypergraphElementRepresentingPropertyKeyPath where Root: View, Value: _HeavyweightViewHypergraphElementRepresentingProperty {
     

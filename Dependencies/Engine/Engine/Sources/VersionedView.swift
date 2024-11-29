@@ -96,7 +96,7 @@ extension VersionedView where Body == Never{
     public static func makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
-    ) -> _ViewOutputs {
+    ) -> SwiftUI._ViewOutputs {
         #if !DEBUG
         if #available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *) {
             return V6Body._makeView(view: view[\.v6Body], inputs: inputs)
@@ -147,7 +147,7 @@ extension VersionedView where Body == Never{
     public static func makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
-    ) -> _ViewListOutputs {
+    ) -> SwiftUI._ViewListOutputs {
         #if !DEBUG
         if #available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *) {
             return V6Body._makeViewList(view: view[\.v6Body], inputs: inputs)
@@ -197,7 +197,7 @@ extension VersionedView where Body == Never{
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public static func viewListCount(
-        inputs: _ViewListCountInputs
+        inputs: SwiftUI._ViewListCountInputs
     ) -> Int? {
         #if !DEBUG
         if #available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *) {

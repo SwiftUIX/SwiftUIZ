@@ -31,8 +31,8 @@ public struct StaticContent<Descriptor: TypeDescriptor>: View {
     public static func _makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
-    ) -> _ViewOutputs {
-        func project<T>(_ type: T.Type) -> _ViewOutputs {
+    ) -> SwiftUI._ViewOutputs {
+        func project<T>(_ type: T.Type) -> SwiftUI._ViewOutputs {
             let conformance = ViewProtocolDescriptor.conformance(of: T.self)!
             var visitor = ViewOutputsVisitor(view: view[\.content], inputs: inputs)
             conformance.visit(visitor: &visitor)
@@ -45,8 +45,8 @@ public struct StaticContent<Descriptor: TypeDescriptor>: View {
     public static func _makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
-    ) -> _ViewListOutputs {
-        func project<T>(_ type: T.Type) -> _ViewListOutputs {
+    ) -> SwiftUI._ViewListOutputs {
+        func project<T>(_ type: T.Type) -> SwiftUI._ViewListOutputs {
             let conformance = ViewProtocolDescriptor.conformance(of: T.self)!
             var visitor = ViewListOutputsVisitor(view: view[\.content], inputs: inputs)
             conformance.visit(visitor: &visitor)
@@ -58,7 +58,7 @@ public struct StaticContent<Descriptor: TypeDescriptor>: View {
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public static func _viewListCount(
-        inputs: _ViewListCountInputs
+        inputs: SwiftUI._ViewListCountInputs
     ) -> Int? {
         func project<T>(_ type: T.Type) -> Int? {
             let conformance = ViewProtocolDescriptor.conformance(of: T.self)!
@@ -105,7 +105,7 @@ private struct ViewListOutputsVisitor: ViewVisitor {
 
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 private struct ViewListOutputsCountVisitor: ViewVisitor {
-    var inputs: _ViewListCountInputs
+    var inputs: SwiftUI._ViewListCountInputs
 
     var outputs: Int?
 

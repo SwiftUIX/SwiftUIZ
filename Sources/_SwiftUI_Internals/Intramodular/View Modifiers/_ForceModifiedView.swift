@@ -29,7 +29,7 @@ fileprivate struct _AnyUnmodifiedView<Base: DynamicProperty & View>: View {
     public static func _makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
-    ) -> _ViewOutputs {
+    ) -> SwiftUI._ViewOutputs {
         let body: _GraphValue<Base.Body> = view[\Self.base.body]
         
         return Base.Body._makeView(view: body, inputs: inputs)
@@ -38,7 +38,7 @@ fileprivate struct _AnyUnmodifiedView<Base: DynamicProperty & View>: View {
     public static func _makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
-    ) -> _ViewListOutputs {
+    ) -> SwiftUI._ViewListOutputs {
         let body: _GraphValue<Base.Body> = view[\Self.base.body]
         
         return Base.Body._makeViewList(view: body, inputs: inputs)
@@ -46,7 +46,7 @@ fileprivate struct _AnyUnmodifiedView<Base: DynamicProperty & View>: View {
     
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public static func _viewListCount(
-        inputs: _ViewListCountInputs
+        inputs: SwiftUI._ViewListCountInputs
     ) -> Int? {
         Base.Body._viewListCount(inputs: inputs)
     }
@@ -83,7 +83,7 @@ extension _ThinForceModifiedView where ViewModifierType: _ThinViewModifier<Body>
     public static func _makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
-    ) -> _ViewOutputs {
+    ) -> SwiftUI._ViewOutputs {
         if Self._disableForceModifiedViewModification {
             return _AnyUnmodifiedView<Self>._makeView(view: view[\._umodifiedHosted], inputs: inputs)
         }
@@ -98,7 +98,7 @@ extension _ThinForceModifiedView where ViewModifierType: _ThinViewModifier<Body>
     public static func _makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
-    ) -> _ViewListOutputs {
+    ) -> SwiftUI._ViewListOutputs {
         if Self._disableForceModifiedViewModification {
             return _AnyUnmodifiedView<Self>._makeViewList(view: view[\._umodifiedHosted], inputs: inputs)
         }
@@ -112,7 +112,7 @@ extension _ThinForceModifiedView where ViewModifierType: _ThinViewModifier<Body>
     
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public static func _viewListCount(
-        inputs: _ViewListCountInputs
+        inputs: SwiftUI._ViewListCountInputs
     ) -> Int? {
         if Self._disableForceModifiedViewModification {
             return _AnyUnmodifiedView<Self>._viewListCount(inputs: inputs)
@@ -133,7 +133,7 @@ extension _ThinForceModifiedView where ViewModifierType: _ThinForceViewModifier<
     public static func _makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
-    ) -> _ViewOutputs {
+    ) -> SwiftUI._ViewOutputs {
         if Self._disableForceModifiedViewModification {
             return Body._makeView(view: view[\.body], inputs: inputs)
         }
@@ -152,7 +152,7 @@ extension _ThinForceModifiedView where ViewModifierType: _ThinForceViewModifier<
     public static func _makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
-    ) -> _ViewListOutputs {
+    ) -> SwiftUI._ViewListOutputs {
         if Self._disableForceModifiedViewModification {
             return Body._makeViewList(view: view[\.body], inputs: inputs)
         }
@@ -168,7 +168,7 @@ extension _ThinForceModifiedView where ViewModifierType: _ThinForceViewModifier<
     
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public static func _viewListCount(
-        inputs: _ViewListCountInputs
+        inputs: SwiftUI._ViewListCountInputs
     ) -> Int? {
         if Self._disableForceModifiedViewModification {
             return Body._viewListCount(inputs: inputs)
@@ -189,7 +189,7 @@ extension _ForceModifiedView where ViewModifierType: ViewModifier {
     public static func _makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
-    ) -> _ViewOutputs {
+    ) -> SwiftUI._ViewOutputs {
         let keyPath: KeyPath<Self, _ModifiedBody> = \Self.[_lazilyModifiedBy: Metatype(ViewModifierType.self)]
         
         let modifiedView = view[keyPath]
@@ -200,7 +200,7 @@ extension _ForceModifiedView where ViewModifierType: ViewModifier {
     public static func _makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
-    ) -> _ViewListOutputs {
+    ) -> SwiftUI._ViewListOutputs {
         let keyPath: KeyPath<Self, _ModifiedBody> = \Self.[_lazilyModifiedBy: Metatype(ViewModifierType.self)]
         
         let modifiedView = view[keyPath]
@@ -210,7 +210,7 @@ extension _ForceModifiedView where ViewModifierType: ViewModifier {
     
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public static func _viewListCount(
-        inputs: _ViewListCountInputs
+        inputs: SwiftUI._ViewListCountInputs
     ) -> Int? {
         _ModifiedBody._viewListCount(inputs: inputs)
     }

@@ -49,7 +49,7 @@ public struct StaticConditionalContent<
     public static func _makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
-    ) -> _ViewOutputs {
+    ) -> SwiftUI._ViewOutputs {
         Condition.value
             ? TrueContent._makeView(view: view[\.trueContent], inputs: inputs)
             : FalseContent._makeView(view: view[\.falseContent], inputs: inputs)
@@ -58,7 +58,7 @@ public struct StaticConditionalContent<
     public static func _makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
-    ) -> _ViewListOutputs {
+    ) -> SwiftUI._ViewListOutputs {
         Condition.value
             ? TrueContent._makeViewList(view: view[\.trueContent], inputs: inputs)
             : FalseContent._makeViewList(view: view[\.falseContent], inputs: inputs)
@@ -66,7 +66,7 @@ public struct StaticConditionalContent<
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public static func _viewListCount(
-        inputs: _ViewListCountInputs
+        inputs: SwiftUI._ViewListCountInputs
     ) -> Int? {
         Condition.value
             ? TrueContent._viewListCount(inputs: inputs)

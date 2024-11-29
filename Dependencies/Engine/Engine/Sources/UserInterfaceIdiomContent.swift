@@ -77,7 +77,7 @@ extension UserInterfaceIdiomContent where Body == Never{
     public static func makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
-    ) -> _ViewOutputs {
+    ) -> SwiftUI._ViewOutputs {
         #if os(macOS)
         return MacBody._makeView(view: view[\.macBody], inputs: inputs)
         #elseif os(watchOS)
@@ -103,7 +103,7 @@ extension UserInterfaceIdiomContent where Body == Never{
     public static func makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
-    ) -> _ViewListOutputs {
+    ) -> SwiftUI._ViewListOutputs {
         #if os(macOS)
         return MacBody._makeViewList(view: view[\.macBody], inputs: inputs)
         #elseif os(watchOS)
@@ -128,7 +128,7 @@ extension UserInterfaceIdiomContent where Body == Never{
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public static func viewListCount(
-        inputs: _ViewListCountInputs
+        inputs: SwiftUI._ViewListCountInputs
     ) -> Int? {
         #if os(macOS)
         return MacBody._viewListCount(inputs: inputs)

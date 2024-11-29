@@ -13,7 +13,7 @@ public protocol InterfaceModelIdentifier: InterfaceModel, Hashable, Sendable whe
     associatedtype Model: InterfaceModel
 }
 
-// MARK: - Implemented Conformances
+// MARK: - Conformees
 
 extension _TypeAssociatedID: InterfaceModel where Parent: InterfaceModel {
     

@@ -45,8 +45,8 @@ public struct ViewInputConditionalModifier<
     public static func _makeView(
         modifier: _GraphValue<Self>,
         inputs: _ViewInputs,
-        body: @escaping (_Graph, _ViewInputs) -> _ViewOutputs
-    ) -> _ViewOutputs {
+        body: @escaping (_Graph, _ViewInputs) -> SwiftUI._ViewOutputs
+    ) -> SwiftUI._ViewOutputs {
         Condition.evaluate(ViewInputs(inputs: inputs._graphInputs))
             ? TrueModifier._makeView(modifier: modifier[\.trueModifier], inputs: inputs, body: body)
             : FalseModifier._makeView(modifier: modifier[\.falseModifier], inputs: inputs, body: body)
@@ -55,8 +55,8 @@ public struct ViewInputConditionalModifier<
     public static func _makeViewList(
         modifier: _GraphValue<Self>,
         inputs: _ViewListInputs,
-        body: @escaping (_Graph, _ViewListInputs) -> _ViewListOutputs
-    ) -> _ViewListOutputs {
+        body: @escaping (_Graph, _ViewListInputs) -> SwiftUI._ViewListOutputs
+    ) -> SwiftUI._ViewListOutputs {
         Condition.evaluate(ViewInputs(inputs: inputs._graphInputs))
             ? TrueModifier._makeViewList(modifier: modifier[\.trueModifier], inputs: inputs, body: body)
             : FalseModifier._makeViewList(modifier: modifier[\.falseModifier], inputs: inputs, body: body)
@@ -64,7 +64,7 @@ public struct ViewInputConditionalModifier<
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public static func _viewListCount(
-        inputs: _ViewListCountInputs,
+        inputs: SwiftUI._ViewListCountInputs,
         body: (_ViewListCountInputs) -> Int?
     ) -> Int? {
         Condition.evaluate(ViewInputs(inputs: inputs._graphInputs))
