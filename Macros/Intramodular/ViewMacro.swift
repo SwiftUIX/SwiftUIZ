@@ -30,7 +30,7 @@ extension ViewMacro: ExtensionMacro {
             """
             extension \(type.trimmed): CustomSourceDeclarationReflectable, \(newConformances) {
                 public static nonisolated var customSourceDeclarationMirror: _StaticSwift.SourceDeclarationMirror {
-                    .init(file: #file, function: #function, line: #line, column: nil)
+                    .init(file: #filePath, function: #function, line: #line, column: nil)
                 }
             }
             """
