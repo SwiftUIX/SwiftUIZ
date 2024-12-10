@@ -94,7 +94,7 @@ public struct _InvisibleAppViewIndexer: View {
     }
 }
 extension _InvisibleAppViewIndex {
-    final class View: Identifiable, ObservableObject {
+    final class View: Identifiable, ObservableObject, @unchecked Sendable {
         let id = _AutoIncrementingIdentifier<View>()
         
         @Published var host: ViewHost.ID?
@@ -111,7 +111,7 @@ extension _InvisibleAppViewIndex {
         }
     }
     
-    class ViewHost: Identifiable {
+    class ViewHost: Identifiable, @unchecked Sendable {
         let id: AnyHashable = _AutoIncrementingIdentifier<ViewHost>()
         
         var item: _InvisibleAppViewIndex.View
@@ -154,7 +154,7 @@ extension _InvisibleAppViewIndex {
         }
     }
     
-    class WindowHost: Identifiable {
+    class WindowHost: Identifiable, @unchecked Sendable {
         let id: AnyHashable = _AutoIncrementingIdentifier<ViewHost>()
         
         var item: _InvisibleAppViewIndex.Window
