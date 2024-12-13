@@ -7,9 +7,7 @@ import SwiftUIX
 import SwallowMacrosClient
 
 #once {
-    Task(priority: .userInitiated) { @MainActor in
-        _ = _InvisibleAppViewIndex.shared
-    }
+    _ = _InvisibleAppViewIndex.shared
 }
 
 /// A view that's loaded invisibly in the background.
@@ -25,27 +23,20 @@ public protocol _InvisibleAppWindow: Initiable, View {
 
 @MainActor
 private class _InvisibleAppViewIndex: ObservableObject {
-    static let shared = _InvisibleAppViewIndex()
-    
-    @_StaticMirrorQuery(#metatype((any _InvisibleAppView).self))
+    @_StaticMirrorQuery(#metatype((any _InvisibleAppView).self), .nonAppleFramework, .kind(.enum, .struct))
     private static var allViewTypes: [any _InvisibleAppView.Type]
-    @_StaticMirrorQuery(#metatype((any _InvisibleAppWindow).self))
+    @_StaticMirrorQuery(#metatype((any _InvisibleAppWindow).self), .nonAppleFramework, .kind(.enum, .struct))
     private static var allWindowTypes: [any _InvisibleAppWindow.Type]
-    
+
+    static let shared = _InvisibleAppViewIndex()
+        
     @Published private(set) var views: [View] = []
     @Published private(set) var windows: [Window] = []
     
     @MainActor
     private init() {
-        Task { @MainActor in
-            await Task.yield()
-            
-            self.views = _InvisibleAppViewIndex.allViewTypes.map({ View(owner: self, swiftType: $0) })
-            
-            await Task.yield()
-
-            self.windows = _InvisibleAppViewIndex.allWindowTypes.map({ Window(owner: self, swiftType: $0) })
-        }
+        self.views = _InvisibleAppViewIndex.allViewTypes.map({ View(owner: self, swiftType: $0) })
+        self.windows = _InvisibleAppViewIndex.allWindowTypes.map({ Window(owner: self, swiftType: $0) })
     }
 }
 
@@ -134,7 +125,7 @@ extension _InvisibleAppViewIndex {
         }
     }
     
-    final class Window: Identifiable, ObservableObject {
+    final class Window: Identifiable, ObservableObject, @unchecked Sendable {
         let id = _AutoIncrementingIdentifier<Window>()
         
         let owner: _InvisibleAppViewIndex

@@ -31,11 +31,10 @@ extension ViewPreview {
 
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
 public struct _ViewPreviewsContent: Logging, View {
-    /*@UserStorage(
+    @UserStorage(
         "_ViewPreviewsContent.selection",
         deferUpdates: true
-    )*/
-    @State
+    )
     public var selection: _PreviewProviderDescriptor.ID?
     
     init() {
