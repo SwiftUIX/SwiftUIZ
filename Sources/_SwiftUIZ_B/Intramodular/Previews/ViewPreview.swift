@@ -38,9 +38,7 @@ public struct _ViewPreviewsContent: Logging, View {
     public var selection: _PreviewProviderDescriptor.ID?
     
     init() {
-        if let selection {
-            print(selection)
-        }
+
     }
     
     var data: [_PreviewProviderDescriptor] {

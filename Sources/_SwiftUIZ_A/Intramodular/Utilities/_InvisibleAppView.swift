@@ -7,7 +7,9 @@ import SwiftUIX
 import SwallowMacrosClient
 
 #once {
-    _ = _InvisibleAppViewIndex.shared
+    Task(priority: .userInitiated) { @MainActor in
+        _ = _InvisibleAppViewIndex.shared
+    }
 }
 
 /// A view that's loaded invisibly in the background.
@@ -22,7 +24,7 @@ public protocol _InvisibleAppWindow: Initiable, View {
 }
 
 @MainActor
-private class _InvisibleAppViewIndex: ObservableObject {
+private class _InvisibleAppViewIndex: ObservableObject, @unchecked Sendable {
     @_StaticMirrorQuery(#metatype((any _InvisibleAppView).self), .nonAppleFramework, .kind(.enum, .struct))
     private static var allViewTypes: [any _InvisibleAppView.Type]
     @_StaticMirrorQuery(#metatype((any _InvisibleAppWindow).self), .nonAppleFramework, .kind(.enum, .struct))
