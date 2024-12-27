@@ -36,8 +36,30 @@ open class _AnyViewHypergraph: NSObject, ObservableObject {
     }
 }
 
-public final class _InvalidViewHypergraph: _AnyViewHypergraph {
+public final class _InvalidViewHypergraph: _AnyViewHypergraph, _AnyViewHypergraphType {
+    public subscript(
+        id: _AnyViewHypergraph.InterposeID
+    ) -> any _AnyViewHypergraph.InterposeProtocol {
+        fatalError(.unimplemented)
+    }
     
+    public func prepare(
+        _: some _AnyViewHypergraph.InterposeProtocol
+    ) throws {
+        
+    }
+    
+    public func insert(
+        _: any _AnyViewHypergraph.InterposeProtocol
+    ) {
+        
+    }
+    
+    public func remove(
+        _: any _AnyViewHypergraph.InterposeProtocol
+    ) {
+        
+    }
 }
 
 // MARK: - WIP

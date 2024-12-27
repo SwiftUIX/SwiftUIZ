@@ -45,7 +45,9 @@ extension EnvironmentValues {
         public var graph: any _AnyViewHypergraphType {
             get {
                 guard let result = _graph else {
-                    fatalError(_ViewInterposeError.viewGraphMissing)
+                    runtimeIssue(_ViewInterposeError.viewGraphMissing)
+                    
+                    return _InvalidViewHypergraph()
                 }
                 
                 return result
