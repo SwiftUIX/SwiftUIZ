@@ -2,8 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
-@_exported import Swallow
-@_exported import SwallowMacrosClient
+import Swallow
 @_exported import _SwiftUIZ_A
 
 extension _TaskLocalValues {

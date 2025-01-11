@@ -4,6 +4,7 @@
 
 import Runtime
 import Swallow
+import SwallowMacrosClient
 import _SwiftUIZ_A
 
 public struct _ShallowEnvironmentKeyDescriptor {

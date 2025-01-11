@@ -52,7 +52,7 @@ let package = Package(
             swiftSettings: []
         ),
         .target(
-            name: "cmark-gfm",
+            name: "_SwiftUIZ_cmark-gfm",
             path: "Dependencies/cmark-gfm"
         ),
         .target(
@@ -107,7 +107,7 @@ let package = Package(
             dependencies: [
                 "_SwiftUIZ_Nuke",
                 "_SwiftUIZ_NukeUI",
-                "cmark-gfm",
+                "_SwiftUIZ_cmark-gfm",
                 "Swallow",
                 .product(name: "SwallowMacrosClient", package: "Swallow"),
                 "SwiftUIX",

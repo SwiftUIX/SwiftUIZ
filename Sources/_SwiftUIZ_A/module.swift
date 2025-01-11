@@ -2,8 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
-@_exported import Swallow
-@_exported import SwallowMacrosClient
+import SwallowMacrosClient
 @_exported import _SwiftUI_Internals
 @_exported import SwiftUIX
 

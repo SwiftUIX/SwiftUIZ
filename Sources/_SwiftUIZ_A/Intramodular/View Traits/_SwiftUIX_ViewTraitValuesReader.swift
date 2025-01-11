@@ -2,6 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
+import Diagnostics
 @_spi(Internal) import SwiftUIX
 
 public struct _SwiftUIX_ViewTraitsReader<Content: View>: View {

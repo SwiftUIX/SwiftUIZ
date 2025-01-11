@@ -2,6 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
+import _SwiftUIZ_A
 import Diagnostics
 import Swallow
 import SwiftUIX
@@ -38,10 +39,10 @@ public struct _ViewPreviewsContent: Logging, View {
     public var selection: _PreviewProviderDescriptor.ID?
     
     init() {
-
+        
     }
     
-    var data: [_PreviewProviderDescriptor] {
+    private var data: [_PreviewProviderDescriptor] {
         _PreviewProviderDescriptor.allCases.sorted(by: { $0.title < $1.title })
     }
     
@@ -64,13 +65,19 @@ public struct _ViewPreviewsContent: Logging, View {
             .frame(minWidth: 256)
         } detail: {
             Group {
-                if let selection {
-                    _PreviewProviderDescriptor.allCases.first(where: {
-                        $0.id == selection
-                    })?.content
+                if let selection: _PreviewProviderDescriptor.ID {
+                    if let content: AnyView = _PreviewProviderDescriptor.allCases.first(where: { $0.id == selection })?.content {
+                        ZStack {
+                            content
+                        }
+                        .id(selection)
+                    } else {
+                        _UnimplementedView()
+                    }
                 }
             }
-            .frame(minWidth: 512)
+            .frame(minWidth: 512, maxHeight: 1024)
+            .id(selection)
         }
     }
 }

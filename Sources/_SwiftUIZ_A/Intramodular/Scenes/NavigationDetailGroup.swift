@@ -2,6 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
+import Swallow
 import SwiftUI
 
 /// A scene that represents a navigation detail.

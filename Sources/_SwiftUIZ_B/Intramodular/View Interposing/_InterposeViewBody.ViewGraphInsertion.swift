@@ -4,6 +4,7 @@
 
 import Diagnostics
 import Runtime
+import SwallowMacrosClient
 import SwiftUIX
 @_spi(Internal) import _SwiftUIZ_A
 
@@ -57,8 +58,12 @@ extension _InterposedViewBody {
         func transformEnvironment(
             _ environment: inout EnvironmentValues
         ) {
+            guard let graph else {
+                return
+            }
+            
             do {
-                environment._interposeContext.graph = graph!
+                environment._interposeContext.graph = graph
                 environment._interposeContext._inheritance.append(insertedObject.id)
                 
                 for (key, property) in insertedObject.elementProperties {

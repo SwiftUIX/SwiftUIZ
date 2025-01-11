@@ -5,7 +5,7 @@
 @_spi(Internal) internal import SwiftUIX
 import Foundation
 
-@_implementationOnly import cmark_gfm
+@_implementationOnly import _SwiftUIZ_cmark_gfm
 
 extension Array where Element == BlockNode {
     @_optimize(speed)

@@ -10,7 +10,7 @@ import SwiftUIX
 
 /// Scenes discovered at runtime using `_RuntimeTypeDiscoveryIndex`.
 public struct _RuntimeDiscoveredScenes: _DynamicScene {
-    @_StaticMirrorQuery(type: (any Scene).self)
+    @_StaticMirrorQuery(type: (any Scene).self, predicates: [.nonAppleFramework, .pureSwift])
     private static var allSceneTypes: [any Scene.Type]
     
     public init() {

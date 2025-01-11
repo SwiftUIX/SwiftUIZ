@@ -53,3 +53,36 @@ public struct _ThinModifiedView<Content: View, Modifier: _ThinViewModifier<Conte
         modifier.body(content: content)
     }
 }
+
+@usableFromInline
+struct _RecursiveThinModifiedView<Content: View, Modifier: _ThinViewModifier<Content.Body>>: View {
+    public let content: Content
+    public let modifier: Modifier
+    
+    public init(content: Content, modifier: Modifier) {
+        self.content = content
+        self.modifier = modifier
+    }
+    
+    public var body: some View {
+        modifier.body(content: content.body)
+    }
+}
+
+@usableFromInline
+struct _RecursiveThinForceModifiedView<Content: View, Modifier: _ThinForceViewModifier<Content, Content.Body>>: View {
+    public let content: Content
+    public let modifier: Modifier
+    
+    public init(content: Content, modifier: Modifier) {
+        self.content = content
+        self.modifier = modifier
+    }
+    
+    public var body: some View {
+        modifier.body(
+            root: content,
+            content: LazyView { content.body }
+        )
+    }
+}

@@ -15,7 +15,6 @@ import Combine
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 @MainActor @preconcurrency
 public struct UpdatePhase: DynamicProperty {
-
     @usableFromInline
     @MainActor @preconcurrency
     final class Storage: ObservableObject {

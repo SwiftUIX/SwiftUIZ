@@ -2,6 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
+import Swallow
 import SwiftUIX
 
 /// A view that is detached (i.e. not rendered) but can still be used to read traits.

@@ -2,6 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
+import Swallow
 import SwiftUIX
 
 /// A scene that represents a presentation.

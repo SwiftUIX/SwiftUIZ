@@ -2,6 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
+import Swallow
 @_exported import SwiftUIX
 @_exported import _SwiftUIZ_A
 @_exported import _SwiftUIZ_B

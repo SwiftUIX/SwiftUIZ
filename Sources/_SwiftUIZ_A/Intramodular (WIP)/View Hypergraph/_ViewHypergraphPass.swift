@@ -2,6 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
+import Swallow
 import SwiftUIX
 
 public protocol _HeavyweightViewHypergraphPass<Target> {

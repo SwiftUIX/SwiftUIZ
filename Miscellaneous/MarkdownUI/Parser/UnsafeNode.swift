@@ -2,7 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
-@_implementationOnly import cmark_gfm
+@_implementationOnly import _SwiftUIZ_cmark_gfm
 import Foundation
 
 typealias UnsafeNode = UnsafeMutablePointer<cmark_node>

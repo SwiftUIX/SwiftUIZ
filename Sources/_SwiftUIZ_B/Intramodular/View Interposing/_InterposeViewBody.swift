@@ -2,6 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
+import Swallow
 import _SwiftUI_Internals
 import _SwiftUIZ_A
 @_spi(Internal) import SwiftUIX

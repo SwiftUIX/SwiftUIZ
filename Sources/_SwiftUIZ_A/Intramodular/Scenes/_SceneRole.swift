@@ -2,6 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
+import SwallowMacrosClient
 import SwiftUI
 
 @OptionSet<Int>
