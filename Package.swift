@@ -19,7 +19,7 @@ let package = Package(
                 "_SwiftUIZ_A",
                 "_SwiftUIZ_B",
                 "Engine",
-                "SwiftUIZ"
+                "SwiftUIZ",
             ]
         ),
         .library(
@@ -171,6 +171,6 @@ let package = Package(
             swiftSettings: [
                 .enableExperimentalFeature("AccessLevelOnImport")
             ]
-        )
+        ),
     ]
 )
