@@ -36,7 +36,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/siteline/SwiftUI-Introspect", from: "1.3.0"),
+        .package(url: "https://github.com/siteline/SwiftUI-Introspect.git", from: "1.3.0"),
         .package(url: "https://github.com/SwiftUIX/SwiftUIX.git", branch: "master"),
         .package(url: "https://github.com/vmanot/CorePersistence.git", branch: "main"),
         .package(url: "https://github.com/vmanot/Merge.git", branch: "master"),

@@ -101,7 +101,7 @@ struct ClassMetadata: TypeMetadata {
             let superclass: UInt32
             let negativeSizeOrResilientBounds: UInt32
             let positiveSizeOrExtraFlags: UInt32
-            let numImmediateMembers: UInt32
+            let numberOfImmediateMembers: UInt32
             let numFields: UInt32
             let fieldOffsetVectorOffset: UInt32
         }
@@ -117,11 +117,12 @@ struct ClassMetadata: TypeMetadata {
         }
 
         var numMembers: Int {
-            Int(layout.numImmediateMembers)
+            Int(layout.numberOfImmediateMembers)
         }
 
         var genericArgumentOffset: Int {
             let flags = TypeContextDescriptorFlags(bits: UInt64(layout.base.base.flags.kindSpecificFlags))
+        
             if flags.classHasResilientSuperclass {
                 fatalError("unimplemented")
             } else if flags.classAreImmediateMembersNegative {
