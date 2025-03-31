@@ -10,13 +10,10 @@ import SwallowMacrosClient
 @_spi(Internal) import _SwiftUIZ_A
 
 /// A view that interposes a target view's body.
-@frozen
 public struct _InterposedViewBody<Root: DynamicView, Content: View>: View {
     @Environment(\._interposeContext) private var _interposeContext: EnvironmentValues._InterposeGraphContext
     
-    @usableFromInline
     let root: Root
-    @usableFromInline
     let content: Content
     
     @ViewStorage private var graphInsertion: ViewGraphInsertion!
