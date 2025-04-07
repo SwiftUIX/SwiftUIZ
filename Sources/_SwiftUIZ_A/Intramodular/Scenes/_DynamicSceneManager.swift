@@ -28,7 +28,7 @@ public final class _DynamicSceneManager: ObservableObject {
         for instance: T
     ) -> (some _SceneContent)? {
         #try(.optimistic) {
-            try _resolve_SceneContent(for: .init(value: instance))
+            try self._resolve_SceneContent(for: .init(value: instance))
         }
     }
     

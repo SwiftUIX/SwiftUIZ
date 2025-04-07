@@ -2,12 +2,8 @@
 // Copyright (c) Nathan Tannar
 //
 
+private import _SwiftRuntimeExports
 import Foundation
-
-public struct MetadataField {
-    public let key: String
-    public let type: Any.Type
-}
 
 public func swift_getFields<InstanceType>(_ instance: InstanceType) -> [(field: MetadataField, value: Any?)] {
     func unwrap<T>(_ x: Any) -> T {
@@ -72,34 +68,14 @@ public func swift_getClassGenerics(for type: Any.Type) -> [Any.Type]? {
     return metadata[\.genericTypes]
 }
 
-struct SwiftFieldNotFoundError: Error, CustomStringConvertible {
-    var key: String
-    var instance: Any.Type
-
-    var description: String {
-        "\(key) was not found on instance type \(instance)"
-    }
-}
-
-struct SwiftFieldTypeMismatchError: Error, CustomStringConvertible {
-    var key: String
-    var expected: Any.Type
-    var received: Any.Type
-    var instance: Any.Type
-
-    var description: String {
-        "Expected type of \(expected) for key \(key) but recieved \(received) on instance type \(instance)"
-    }
-}
-
 private func getFieldValue<Value, InstanceType>(
     _ key: String,
     _ value: Value.Type,
     _ instance: InstanceType
 ) throws -> Value {
     let field = try swift_getField(key, instance)
-    guard MemoryLayout<Value>.size == swift_getSize(of: field.type) || value == Any.self else {
-        throw SwiftFieldTypeMismatchError(
+    guard MemoryLayout<Value>.size == _swift_getSize(of: field.type) || value == Any.self else {
+        throw _SwiftFieldTypeMismatchError(
             key: key,
             expected: field.type,
             received: value,
@@ -126,8 +102,8 @@ private func setFieldValue<Value, InstanceType>(
 ) throws {
     let instanceType = type(of: instance)
     let field = try swift_getField(key, instance)
-    guard MemoryLayout<Value>.size == swift_getSize(of: field.type) || Value.self == Any.self else {
-        throw SwiftFieldTypeMismatchError(
+    guard MemoryLayout<Value>.size == _swift_getSize(of: field.type) || Value.self == Any.self else {
+        throw _SwiftFieldTypeMismatchError(
             key: key,
             expected: field.type,
             received: Value.self,
@@ -139,7 +115,7 @@ private func setFieldValue<Value, InstanceType>(
             let buffer = pointer.advanced(by: field.offset).assumingMemoryBound(to: S.self)
             if Value.self == Any.self {
                 guard let value = value as? S else {
-                    throw SwiftFieldTypeMismatchError(
+                    throw _SwiftFieldTypeMismatchError(
                         key: key,
                         expected: field.type,
                         received: Any.self,
@@ -204,11 +180,11 @@ private func swift_getField_slow(
     _ key: String,
     _ instanceType: Any.Type
 ) throws -> Field {
-    let count = swift_reflectionMirror_recursiveCount(instanceType)
+    let count = _swift_reflectionMirror_recursiveCount(instanceType)
     
     for i in 0..<count {
-        var field = FieldReflectionMetadata()
-        let fieldType = swift_reflectionMirror_recursiveChildMetadata(instanceType, index: i, fieldMetadata: &field)
+        var field = _SwiftRuntimeTypeFieldReflectionMetadata()
+        let fieldType = _swift_reflectionMirror_recursiveChildMetadata(instanceType, index: i, fieldMetadata: &field)
         
         defer {
             field.dealloc?(field.name)
@@ -221,7 +197,7 @@ private func swift_getField_slow(
             continue
         }
         
-        let offset = swift_reflectionMirror_recursiveChildOffset(instanceType, index: i)
+        let offset = _swift_reflectionMirror_recursiveChildOffset(instanceType, index: i)
         
         return Field(type: fieldType, offset: offset)
     }
@@ -265,39 +241,12 @@ private func withUnsafeMutableInstancePointer<InstanceType, Result>(
     }
 }
 
-private func swift_getSize(of type: Any.Type) -> Int {
-    func project<T>(_: T.Type) -> Int {
-        MemoryLayout<T>.size
-    }
-    return _openExistential(type, do: project)
+public struct MetadataField {
+    public let key: String
+    public let type: Any.Type
 }
 
 private struct Field {
     let type: Any.Type
     let offset: Int
 }
-
-private typealias Dealloc = @convention(c) (UnsafePointer<CChar>?) -> Void
-
-private struct FieldReflectionMetadata {
-    let name: UnsafePointer<CChar>? = nil
-    let dealloc: Dealloc? = nil
-    let isStrong: Bool = false
-    let isVar: Bool = false
-}
-
-@_silgen_name("swift_isClassType")
-private func swift_isClassType(_: Any.Type) -> Bool
-
-@_silgen_name("swift_reflectionMirror_recursiveCount")
-private func swift_reflectionMirror_recursiveCount(_: Any.Type) -> Int
-
-@_silgen_name("swift_reflectionMirror_recursiveChildMetadata")
-private func swift_reflectionMirror_recursiveChildMetadata(
-    _: Any.Type
-    , index: Int
-    , fieldMetadata: UnsafeMutablePointer<FieldReflectionMetadata>
-) -> Any.Type
-
-@_silgen_name("swift_reflectionMirror_recursiveChildOffset")
-private func swift_reflectionMirror_recursiveChildOffset(_: Any.Type, index: Int) -> Int

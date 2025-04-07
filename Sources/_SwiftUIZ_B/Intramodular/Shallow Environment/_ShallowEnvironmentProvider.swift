@@ -25,7 +25,7 @@ public class _ShallowEnvironmentProvider {
     ) -> T? {
         get {
             #try(.optimistic) {
-                try cast(storage[key], to: T.self)
+                try cast(self.storage[key], to: T.self)
             }
         }
     }
