@@ -11,6 +11,12 @@ let package = Package(
     ],
     products: [
         .library(
+            name: "Engine",
+            targets: [
+                "Engine",
+            ]
+        ),
+        .library(
             name: "SwiftUIZ",
             targets: [
                 "_SwiftUI_Internals",
@@ -88,6 +94,7 @@ let package = Package(
             name: "Engine",
             dependencies: [
                 "EngineCore",
+                "Swallow",
             ],
             path: "Dependencies/Engine/Engine"
         ),
@@ -95,6 +102,7 @@ let package = Package(
             name: "EngineCore",
             dependencies: [
                 "EngineCoreC",
+                "Swallow",
             ],
             path: "Dependencies/Engine/EngineCore"
         ),
