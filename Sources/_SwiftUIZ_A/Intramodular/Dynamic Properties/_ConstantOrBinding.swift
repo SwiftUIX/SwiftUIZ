@@ -3,6 +3,7 @@
 //
 
 import Swallow
+import SwallowMacrosClient
 import SwiftUI
 
 @dynamicMemberLookup
@@ -49,7 +50,7 @@ public struct _ConstantOrBinding<Value>: _SwiftUIZ_DynamicProperty {
     public var binding: any _SwiftUIX_BindingType<Value> {
         get throws {
             guard case .binding(let binding) = base else {
-                throw _PlaceholderError()
+                #throw
             }
             
             return binding

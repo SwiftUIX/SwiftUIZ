@@ -153,8 +153,8 @@ public enum _DynamicSceneInitializers {
             }
             
             try _warnOnThrow {
-                try _tryAssert(parameters.idType == nil)
-                try _tryAssert(parameters.id == nil)
+                try #assert(parameters.idType == nil)
+                try #assert(parameters.id == nil)
             }
             
             guard let value = parameters.value as? Value else {

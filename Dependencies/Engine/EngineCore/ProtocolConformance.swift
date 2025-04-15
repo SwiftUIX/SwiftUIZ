@@ -2,6 +2,8 @@
 // Copyright (c) Nathan Tannar
 //
 
+import Swallow
+
 /// A type that wraps the conformance of protocol `P` for a given type.
 ///
 /// See also:
@@ -14,7 +16,7 @@ public struct ProtocolConformance<P: TypeDescriptor> {
     public init?(_ type: Any.Type) {
         let metadata = unsafeBitCast(type, to: UnsafeRawPointer.self)
         let desc = P.descriptor
-        guard let conformance = swift_conformsToProtocol(metadata, desc) else {
+        guard let conformance = _swift_conformsToProtocol(metadata, desc) else {
             return nil
         }
         self.metadata = metadata
@@ -39,9 +41,3 @@ extension TypeDescriptor {
         return ProtocolConformance(type)
     }
 }
-
-@_silgen_name("swift_conformsToProtocol")
-func swift_conformsToProtocol(
-    _ type: UnsafeRawPointer,
-    _ descriptor: UnsafeRawPointer
-) -> UnsafeRawPointer?

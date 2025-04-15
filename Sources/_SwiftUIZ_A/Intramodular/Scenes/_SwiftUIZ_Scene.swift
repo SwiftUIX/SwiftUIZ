@@ -3,6 +3,7 @@
 //
 
 import Swallow
+import SwallowMacrosClient
 import SwiftUI
 
 @MainActor
@@ -49,7 +50,7 @@ extension _SwiftUIZ_Scene {
         } else if let body = body as? _DonateDynamicSceneInitializer {
             return body._resolve()
         } else {
-            throw _PlaceholderError()
+            #throw
         }
     }
 }
