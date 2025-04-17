@@ -2,14 +2,16 @@
 // Copyright (c) Vatsal Manot
 //
 
-import SwiftDiagnostics
 import MacroBuilder
+import SwiftDiagnostics
+import SwiftSyntaxMacros
+import SwiftSyntaxUtilities
 
 public struct _ViewTraitKeyMacro {
     
 }
 
-extension _ViewTraitKeyMacro: MemberMacro {
+extension _ViewTraitKeyMacro: _MemberMacro2 {
     private struct _ViewTraitKeyArguments: Codable {
         enum CodingKeys: String, CodingKey {
             case type = "for"
@@ -20,9 +22,10 @@ extension _ViewTraitKeyMacro: MemberMacro {
         let name: String
     }
 
-    public static func expansion(
+    public static func _expansion(
         of node: AttributeSyntax,
         providingMembersOf declaration: some DeclGroupSyntax,
+        conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
         let arguments = try node.labeledArguments!.decode(_ViewTraitKeyArguments.self)
