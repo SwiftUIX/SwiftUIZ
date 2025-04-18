@@ -22,9 +22,9 @@ let package = Package(
                 "_SwiftUI_Internals",
                 "_SwiftUIZ_Nuke",
                 "_SwiftUIZ_NukeUI",
+                "_UniversalDisplayLink",
                 "_SwiftUIZ_A",
                 "_SwiftUIZ_B",
-                "Engine",
                 "SwiftUIZ",
             ]
         ),
@@ -60,6 +60,17 @@ let package = Package(
         .target(
             name: "_SwiftUIZ_cmark-gfm",
             path: "Dependencies/cmark-gfm"
+        ),
+        .target(
+            name: "_UniversalDisplayLink",
+            dependencies: [
+                "Swallow",
+                "SwiftUIX"
+            ],
+            path: "Sources/_UniversalDisplayLink",
+            swiftSettings: [
+                .enableExperimentalFeature("AccessLevelOnImport")
+            ]
         ),
         .target(
             name: "_SwiftUI_Internals",
