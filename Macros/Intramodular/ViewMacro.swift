@@ -40,11 +40,12 @@ extension ViewMacro: ExtensionMacro {
     }
 }
 
-extension ViewMacro: MemberMacro {
-    public static func expansion<Declaration: DeclGroupSyntax, Context: MacroExpansionContext>(
+extension ViewMacro: _MemberMacro2 {
+    public static func _expansion(
         of node: AttributeSyntax,
-        providingMembersOf declaration: Declaration,
-        in context: Context
+        providingMembersOf declaration: some DeclGroupSyntax,
+        conformingTo protocols: [TypeSyntax],
+        in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
         guard Array<SwiftSyntax.SyntaxKind>([.classDecl, .extensionDecl, .structDecl]).contains(declaration.kind) else {
             throw ViewMacroError()

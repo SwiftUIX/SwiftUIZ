@@ -11,12 +11,6 @@ let package = Package(
     ],
     products: [
         .library(
-            name: "Engine",
-            targets: [
-                "Engine",
-            ]
-        ),
-        .library(
             name: "SwiftUIZ",
             targets: [
                 "_SwiftUI_Internals",
@@ -25,6 +19,7 @@ let package = Package(
                 "_UniversalDisplayLink",
                 "_SwiftUIZ_A",
                 "_SwiftUIZ_B",
+                "Engine",
                 "SwiftUIZ",
             ]
         ),
