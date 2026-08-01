@@ -6,38 +6,71 @@ import SwiftUI
 
 /// A wrapper for `@ViewBuilder`
 @frozen
-public struct ViewAdapter<Content: View>: View {
+public struct ViewAdapter<Content: View>: PrimitiveView {
 
-    @usableFromInline
-    var content: Content
+    public var content: Content
 
     @inlinable
     public init(@ViewBuilder content: () -> Content) {
         self.content = content()
     }
 
-    public var body: Never {
-        bodyError()
+    private nonisolated var _body: ViewAdapterBody<Content> {
+        ViewAdapterBody(content: self)
     }
 
-    public static func _makeView(
+    public nonisolated static func makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
-    ) -> SwiftUI._ViewOutputs {
-        Content._makeView(view: view[\.content], inputs: inputs)
+    ) -> _ViewOutputs {
+        ViewAdapterBody<Content>._makeView(view: view[\._body], inputs: inputs)
     }
 
-    public static func _makeViewList(
+    public nonisolated static func makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
-    ) -> SwiftUI._ViewListOutputs {
-        Content._makeViewList(view: view[\.content], inputs: inputs)
+    ) -> _ViewListOutputs {
+        ViewAdapterBody<Content>._makeViewList(view: view[\._body], inputs: inputs)
     }
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-    public static func _viewListCount(
-        inputs: SwiftUI._ViewListCountInputs
+    public nonisolated static func viewListCount(
+        inputs: _ViewListCountInputs
     ) -> Int? {
-        Content._viewListCount(inputs: inputs)
+        ViewAdapterBody<Content>._viewListCount(inputs: inputs)
+    }
+}
+
+private struct ViewAdapterBody<Content: View>: View {
+    nonisolated(unsafe) var content: ViewAdapter<Content>
+
+    var body: some View {
+        content.content
+    }
+}
+
+// MARK: - Previews
+
+struct ViewAdapter_Previews: PreviewProvider {
+    static var previews: some View {
+        Preview()
+    }
+
+    struct Preview: View {
+        var body: some View {
+            ViewAdapter {
+                Content()
+            }
+        }
+
+        struct Content: View {
+            @State var value = 0
+
+            var body: some View {
+                Button(value.description) {
+                    value += 1
+                }
+            }
+        }
     }
 }

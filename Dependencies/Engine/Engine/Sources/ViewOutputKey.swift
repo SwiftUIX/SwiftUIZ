@@ -35,15 +35,17 @@ extension ViewOutputKey where Value == ViewOutputList<Content> {
 /// A list of views sourced by a ``ViewOutputKey``
 @frozen
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-public struct ViewOutputList<Content: View>: View, RandomAccessCollection {
+public struct ViewOutputList<Content: View>: View, RandomAccessCollection, Sequence {
+
     @frozen
     public struct Subview: View, Identifiable {
+
         public struct ID: Hashable {
             var value: Namespace.ID
         }
 
-        public var id: ID
-        public var explicitID: AnyHashable?
+        public nonisolated(unsafe) var id: ID
+        public nonisolated(unsafe) var explicitID: AnyHashable?
         public var content: Content
 
         var phase: UpdatePhase.Value
@@ -66,22 +68,24 @@ public struct ViewOutputList<Content: View>: View, RandomAccessCollection {
     }
 
     public private(set) var elements: [Subview]
-    public private(set) var elementsByExplicitID: [AnyHashable: Subview]
+    public nonisolated(unsafe) private(set) var elementsByExplicitID: [AnyHashable: Subview]
 
-    public init(elements: [Subview]) {
+    public nonisolated init(elements: [Subview]) {
         self.elements = elements
-        self.elementsByExplicitID = Dictionary(uniqueKeysWithValues: elements.compactMap {
-            if let id = $0.explicitID {
-                return (id, $0)
-            } else {
-                return nil
-            }
-        })
+        self.elementsByExplicitID = Dictionary(
+            elements.compactMap { child in
+                child.explicitID.map { ($0, child) }
+            },
+            uniquingKeysWith: { _, rhs in rhs }
+        )
     }
-    
-    public mutating func mergeInPlace(with other: Self) {
-        self.elements.append(contentsOf: other.elements)
-        self.elementsByExplicitID.merge(other.elementsByExplicitID, uniquingKeysWith: { lhs, rhs in rhs })
+
+    public nonisolated mutating func mergeInPlace(with other: Self) {
+        elements.append(contentsOf: other.elements)
+        elementsByExplicitID.merge(
+            other.elementsByExplicitID,
+            uniquingKeysWith: { _, rhs in rhs }
+        )
     }
 
     public var body: some View {
@@ -90,29 +94,36 @@ public struct ViewOutputList<Content: View>: View, RandomAccessCollection {
         }
     }
 
-    // MARK: Collection
+    // MARK: Sequence
 
-    public typealias Element = Subview
     public typealias Iterator = IndexingIterator<Array<Element>>
-    public typealias Index = Int
 
-    public func makeIterator() -> Iterator {
+    public nonisolated func makeIterator() -> Iterator {
         elements.makeIterator()
     }
 
-    public var startIndex: Index {
+    public nonisolated var underestimatedCount: Int {
+        elements.underestimatedCount
+    }
+
+    // MARK: RandomAccessCollection
+
+    public typealias Element = Subview
+    public typealias Index = Int
+
+    public nonisolated var startIndex: Index {
         elements.startIndex
     }
 
-    public var endIndex: Index {
+    public nonisolated var endIndex: Index {
         elements.endIndex
     }
 
-    public subscript(position: Index) -> Element {
+    public nonisolated subscript(position: Index) -> Element {
         elements[position]
     }
 
-    public func index(after index: Index) -> Index {
+    public nonisolated func index(after index: Index) -> Index {
         elements.index(after: index)
     }
 }
@@ -124,8 +135,10 @@ public struct ViewOutputSourceModifier<
     Key: ViewOutputKey,
     Source: View
 >: ViewModifier where Key.Content == Source {
+
     @usableFromInline
     var id: AnyHashable?
+
     @usableFromInline
     var source: Source
 
@@ -135,7 +148,7 @@ public struct ViewOutputSourceModifier<
     @inlinable
     public init(
         _ key: Key.Type = Key.self,
-        id: AnyHashable?,
+        id: AnyHashable? = nil,
         source: Source
     ) {
         self.id = id
@@ -178,7 +191,6 @@ extension View {
         modifier(
             ViewOutputSourceModifier(
                 Key.self,
-                id: nil,
                 source: source()
             )
         )
@@ -197,13 +209,12 @@ extension View {
         modifier(
             ViewOutputSourceModifier(
                 Key.self,
-                id: nil,
                 source: AnyView(source())
             )
         )
     }
-    
-    /// A modifier that writes a `Source` view to a ``ViewOutputKey``
+
+    /// A modifier that writes an explicitly identified `Source` view to a ``ViewOutputKey``.
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     @inlinable
     public func viewOutput<
@@ -288,6 +299,7 @@ public struct ViewOutputKeyReader<
         PreferenceKeyReader(ViewOutputPreferenceKey<Key>.self) { value in
             content(Value(value: value))
         }
+        .preference(key: ViewOutputPreferenceKey<Key>.self, value: .init())
     }
 }
 
@@ -323,36 +335,37 @@ public struct ViewOutputKeyValueReader<
     }
 }
 
-// SwiftUIZ
+/// A container view that resolves one explicitly identified view from a ``ViewOutputKey`` value.
 @frozen
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 public struct _UnaryViewOutputKeyValueReader<
     Key: ViewOutputKey,
-    ID: Hashable,
     Content: View
 >: View {
-    
+
     @usableFromInline
     var value: ViewOutputKeyValueProxy<Key>
+
     @usableFromInline
     var id: AnyHashable
+
     @usableFromInline
     var content: (ViewOutputList<Key.Content>.Subview) -> Content
-    
+
     @inlinable
-    public init(
+    public init<ID: Hashable>(
         _ value: ViewOutputKeyValueProxy<Key>,
-        id: AnyHashable,
+        id: ID,
         @ViewBuilder content: @escaping (ViewOutputList<Key.Content>.Subview) -> Content
     ) {
         self.value = value
         self.id = id
         self.content = content
     }
-    
+
     public var body: some View {
-        PreferenceKeyValueReader(value.value) { view in
-            if let view = view.list.elementsByExplicitID[id] {
+        PreferenceKeyValueReader(value.value) { value in
+            if let view = value.list.elementsByExplicitID[id] {
                 content(view)
             }
         }
@@ -375,20 +388,32 @@ struct ViewOutputKey_Previews: PreviewProvider {
         var body: some View {
             ViewOutputKeyReader(PreviewViewOutputKey.self) { value in
                 VStack {
-                    ViewOutputKeyValueReader(value) { views in
-                        ForEach(views) { view in
-                            view
+                    VStack {
+                        ViewOutputKeyValueReader(value) { views in
+                            ForEach(views) { view in
+                                view
+                            }
                         }
                     }
-                }
-                .viewOutput(PreviewViewOutputKey.self) {
-                    Text("Hello, World")
-                }
-                .viewOutput(PreviewViewOutputKey.self) {
-                    Button {
-                        counter += 1
-                    } label: {
-                        Text(counter.description)
+
+                    ViewOutputKeyReader(PreviewViewOutputKey.self) { value in
+                        VStack {
+                            ViewOutputKeyValueReader(value) { views in
+                                ForEach(views) { view in
+                                    view
+                                }
+                            }
+                        }
+                        .viewOutput(PreviewViewOutputKey.self) {
+                            Text("Hello, World")
+                        }
+                        .viewOutput(PreviewViewOutputKey.self) {
+                            Button {
+                                counter += 1
+                            } label: {
+                                Text(counter.description)
+                            }
+                        }
                     }
                 }
             }

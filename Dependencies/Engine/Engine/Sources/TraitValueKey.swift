@@ -12,9 +12,18 @@ import SwiftUI
 /// > Note: Similar to `LayoutValueTrait` but backwards compatible to work with any
 /// view when transformed with a ``VariadicViewAdapter``
 ///
-public protocol TraitValueKey {
+public protocol TraitValueKey: ViewTraitKey {
     associatedtype Value
     static var defaultValue: Self.Value { get }
+}
+
+extension TraitValueKey {
+
+    public static var conformance: ProtocolConformance<ViewTraitKeyProtocolDescriptor>? {
+        ViewTraitKeyProtocolDescriptor.conformance(
+            of: TraitValueKeyBox<Self>.self
+        )
+    }
 }
 
 extension View {
@@ -30,36 +39,65 @@ extension View {
             )
         )
     }
+
+    /// Conditionally writes the trait `Key` to the view
+    @available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *)
+    public func trait<Key: TraitValueKey>(
+        _ key: Key.Type,
+        _ value: Key.Value,
+        isEnabled: Bool
+    ) -> some View {
+        modifier(
+            _ConditionalTraitWritingModifier<TraitValueKeyBox<Key>>(
+                value: value,
+                isEnabled: isEnabled
+            )
+        )
+    }
 }
 
-extension AnyVariadicView.Subview {
-    public subscript<Key: TraitValueKey>(
-        key: Key.Type
-    ) -> Key.Value {
-        get { self[TraitValueKeyBox<Key>.self] }
-        set { self[TraitValueKeyBox<Key>.self] = newValue }
+extension VariadicView.Subview {
+
+    public subscript<K: TraitValueKey>(
+        key: K.Type
+    ) -> K.Value {
+        get { self[TraitValueKeyBox<K>.self] }
+        set { self[TraitValueKeyBox<K>.self] = newValue }
+    }
+
+    public func trait<K: TraitValueKey>(
+        _ key: K.Type
+    ) -> K.Value {
+        self[TraitValueKeyBox<K>.self]
     }
 }
 
 @available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *)
 extension Layout.Subviews.Element {
-    public subscript<Key: TraitValueKey>(
-        key: Key.Type
-    ) -> Key.Value {
-        _trait(key: TraitValueKeyBox<Key>.self)
+    
+    public subscript<K: TraitValueKey>(
+        key: K.Type
+    ) -> K.Value {
+        _trait(key: TraitValueKeyBox<K>.self)
+    }
+
+    public func trait<K: TraitValueKey>(
+        _ key: K.Type
+    ) -> K.Value {
+        _trait(key: TraitValueKeyBox<K>.self)
     }
 }
 
-private struct TraitValueKeyBox<Key: TraitValueKey>: _ViewTraitKey {
-    typealias Value = Key.Value
-    static var defaultValue: Key.Value { Key.defaultValue }
+private struct TraitValueKeyBox<K: TraitValueKey>: _ViewTraitKey {
+    typealias Value = K.Value
+    static var defaultValue: K.Value { K.defaultValue }
 }
 
 // MARK: - Previews
 
 struct TraitValueKey_Previews: PreviewProvider {
     struct PreviewTraitValueKey: TraitValueKey {
-        static var defaultValue: Int = 0
+        static let defaultValue: Int = 0
     }
 
     static var previews: some View {
@@ -70,7 +108,7 @@ struct TraitValueKey_Previews: PreviewProvider {
                 Text("Line 1")
                     .trait(PreviewTraitValueKey.self, 1)
             } content: { content in
-                let sortedChildren = content.children
+                let sortedChildren = content
                     .sorted { lhs, rhs in
                         lhs[PreviewTraitValueKey.self] < rhs[PreviewTraitValueKey.self]
                     }

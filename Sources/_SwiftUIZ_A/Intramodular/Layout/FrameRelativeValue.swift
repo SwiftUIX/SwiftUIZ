@@ -6,10 +6,12 @@ import Swallow
 @_spi(Internal) import SwiftUIX
 
 @MainActor
-public struct FrameRelativeValue<Value> {
-    public let value: @MainActor (CGSize) -> Value
+public struct FrameRelativeValue<Value>: @unchecked Sendable {
+    public let value: @MainActor @Sendable (CGSize) -> Value
     
-    public init(_ value: @escaping @MainActor @Sendable (CGSize) -> Value) {
+    public init(
+        _ value: @escaping @MainActor @Sendable (CGSize) -> Value
+    ) {
         self.value = value
     }
     

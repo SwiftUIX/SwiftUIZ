@@ -14,10 +14,23 @@ public typealias MultiViewProtocolDescriptor = EngineCore.MultiViewProtocolDescr
 
 @frozen
 public struct MultiViewSubviewVisitor: MultiViewVisitor {
+
     @frozen
     public struct Subview: View, Identifiable {
-        public var id: Context.ID
-        public var body: AnyView
+        public nonisolated(unsafe) var id: Context.ID
+        public nonisolated(unsafe) var content: AnyView
+
+        nonisolated init<Content: View>(
+            id: Context.ID,
+            content: Content
+        ) {
+            self.id = id
+            self.content = AnyView(content)
+        }
+
+        public var body: some View {
+            content
+        }
     }
 
     public private(set) var subviews: [Subview] = []
@@ -30,11 +43,12 @@ public struct MultiViewSubviewVisitor: MultiViewVisitor {
         context: Context,
         stop: inout Bool
     ) {
-        subviews.append(Subview(id: context.id, body: AnyView(content)))
+        subviews.append(Subview(id: context.id, content: content))
     }
 }
 
 extension MultiViewAdapter where Visitor == MultiViewSubviewVisitor {
+
     @inlinable
     public init(
         @ViewBuilder source: () -> Source,
@@ -67,6 +81,7 @@ public struct MultiViewIsEmptyVisitor: MultiViewVisitor {
 }
 
 extension MultiViewAdapter where Visitor == MultiViewIsEmptyVisitor {
+
     @inlinable
     public static func isEmptyVisitor(
         @ViewBuilder source: () -> Source,
@@ -77,6 +92,15 @@ extension MultiViewAdapter where Visitor == MultiViewIsEmptyVisitor {
             source: source,
             content: { content($0.isEmpty) }
         )
+    }
+}
+
+extension View {
+
+    public var isEmptyView: Bool {
+        var visitor = MultiViewIsEmptyVisitor()
+        visit(visitor: &visitor)
+        return visitor.isEmpty
     }
 }
 

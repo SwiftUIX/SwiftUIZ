@@ -6,10 +6,9 @@ import SwiftUI
 import EngineCore
 import os.log
 
-@frozen
 public struct ViewInputs {
 
-    public struct Options: OptionSet {
+    public struct Options: OptionSet, Sendable {
         public var rawValue: UInt32
 
         public init(rawValue: UInt32) { self.rawValue = rawValue }
@@ -18,62 +17,81 @@ public struct ViewInputs {
             Options(rawValue: 1 << index)
         }
 
+        public static let isAxisDefined = Options(rawValue: 1 << 2)
+
         public static let isAxisHorizontal = Options(rawValue: 1 << 3)
     }
 
-    public var _graphInputs: _GraphInputs
+    var customInputs: PropertyList
 
-    public var options: Options {
+    public let options: Options
+
+    init(inputs: _GraphInputs) {
+        self.customInputs = inputs.customInputs
         do {
-            let rawValue = try swift_getFieldValue("options", UInt32.self, _graphInputs)
-            return Options(rawValue: rawValue)
+            let rawValue = try swift_getFieldValue("options", UInt32.self, inputs)
+            self.options = Options(rawValue: rawValue)
         } catch {
-            return Options(rawValue: 0)
+            preconditionFailure("Unexpected failure, please file a bug with error: \(error)")
         }
     }
 
-    init(inputs: _GraphInputs) {
-        self._graphInputs = inputs
+    init(inputs: _ViewInputs) {
+        self.init(inputs: inputs.graphInputs)
+    }
+
+    init(inputs: _ViewListInputs) {
+        self.init(inputs: inputs.graphInputs)
+    }
+
+    @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
+    init(inputs: _ViewListCountInputs) {
+        self.customInputs = inputs.customInputs
+        do {
+            let rawValue = try swift_getFieldValue("baseOptions", UInt32.self, inputs)
+            self.options = Options(rawValue: rawValue)
+        } catch {
+            preconditionFailure("Unexpected failure, please file a bug with error: \(error)")
+        }
     }
 
     public subscript<Input: ViewInputKey>(
         _ : Input.Type
     ) -> Input.Value {
-        @_transparent get { _graphInputs[Input.self] }
-        @_transparent set { _graphInputs[Input.self] = newValue }
+        get { customInputs[Input.self] }
+        set { customInputs[Input.self] = newValue }
     }
 
     @_disfavoredOverload
     public subscript<Input: ViewInputKey>(
         _ : Input.Type
     ) -> Input.Value? {
-        @_transparent get { _graphInputs[Input.self] }
-        @_transparent set { _graphInputs[Input.self] = newValue }
+        get { customInputs[Input.self] }
+        set { customInputs[Input.self] = newValue }
     }
 
     public subscript<Value>(
         key: String,
-        _: Value.Type
+        as _: Value.Type = Value.self
     ) -> Value? {
-        @_transparent get { _graphInputs[key, Value.self] }
+        get { customInputs[key, as: Value.self] }
+        set { customInputs[key, as: Value.self] = newValue }
     }
 }
 
 /// A `ViewModifier` that only modifies the static inputs
 public protocol ViewInputsModifier: GraphInputsModifier {
-    static func makeInputs(inputs: inout ViewInputs)
+    nonisolated static func makeInputs(inputs: inout ViewInputs)
 }
 
 extension ViewInputsModifier {
-    public static func makeInputs(
+    public nonisolated static func makeInputs(
         modifier: _GraphValue<Self>,
         inputs: inout _GraphInputs
     ) {
-        withUnsafeMutablePointer(to: &inputs) { ptr in
-            ptr.withMemoryRebound(to: ViewInputs.self, capacity: 1) { ptr in
-                makeInputs(inputs: &ptr.pointee)
-            }
-        }
+        var modifiedInputs = ViewInputs(inputs: inputs)
+        makeInputs(inputs: &modifiedInputs)
+        inputs.customInputs = modifiedInputs.customInputs
     }
 }
 
@@ -85,43 +103,44 @@ public struct _ViewInputsLogModifier: ViewInputsModifier {
 
     public static func makeInputs(inputs: inout ViewInputs) {
         #if DEBUG
-        let log: String = {
-            var message = "\n=== ViewInputs ===\n"
-            dump(inputs.options, to: &message)
-            var ptr = inputs._graphInputs.customInputs.elements
-            while let p = ptr {
-                dump(p, to: &message)
-                dump(p.fields, to: &message)
-                if let valueType = swift_getClassGenerics(for: p.metadata.0)?.first {
-                    func project<Value>(_: Value.Type) {
-                        let value = p.getValue(Value.self)
-                        dump(value, to: &message)
-                    }
-                    _openExistential(valueType, do: project)
-                }
-                ptr = p.after
+        var message = ""
+        dump(inputs.options, to: &message)
+        os_log(.debug, "%@", message)
+        var ptr = inputs.customInputs.elements
+        while let p = ptr {
+            message = ""
+            dump(p, to: &message)
+            if case .v8 = p {
+                dump(p.keyType, to: &message)
             }
-            return message
-        }()
-        os_log(.debug, "%@", log)
+            dump(p.fields, to: &message)
+            if let value = p.value {
+                dump(value, to: &message)
+            }
+            ptr = p.advanced()
+
+            os_log(.debug, "%@", message)
+        }
         #endif
     }
 }
 
 extension _ViewInputs {
-    public var _graphInputs: _GraphInputs {
-        @_transparent get {
-            withUnsafePointer(to: self) { ptr in
-                ptr.withMemoryRebound(to: _GraphInputs.self, capacity: 1) { ptr in
-                    ptr.pointee
-                }
+
+    public var graphInputs: _GraphInputs {
+        get {
+            do {
+                let inputs = try swift_getFieldValue("base", _GraphInputs.self, self)
+                return inputs
+            } catch {
+                preconditionFailure("Unexpected failure, please file a bug with error: \(error)")
             }
         }
-        @_transparent set {
-            withUnsafeMutablePointer(to: &self) { ptr in
-                ptr.withMemoryRebound(to: _GraphInputs.self, capacity: 1) { ptr in
-                    ptr.pointee = newValue
-                }
+        set {
+            do {
+                try swift_setFieldValue("base", newValue, &self)
+            } catch {
+                preconditionFailure("Unexpected failure, please file a bug with error: \(error)")
             }
         }
     }
@@ -129,40 +148,43 @@ extension _ViewInputs {
     public subscript<Input: ViewInputKey>(
         _ : Input.Type
     ) -> Input.Value {
-        @_transparent get { _graphInputs[Input.self] }
-        @_transparent set { _graphInputs[Input.self] = newValue }
+        get { graphInputs[Input.self] }
+        set { graphInputs[Input.self] = newValue }
     }
 
     @_disfavoredOverload
     public subscript<Input: ViewInputKey>(
         _ : Input.Type
     ) -> Input.Value? {
-        @_transparent get { _graphInputs[Input.self] }
-        @_transparent set { _graphInputs[Input.self] = newValue }
+        get { graphInputs[Input.self] }
+        set { graphInputs[Input.self] = newValue }
     }
 
     public subscript<Value>(
         key: String,
-        _: Value.Type
+        as _: Value.Type = Value.self
     ) -> Value? {
-        @_transparent get { _graphInputs[key, Value.self] }
+        get { graphInputs[key, as: Value.self] }
+        set { graphInputs[key, as: Value.self] = newValue }
     }
 }
 
 extension _ViewListInputs {
-    public var _graphInputs: _GraphInputs {
-        @_transparent get {
-            withUnsafePointer(to: self) { ptr in
-                ptr.withMemoryRebound(to: _GraphInputs.self, capacity: 1) { ptr in
-                    ptr.pointee
-                }
+
+    public var graphInputs: _GraphInputs {
+        get {
+            do {
+                let inputs = try swift_getFieldValue("base", _GraphInputs.self, self)
+                return inputs
+            } catch {
+                preconditionFailure("Unexpected failure, please file a bug with error: \(error)")
             }
         }
-        @_transparent set {
-            withUnsafeMutablePointer(to: &self) { ptr in
-                ptr.withMemoryRebound(to: _GraphInputs.self, capacity: 1) { ptr in
-                    ptr.pointee = newValue
-                }
+        set {
+            do {
+                try swift_setFieldValue("base", newValue, &self)
+            } catch {
+                preconditionFailure("Unexpected failure, please file a bug with error: \(error)")
             }
         }
     }
@@ -170,40 +192,46 @@ extension _ViewListInputs {
     public subscript<Input: ViewInputKey>(
         _ : Input.Type
     ) -> Input.Value {
-        @_transparent get { _graphInputs[Input.self] }
-        @_transparent set { _graphInputs[Input.self] = newValue }
+        get { graphInputs[Input.self] }
+        set { graphInputs[Input.self] = newValue }
     }
 
     @_disfavoredOverload
     public subscript<Input: ViewInputKey>(
         _ : Input.Type
     ) -> Input.Value? {
-        @_transparent get { _graphInputs[Input.self] }
-        @_transparent set { _graphInputs[Input.self] = newValue }
+        get { graphInputs[Input.self] }
+        set { graphInputs[Input.self] = newValue }
     }
 
     public subscript<Value>(
         key: String,
-        _: Value.Type
+        as _: Value.Type = Value.self
     ) -> Value? {
-        @_transparent get { _graphInputs[key, Value.self] }
+        get { graphInputs[key, as: Value.self] }
+        set { graphInputs[key, as: Value.self] = newValue }
     }
+}
+
+private struct ViewListCountInputsLayout {
+    var customInputs: PropertyList
 }
 
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 extension _ViewListCountInputs {
-    public var _graphInputs: _GraphInputs {
+
+    var customInputs: PropertyList {
         get {
-            withUnsafePointer(to: self) { ptr in
-                ptr.withMemoryRebound(to: _GraphInputs.self, capacity: 1) { ptr in
-                    ptr.pointee
+            withUnsafePointer(to: self) { ptr -> PropertyList in
+                ptr.withMemoryRebound(to: ViewListCountInputsLayout.self, capacity: 1) { ptr -> PropertyList in
+                    ptr.pointee.customInputs
                 }
             }
         }
         set {
             withUnsafeMutablePointer(to: &self) { ptr in
-                ptr.withMemoryRebound(to: _GraphInputs.self, capacity: 1) { ptr in
-                    ptr.pointee = newValue
+                ptr.withMemoryRebound(to: ViewListCountInputsLayout.self, capacity: 1) { ptr in
+                    ptr.pointee.customInputs = newValue
                 }
             }
         }
@@ -212,22 +240,23 @@ extension _ViewListCountInputs {
     public subscript<Input: ViewInputKey>(
         _ : Input.Type
     ) -> Input.Value {
-        @_transparent get { _graphInputs[Input.self] }
-        @_transparent set { _graphInputs[Input.self] = newValue }
+        get { customInputs[Input.self] }
+        set { customInputs[Input.self] = newValue }
     }
 
     @_disfavoredOverload
     public subscript<Input: ViewInputKey>(
         _ : Input.Type
     ) -> Input.Value? {
-        @_transparent get { _graphInputs[Input.self] }
-        @_transparent set { _graphInputs[Input.self] = newValue }
+        get { customInputs[Input.self] }
+        set { customInputs[Input.self] = newValue }
     }
 
     public subscript<Value>(
         key: String,
-        _: Value.Type
+        as _: Value.Type = Value.self
     ) -> Value? {
-        @_transparent get { _graphInputs[key, Value.self] }
+        get { customInputs[key, as: Value.self] }
+        set { customInputs[key, as: Value.self] = newValue }
     }
 }

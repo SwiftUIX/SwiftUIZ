@@ -3,6 +3,7 @@
 //
 
 #include "visitors.h"
+#include <AvailabilityMacros.h>
 
 extern char $s7SwiftUI14EnvironmentKeyMp;
 
@@ -34,7 +35,7 @@ const void *_MultiViewProtocolDescriptor(void) {
     return &$s10EngineCore9MultiViewMp;
 }
 
-#if TARGET_OS_IOS || TARGET_OS_TV
+#if TARGET_OS_IOS || TARGET_OS_TV || TARGET_OS_VISION
 
 extern char $s7SwiftUI19UIViewRepresentableMp;
 
@@ -78,27 +79,35 @@ void c_visit_ViewTraitKey(void *_Nonnull visitor, const void *_Nonnull metadata,
 
 void c_visit_View(void *_Nonnull visitor, const void *_Nonnull metadata, const void *_Nonnull conformance, const void *_Nonnull descriptor)
 {
-#if TARGET_OS_IOS || TARGET_OS_TV
+#if TARGET_OS_IOS || TARGET_OS_TV || TARGET_OS_VISION
     if (descriptor == _UIViewRepresentableProtocolDescriptor())
     {
         _swift_visit_UIViewRepresentable(visitor, metadata, metadata, conformance);
     }
-    if (descriptor == _UIViewControllerRepresentableProtocolDescriptor())
+    else if (descriptor == _UIViewControllerRepresentableProtocolDescriptor())
     {
         _swift_visit_UIViewControllerRepresentable(visitor, metadata, metadata, conformance);
     }
-#endif
-#if TARGET_OS_OSX
+    else
+    {
+        _swift_visit_View(visitor, metadata, metadata, conformance);
+    }
+#elif TARGET_OS_OSX
     if (descriptor == _NSViewRepresentableProtocolDescriptor())
     {
         _swift_visit_NSViewRepresentable(visitor, metadata, metadata, conformance);
     }
-    if (descriptor == _NSViewControllerRepresentableProtocolDescriptor())
+    else if (descriptor == _NSViewControllerRepresentableProtocolDescriptor())
     {
         _swift_visit_NSViewControllerRepresentable(visitor, metadata, metadata, conformance);
     }
-#endif
+    else
+    {
+        _swift_visit_View(visitor, metadata, metadata, conformance);
+    }
+#else
     _swift_visit_View(visitor, metadata, metadata, conformance);
+#endif
 }
 
 void c_visit_ViewModifier(void *_Nonnull visitor, const void *_Nonnull metadata, const void *_Nonnull conformance)
@@ -110,4 +119,68 @@ void c_visit_ViewModifier(void *_Nonnull visitor, const void *_Nonnull metadata,
 void c_visit_MultiView(void *_Nonnull content, void *_Nonnull visitor, const void *_Nonnull metadata, const void *_Nonnull conformance)
 {
     _swift_visit_MultiView(content, visitor, metadata, metadata, conformance);
+}
+
+void *_Nullable c_swift_conformsToProtocol(const void *_Nonnull metadata, const void *_Nonnull descriptor)
+{
+    void *conformance = swift_conformsToProtocol(metadata, descriptor);
+    return conformance;
+}
+
+bool c_swift_isClassType(const void *_Nonnull metadata)
+{
+    bool isClass = swift_isClassType(metadata);
+    return isClass;
+}
+
+bool c_swift_isOpaqueTypeErasureEnabled()
+{
+    #if defined(__IPHONE_OS_VERSION_MAX_ALLOWED)
+    #if defined(__IPHONE_18_4) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_18_4
+    return false;
+    #elif defined(__IPHONE_18_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_18_0
+    return true;
+    #else
+    return false;
+    #endif
+
+    #elif defined(__WATCH_OS_VERSION_MAX_ALLOWED)
+    #if defined(__WATCHOS_11_4) && __WATCH_OS_VERSION_MAX_ALLOWED >= __WATCHOS_11_4
+    return false;
+    #elif defined(__WATCHOS_11_0) && __WATCH_OS_VERSION_MAX_ALLOWED >= __WATCHOS_11_0
+    return true;
+    #else
+    return false;
+    #endif
+
+    #elif defined(__TV_OS_VERSION_MAX_ALLOWED)
+    #if defined(__TVOS_18_4) && __TV_OS_VERSION_MAX_ALLOWED >= __TVOS_18_4
+    return false;
+    #elif defined(__TVOS_18_0) && __TV_OS_VERSION_MAX_ALLOWED >= __TVOS_18_0
+    return true;
+    #else
+    return false;
+    #endif
+
+    #elif defined(__VISION_OS_VERSION_MAX_ALLOWED)
+    #if defined(__VISIONOS_2_4) && __VISION_OS_VERSION_MAX_ALLOWED >= __VISIONOS_2_4
+    return false;
+    #elif defined(__VISIONOS_2_0) __VISION_OS_VERSION_MAX_ALLOWED >= __VISIONOS_2_0
+    return true;
+    #else
+    return false;
+    #endif
+
+    #elif defined(__MAC_OS_X_VERSION_MAX_ALLOWED)
+    #if defined(__MAC_15_4) && __MAC_OS_X_VERSION_MAX_ALLOWED >= __MAC_15_4
+    return false;
+    #elif defined(__MAC_15_0) && __MAC_OS_X_VERSION_MAX_ALLOWED >= __MAC_15_0
+    return true;
+    #else
+    return false;
+    #endif
+
+    #else
+    return false;
+    #endif
 }

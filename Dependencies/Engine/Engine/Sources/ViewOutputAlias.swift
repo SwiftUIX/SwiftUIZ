@@ -22,7 +22,7 @@ import SwiftUI
 ///  - ``ViewAlias``
 ///
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-public protocol ViewOutputAlias: View where Body == Never {
+public protocol ViewOutputAlias: PrimitiveView {
     associatedtype Content: View = AnyView
     associatedtype DefaultBody: View = EmptyView
     @MainActor @ViewBuilder var defaultBody: DefaultBody { get }
@@ -116,7 +116,7 @@ public struct ViewOutputAliasReader<
     public var body: some View {
         ViewOutputKeyReader(ViewOutputAliasKey<Alias>.self) { value in
             content
-                .viewAlias(ViewOutputAliasKey<Alias>.self) {
+                .viewAlias(ViewOutputAliasBody<Alias>.self) {
                     ViewOutputKeyValueReader(value) { view in
                         view
                     }
@@ -132,61 +132,60 @@ extension ViewOutputAlias where DefaultBody == EmptyView {
     }
 }
 
-
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 extension ViewOutputAlias {
-    public var body: Body {
-        bodyError()
+
+    private nonisolated var _body: ViewOutputAliasBody<Self> {
+        ViewOutputAliasBody(alias: self)
     }
 
-    private var content: ViewOutputAliasKey<Self> {
-        ViewOutputAliasKey(alias: self)
-    }
-
-    public static func _makeView(
+    public nonisolated static func makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
-    ) -> SwiftUI._ViewOutputs {
-        ViewOutputAliasKey<Self>._makeView(
-            view: view[\.content],
+    ) -> _ViewOutputs {
+        ViewOutputAliasBody<Self>._makeView(
+            view: view[\._body],
             inputs: inputs
         )
     }
 
-    public static func _makeViewList(
+    public nonisolated static func makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
-    ) -> SwiftUI._ViewListOutputs {
-        ViewOutputAliasKey<Self>._makeViewList(
-            view: view[\.content],
+    ) -> _ViewListOutputs {
+        ViewOutputAliasBody<Self>._makeViewList(
+            view: view[\._body],
             inputs: inputs
         )
     }
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-    public static func _viewListCount(
-        inputs: SwiftUI._ViewListCountInputs
+    public nonisolated static func viewListCount(
+        inputs: _ViewListCountInputs
     ) -> Int? {
-        ViewOutputAliasKey<Self>._viewListCount(
+        ViewOutputAliasBody<Self>._viewListCount(
             inputs: inputs
         )
     }
 }
 
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-private struct ViewOutputAliasKey<
-    Alias: ViewOutputAlias
->: ViewOutputKey, ViewAlias {
-
-    var alias: Alias
+private struct ViewOutputAliasBody<Alias: ViewOutputAlias>: ViewAlias {
+    nonisolated(unsafe) var alias: Alias
 
     var defaultBody: Alias.DefaultBody {
         alias.defaultBody
     }
+}
+
+@available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
+private struct ViewOutputAliasKey<
+    Alias: ViewOutputAlias
+>: ViewOutputKey {
 
     typealias Content = Alias.Content
 
-    static func reduce(
+    nonisolated static func reduce(
         value: inout Value,
         nextValue: () -> Value
     ) {
@@ -198,18 +197,32 @@ private struct ViewOutputAliasKey<
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 struct ViewOutputAlias_Previews: PreviewProvider {
-    struct PreviewViewOutputAlias: ViewOutputAlias { }
+    struct PreviewViewOutputAlias: ViewOutputAlias {
+        var defaultBody: some View {
+            Text("default")
+        }
+    }
 
     static var previews: some View {
-        ViewOutputAliasReader(PreviewViewOutputAlias.self) {
-            VStack {
-                PreviewViewOutputAlias()
-            }
-            .viewOutputAlias(PreviewViewOutputAlias.self) {
-                Text("Hello, World A")
-            }
-            .viewOutputAlias(PreviewViewOutputAlias.self) {
-                Text("Hello, World B")
+        VStack {
+            PreviewViewOutputAlias()
+
+            ViewOutputAliasReader(PreviewViewOutputAlias.self) {
+                VStack {
+                    PreviewViewOutputAlias()
+
+                    ViewOutputAliasReader(PreviewViewOutputAlias.self) {
+                        VStack {
+                            PreviewViewOutputAlias()
+                        }
+                        .viewOutputAlias(PreviewViewOutputAlias.self) {
+                            Text("Hello, World A")
+                        }
+                        .viewOutputAlias(PreviewViewOutputAlias.self) {
+                            Text("Hello, World B")
+                        }
+                    }
+                }
             }
         }
     }

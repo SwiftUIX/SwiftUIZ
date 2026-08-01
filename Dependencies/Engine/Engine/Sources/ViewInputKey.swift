@@ -5,7 +5,7 @@
 import SwiftUI
 
 /// A static input key for a view
-public protocol ViewInputKey: AnyViewInputKey {
+public protocol ViewInputKey {
     associatedtype Value
     static var defaultValue: Value { get }
 }
@@ -54,9 +54,9 @@ public struct ViewInputModifier<Input: ViewInput>: ViewModifier {
     public init() { }
 
     public func body(content: Content) -> some View {
-        UnaryViewAdaptor { // workaround crashes
-            content.modifier(Modifier())
-        }
+        content
+            .modifier(Modifier())
+            .modifier(UnaryViewModifier())
     }
 
     private struct Modifier: ViewInputsModifier {
@@ -64,13 +64,4 @@ public struct ViewInputModifier<Input: ViewInput>: ViewModifier {
             inputs[Input.Key.self] = Input.value
         }
     }
-}
-
-/// Do not use directly, use ``ViewInputKey``
-public protocol AnyViewInputKey {
-    static var value: Any.Type { get }
-}
-
-extension ViewInputKey {
-    public static var value: any Any.Type { Value.self }
 }

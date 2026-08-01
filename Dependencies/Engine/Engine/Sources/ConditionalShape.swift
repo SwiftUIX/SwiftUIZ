@@ -9,6 +9,31 @@ public typealias ConditionalShape<TrueShape: Shape, FalseShape: Shape> = Conditi
 
 extension ConditionalShape: Shape {
 
+    public var animatableData: AnyAnimatableData {
+        get {
+            switch storage {
+            case .trueContent(let shape):
+                return AnyAnimatableData(shape.animatableData)
+            case .falseContent(let shape):
+                return AnyAnimatableData(shape.animatableData)
+            }
+        }
+        set {
+            switch storage {
+            case .trueContent(var shape):
+                if let newValue = newValue.value(as: TrueContent.AnimatableData.self) {
+                    shape.animatableData = newValue
+                    storage = .trueContent(shape)
+                }
+            case .falseContent(var shape):
+                if let newValue = newValue.value(as: FalseContent.AnimatableData.self) {
+                    shape.animatableData = newValue
+                    storage = .falseContent(shape)
+                }
+            }
+        }
+    }
+
     public func path(in rect: CGRect) -> Path {
         switch storage {
         case .trueContent(let shape):
@@ -23,7 +48,7 @@ extension ConditionalShape: Shape {
         if TrueContent.role == FalseContent.role {
             return TrueContent.role
         }
-        return EmptyShape.role
+        return .fill
     }
 
     @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
@@ -46,6 +71,35 @@ extension ConditionalShape: Shape {
         }
     }
 }
+
+extension ConditionalShape: InsettableShape where TrueContent: InsettableShape, FalseContent: InsettableShape {
+
+    public nonisolated func inset(
+        by amount: CGFloat
+    ) -> ConditionalShape<TrueContent.InsetShape, FalseContent.InsetShape> {
+        switch storage {
+        case .trueContent(let shape):
+            return .init(shape.inset(by: amount))
+        case .falseContent(let shape):
+            return .init(shape.inset(by: amount))
+        }
+    }
+}
+
+#if canImport(FoundationModels) // Xcode 26
+@available(iOS 26.0, macOS 26.0, tvOS 26.0, watchOS 26.0, visionOS 26.0, *)
+extension ConditionalShape: RoundedRectangularShape where TrueContent: RoundedRectangularShape, FalseContent: RoundedRectangularShape {
+
+    public func corners(in size: CGSize?) -> Corners? {
+        switch storage {
+        case .trueContent(let shape):
+            return shape.corners(in: size)
+        case .falseContent(let shape):
+            return shape.corners(in: size)
+        }
+    }
+}
+#endif
 
 // MARK: - Previews
 

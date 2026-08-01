@@ -2,21 +2,20 @@
 // Copyright (c) Nathan Tannar
 //
 
-import Swallow
-
 /// A type that wraps the conformance of protocol `P` for a given type.
 ///
 /// See also:
 ///  - `https://forums.swift.org/t/calling-swift-runtime-methods/23325`
 ///  - `https://github.com/apple/swift/blob/main/stdlib/toolchain/Compatibility50/ProtocolConformance.cpp`
-public struct ProtocolConformance<P: TypeDescriptor> {
+@frozen
+public struct ProtocolConformance<P: TypeDescriptor>: @unchecked Sendable {
     public var metadata: UnsafeRawPointer
     public var conformance: UnsafeRawPointer
 
     public init?(_ type: Any.Type) {
         let metadata = unsafeBitCast(type, to: UnsafeRawPointer.self)
         let desc = P.descriptor
-        guard let conformance = _swift_conformsToProtocol(metadata, desc) else {
+        guard let conformance = c_swift_conformsToProtocol(metadata, desc) else {
             return nil
         }
         self.metadata = metadata
@@ -41,3 +40,9 @@ extension TypeDescriptor {
         return ProtocolConformance(type)
     }
 }
+
+@_silgen_name("c_swift_conformsToProtocol")
+func c_swift_conformsToProtocol(
+    _ type: UnsafeRawPointer,
+    _ descriptor: UnsafeRawPointer
+) -> UnsafeRawPointer?

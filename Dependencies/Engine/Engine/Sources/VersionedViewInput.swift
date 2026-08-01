@@ -5,38 +5,48 @@
 import SwiftUI
 import EngineCore
 
-public struct VersionInput: Equatable {
-    
+public struct VersionInput: Equatable, Sendable {
+
     var rawValue: UInt8
-    
+
     public static let v1 = VersionInput(rawValue: 1)
     public struct V1: _VersionInput {
         public static let value: VersionInput = .v1
     }
-    
+
     public static let v2 = VersionInput(rawValue: 2)
     public struct V2: _VersionInput {
         public static let value: VersionInput = .v2
     }
-    
+
     public static let v3 = VersionInput(rawValue: 3)
     public struct V3: _VersionInput {
         public static let value: VersionInput = .v3
     }
-    
+
     public static let v4 = VersionInput(rawValue: 4)
     public struct V4: _VersionInput {
         public static let value: VersionInput = .v4
     }
-    
+
     public static let v5 = VersionInput(rawValue: 5)
     public struct V5: _VersionInput {
         public static let value: VersionInput = .v5
     }
-    
+
     public static let v6 = VersionInput(rawValue: 6)
     public struct V6: _VersionInput {
         public static let value: VersionInput = .v6
+    }
+
+    public static let v7 = VersionInput(rawValue: 7)
+    public struct V7: _VersionInput {
+        public static let value: VersionInput = .v7
+    }
+
+    public static let v8 = VersionInput(rawValue: 8)
+    public struct V8: _VersionInput {
+        public static let value: VersionInput = .v8
     }
 }
 
@@ -59,11 +69,30 @@ extension _VersionInput where Self == VersionInput.V5 {
 extension _VersionInput where Self == VersionInput.V6 {
     public static var v6: VersionInput.V6 { .init() }
 }
+extension _VersionInput where Self == VersionInput.V7 {
+    public static var v7: VersionInput.V7 { .init() }
+}
+extension _VersionInput where Self == VersionInput.V8 {
+    public static var v8: VersionInput.V8 { .init() }
+}
+
 
 public struct VersionInputKey: ViewInputKey {
     public static var defaultValue: VersionInput {
-        if #available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *) {
+        if #available(iOS 27.0, macOS 27.0, tvOS 27.0, watchOS 27.0, visionOS 27.0, *) {
+            return .v8
+        } else if #available(iOS 26.0, macOS 26.0, tvOS 26.0, watchOS 26.0, visionOS 26.0, *) {
+            return .v7
+        } else if #available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *) {
             return .v6
+        } else if #available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, visionOS 1.0, *) {
+            return .v5
+        } else if #available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *) {
+            return .v4
+        } else if #available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *) {
+            return .v3
+        } else if #available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *) {
+            return .v2
         } else {
             return .v1
         }
@@ -77,7 +106,7 @@ struct UnsupportedVersionView: View {
             if #available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *) {
                 Image(systemName: "exclamationmark.triangle.fill")
             }
-            
+
             Text("Unsupported Version")
         }
         .foregroundColor(.red)
@@ -87,7 +116,7 @@ struct UnsupportedVersionView: View {
 
 #if DEBUG
 extension View {
-    
+
     /// On debug builds, this overrides the version used by ``VersionedView``,
     /// ``VersionedViewModifier`` and ``VersionedDynamicProperty``
     /// On non-debug builds this does nothing
@@ -102,7 +131,7 @@ extension View {
 }
 #else
 extension View {
-    
+
     /// On debug builds, this overrides the version used by ``VersionedView``,
     /// ``VersionedViewModifier`` and ``VersionedDynamicProperty``
     /// On non-debug builds this does nothing
@@ -121,63 +150,90 @@ extension View {
 
 struct VersionInput_Previews: PreviewProvider {
     struct PreviewVersionInputView: VersionedView {
+        var v8Body: some View { Text("V8") }
+        var v7Body: some View { Text("V7") }
+        var v6Body: some View { Text("V6") }
         var v5Body: some View { Text("V5") }
         var v4Body: some View { Text("V4") }
         var v3Body: some View { Text("V3") }
         var v2Body: some View { Text("V2") }
         var v1Body: some View { Text("V1") }
     }
-    
+
     struct PreviewVersionInputViewModifier: VersionedViewModifier {
+        func v8Body(content: Content) -> some View { Text("V8") }
+        func v7Body(content: Content) -> some View { Text("V7") }
+        func v6Body(content: Content) -> some View { Text("V6") }
         func v5Body(content: Content) -> some View { Text("V5") }
         func v4Body(content: Content) -> some View { Text("V4") }
         func v3Body(content: Content) -> some View { Text("V3") }
         func v2Body(content: Content) -> some View { Text("V2") }
         func v1Body(content: Content) -> some View { Text("V1") }
     }
-    
+
     static var previews: some View {
         Group {
             VStack {
                 PreviewVersionInputView()
+                    .version(.v8)
+
+                PreviewVersionInputView()
+                    .version(.v7)
+
+                PreviewVersionInputView()
+                    .version(.v6)
+
+                PreviewVersionInputView()
                     .version(.v5)
-                
+
                 PreviewVersionInputView()
                     .version(.v4)
-                
+
                 PreviewVersionInputView()
                     .version(.v3)
-                
+
                 PreviewVersionInputView()
                     .version(.v2)
-                
+
                 PreviewVersionInputView()
                     .version(.v1)
             }
             .previewDisplayName("VersionedView")
-            
+
             VStack {
                 EmptyView()
                     .modifier(PreviewVersionInputViewModifier())
+                    .version(.v8)
+
+                EmptyView()
+                    .modifier(PreviewVersionInputViewModifier())
+                    .version(.v7)
+
+                EmptyView()
+                    .modifier(PreviewVersionInputViewModifier())
+                    .version(.v6)
+
+                EmptyView()
+                    .modifier(PreviewVersionInputViewModifier())
                     .version(.v5)
-                
+
                 EmptyView()
                     .modifier(PreviewVersionInputViewModifier())
                     .version(.v4)
-                
+
                 EmptyView()
                     .modifier(PreviewVersionInputViewModifier())
                     .version(.v3)
-                
+
                 EmptyView()
                     .modifier(PreviewVersionInputViewModifier())
                     .version(.v2)
-                
+
                 EmptyView()
                     .modifier(PreviewVersionInputViewModifier())
                     .version(.v1)
             }
-            .previewDisplayName("VersionedView")
+            .previewDisplayName("VersionedViewModifier")
         }
     }
 }

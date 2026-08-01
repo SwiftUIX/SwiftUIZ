@@ -10,21 +10,30 @@ public struct StaticConditionalContent<
     Condition: StaticCondition,
     TrueContent: View,
     FalseContent: View
->: View {
+>: PrimitiveView {
 
     @usableFromInline
-    var content: ConditionalContent<TrueContent, FalseContent>
+    nonisolated(unsafe) var content: ConditionalContent<TrueContent, FalseContent>
 
     @inlinable
     public init(
         _ : Condition.Type = Condition.self,
-        @ViewBuilder then: () -> TrueContent,
-        @ViewBuilder otherwise: () -> FalseContent
+        @ViewBuilder then: () -> TrueContent = { EmptyView() },
+        @ViewBuilder otherwise: () -> FalseContent = { EmptyView() }
     ) {
-        self.content = Condition.value ? .init(then()) : .init(otherwise())
+        self.init(Condition.self, then: then(), otherwise: otherwise())
     }
 
-    private var trueContent: TrueContent {
+    @inlinable
+    public init(
+        _ : Condition.Type = Condition.self,
+        then: TrueContent = EmptyView(),
+        otherwise: FalseContent = EmptyView()
+    ) {
+        self.content = Condition.value ? .init(then) : .init(otherwise)
+    }
+
+    private nonisolated var trueContent: TrueContent {
         switch content.storage {
         case .trueContent(let content):
             return content
@@ -33,7 +42,7 @@ public struct StaticConditionalContent<
         }
     }
 
-    private var falseContent: FalseContent {
+    private nonisolated var falseContent: FalseContent {
         switch content.storage {
         case .trueContent:
             fatalError("Condition \(String(describing: Condition.self)) produced a dynamic result")
@@ -42,44 +51,31 @@ public struct StaticConditionalContent<
         }
     }
 
-    public var body: Never {
-        bodyError()
-    }
-
-    public static func _makeView(
+    public nonisolated static func makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
-    ) -> SwiftUI._ViewOutputs {
+    ) -> _ViewOutputs {
         Condition.value
             ? TrueContent._makeView(view: view[\.trueContent], inputs: inputs)
             : FalseContent._makeView(view: view[\.falseContent], inputs: inputs)
     }
 
-    public static func _makeViewList(
+    public nonisolated static func makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
-    ) -> SwiftUI._ViewListOutputs {
+    ) -> _ViewListOutputs {
         Condition.value
             ? TrueContent._makeViewList(view: view[\.trueContent], inputs: inputs)
             : FalseContent._makeViewList(view: view[\.falseContent], inputs: inputs)
     }
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-    public static func _viewListCount(
-        inputs: SwiftUI._ViewListCountInputs
+    public nonisolated static func viewListCount(
+        inputs: _ViewListCountInputs
     ) -> Int? {
         Condition.value
             ? TrueContent._viewListCount(inputs: inputs)
             : FalseContent._viewListCount(inputs: inputs)
-    }
-}
-
-extension StaticConditionalContent where FalseContent == EmptyView {
-    public init(
-        _ : Condition.Type = Condition.self,
-        @ViewBuilder then: () -> TrueContent
-    ) {
-        self.init(Condition.self, then: then, otherwise: { EmptyView() })
     }
 }
 
@@ -96,9 +92,28 @@ struct StaticConditionalContent_Previews: PreviewProvider {
         }
     }
 
+    struct Preview: View {
+        var label: String
+        @State var value = 0
+
+        var body: some View {
+            Button {
+                value += 1
+            } label: {
+                Text(verbatim: "\(label) \(value.description)")
+            }
+        }
+    }
+
     static var previews: some View {
         StaticConditionalContent(PreviewCondition.self) {
-            Text("DEBUG")
+            Preview(label: "DEBUG")
+        }
+
+        StaticConditionalContent(PreviewCondition.self) {
+            Preview(label: "DEBUG")
+        } otherwise: {
+            Preview(label: "!DEBUG")
         }
     }
 }

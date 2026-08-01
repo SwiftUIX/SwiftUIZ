@@ -10,79 +10,58 @@ public struct ViewInputConditionalContent<
     Condition: ViewInputsCondition,
     TrueContent: View,
     FalseContent: View
->: View {
+>: PrimitiveView {
 
     @usableFromInline
-    var trueContent: TrueContent
+    nonisolated(unsafe) var trueContent: TrueContent
 
     @usableFromInline
-    var falseContent: FalseContent
+    nonisolated(unsafe) var falseContent: FalseContent
 
     @inlinable
     public init(
         _ : Condition.Type = Condition.self,
-        @ViewBuilder then: () -> TrueContent,
-        @ViewBuilder otherwise: () -> FalseContent
+        @ViewBuilder then: () -> TrueContent = { EmptyView() },
+        @ViewBuilder otherwise: () -> FalseContent = { EmptyView() }
     ) {
-        self.trueContent = then()
-        self.falseContent = otherwise()
+        self.init(Condition.self, then: then(), otherwise: otherwise())
     }
 
     @inlinable
     public init(
-        _ : Condition,
-        @ViewBuilder then: () -> TrueContent,
-        @ViewBuilder otherwise: () -> FalseContent
+        _ : Condition.Type = Condition.self,
+        then: TrueContent = EmptyView(),
+        otherwise: FalseContent = EmptyView()
     ) {
-        self.trueContent = then()
-        self.falseContent = otherwise()
+        self.trueContent = then
+        self.falseContent = otherwise
     }
 
-    public var body: Never {
-        bodyError()
-    }
-
-    public static func _makeView(
+    public static func makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
-    ) -> SwiftUI._ViewOutputs {
-        Condition.evaluate(ViewInputs(inputs: inputs._graphInputs))
+    ) -> _ViewOutputs {
+        Condition.evaluate(ViewInputs(inputs: inputs))
             ? TrueContent._makeView(view: view[\.trueContent], inputs: inputs)
             : FalseContent._makeView(view: view[\.falseContent], inputs: inputs)
     }
 
-    public static func _makeViewList(
+    public nonisolated static func makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
-    ) -> SwiftUI._ViewListOutputs {
-        Condition.evaluate(ViewInputs(inputs: inputs._graphInputs))
+    ) -> _ViewListOutputs {
+        Condition.evaluate(ViewInputs(inputs: inputs))
             ? TrueContent._makeViewList(view: view[\.trueContent], inputs: inputs)
             : FalseContent._makeViewList(view: view[\.falseContent], inputs: inputs)
     }
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-    public static func _viewListCount(
-        inputs: SwiftUI._ViewListCountInputs
+    public static func viewListCount(
+        inputs: _ViewListCountInputs
     ) -> Int? {
-        Condition.evaluate(ViewInputs(inputs: inputs._graphInputs))
+        Condition.evaluate(ViewInputs(inputs: inputs))
             ? TrueContent._viewListCount(inputs: inputs)
             : FalseContent._viewListCount(inputs: inputs)
-    }
-}
-
-extension ViewInputConditionalContent where FalseContent == EmptyView {
-    public init(
-        _ : Condition.Type = Condition.self,
-        @ViewBuilder then: () -> TrueContent
-    ) {
-        self.init(Condition.self, then: then, otherwise: { EmptyView() })
-    }
-
-    public init(
-        _ : Condition,
-        @ViewBuilder then: () -> TrueContent
-    ) {
-        self.init(Condition.self, then: then, otherwise: { EmptyView() })
     }
 }
 
@@ -91,14 +70,33 @@ extension ViewInputConditionalContent where FalseContent == EmptyView {
 struct ViewInputConditionalContent_Previews: PreviewProvider {
     struct PreviewFlag: ViewInputFlag { }
 
+    struct Preview: View {
+        var label: String
+        @State var value = 0
+
+        var body: some View {
+            Button {
+                value += 1
+            } label: {
+                Text(verbatim: "\(label) \(value.description)")
+            }
+        }
+    }
+
     static var previews: some View {
         VStack {
             ViewInputConditionalContent(PreviewFlag.self) {
-                Text("TRUE")
+                Preview(label: "TRUE")
             } otherwise: {
-                Text("FALSE")
+                Preview(label: "FALSE")
             }
             .input(PreviewFlag.self)
+
+            ViewInputConditionalContent(PreviewFlag.self) {
+                Preview(label: "TRUE")
+            } otherwise: {
+                Preview(label: "FALSE")
+            }
         }
     }
 }

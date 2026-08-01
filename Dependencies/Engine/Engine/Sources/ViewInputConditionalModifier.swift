@@ -10,82 +10,61 @@ public struct ViewInputConditionalModifier<
     Condition: ViewInputsCondition,
     TrueModifier: ViewModifier,
     FalseModifier: ViewModifier
->: ViewModifier {
+>: PrimitiveViewModifier {
 
     @usableFromInline
-    var trueModifier: TrueModifier
+    nonisolated(unsafe) var trueModifier: TrueModifier
 
     @usableFromInline
-    var falseModifier: FalseModifier
+    nonisolated(unsafe) var falseModifier: FalseModifier
 
     @inlinable
     public init(
         _ : Condition.Type = Condition.self,
-        @ViewModifierBuilder then: () -> TrueModifier,
-        @ViewModifierBuilder otherwise: () -> FalseModifier
+        @ViewModifierBuilder then: () -> TrueModifier = { EmptyModifier() },
+        @ViewModifierBuilder otherwise: () -> FalseModifier = { EmptyModifier() }
     ) {
-        self.trueModifier = then()
-        self.falseModifier = otherwise()
+        self.init(Condition.self, then: then(), otherwise: otherwise())
     }
 
     @inlinable
     public init(
-        _ : Condition,
-        @ViewModifierBuilder then: () -> TrueModifier,
-        @ViewModifierBuilder otherwise: () -> FalseModifier
+        _ : Condition.Type = Condition.self,
+        then: TrueModifier,
+        otherwise: FalseModifier
     ) {
-        self.trueModifier = then()
-        self.falseModifier = otherwise()
+        self.trueModifier = then
+        self.falseModifier = otherwise
     }
 
-    public func body(content: Content) -> Never {
-        bodyError()
-    }
-
-    public static func _makeView(
+    public nonisolated static func makeView(
         modifier: _GraphValue<Self>,
         inputs: _ViewInputs,
-        body: @escaping (_Graph, _ViewInputs) -> SwiftUI._ViewOutputs
-    ) -> SwiftUI._ViewOutputs {
-        Condition.evaluate(ViewInputs(inputs: inputs._graphInputs))
+        body: @escaping (_Graph, _ViewInputs) -> _ViewOutputs
+    ) -> _ViewOutputs {
+        Condition.evaluate(ViewInputs(inputs: inputs))
             ? TrueModifier._makeView(modifier: modifier[\.trueModifier], inputs: inputs, body: body)
             : FalseModifier._makeView(modifier: modifier[\.falseModifier], inputs: inputs, body: body)
     }
 
-    public static func _makeViewList(
+    public nonisolated static func makeViewList(
         modifier: _GraphValue<Self>,
         inputs: _ViewListInputs,
-        body: @escaping (_Graph, _ViewListInputs) -> SwiftUI._ViewListOutputs
-    ) -> SwiftUI._ViewListOutputs {
-        Condition.evaluate(ViewInputs(inputs: inputs._graphInputs))
+        body: @escaping (_Graph, _ViewListInputs) -> _ViewListOutputs
+    ) -> _ViewListOutputs {
+        Condition.evaluate(ViewInputs(inputs: inputs))
             ? TrueModifier._makeViewList(modifier: modifier[\.trueModifier], inputs: inputs, body: body)
             : FalseModifier._makeViewList(modifier: modifier[\.falseModifier], inputs: inputs, body: body)
     }
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-    public static func _viewListCount(
-        inputs: SwiftUI._ViewListCountInputs,
+    public nonisolated static func viewListCount(
+        inputs: _ViewListCountInputs,
         body: (_ViewListCountInputs) -> Int?
     ) -> Int? {
-        Condition.evaluate(ViewInputs(inputs: inputs._graphInputs))
+        Condition.evaluate(ViewInputs(inputs: inputs))
             ? TrueModifier._viewListCount(inputs: inputs, body: body)
             : FalseModifier._viewListCount(inputs: inputs, body: body)
-    }
-}
-
-extension ViewInputConditionalModifier where FalseModifier == EmptyModifier {
-    public init(
-        _ : Condition.Type = Condition.self,
-        @ViewModifierBuilder then: () -> TrueModifier
-    ) {
-        self.init(Condition.self, then: then, otherwise: { EmptyModifier() })
-    }
-
-    public init(
-        _ : Condition,
-        @ViewModifierBuilder then: () -> TrueModifier
-    ) {
-        self.init(Condition.self, then: then, otherwise: { EmptyModifier() })
     }
 }
 
@@ -93,9 +72,17 @@ extension ViewInputConditionalModifier where FalseModifier == EmptyModifier {
 
 struct ViewInputConditionalModifier_Previews: PreviewProvider {
     struct PreviewFlag: ViewInputFlag { }
+
     struct BorderModifier: ViewModifier {
+        @State var flag = true
+
         func body(content: Content) -> some View {
-            content.border(Color.red)
+            Button {
+                flag.toggle()
+            } label: {
+                content
+                    .border(flag ? Color.green : Color.red)
+            }
         }
     }
 
@@ -108,6 +95,13 @@ struct ViewInputConditionalModifier_Previews: PreviewProvider {
                     }
                 )
                 .input(PreviewFlag.self)
+
+            Text("Hello, World")
+                .modifier(
+                    ViewInputConditionalModifier(PreviewFlag.self) {
+                        BorderModifier()
+                    }
+                )
         }
     }
 }

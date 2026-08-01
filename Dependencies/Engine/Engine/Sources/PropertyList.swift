@@ -3,53 +3,45 @@
 //
 
 import SwiftUI
+import EngineCore
 
 public struct PropertyList {
-    public struct ElementLayout<Fields>: CustomStringConvertible {
-        var metadata: (Any.Type, UInt)
-        var fields: Fields
-        
-        public var description: String {
-            String(describing: fields)
-        }
-        
-        mutating func withUnsafeValuePointer<T, ReturnType>(
-            _ type: T.Type,
-            do body: (UnsafeMutablePointer<PropertyList.TypedElementLayout<Fields, T>>) -> ReturnType
-        ) -> ReturnType {
-            withUnsafeMutablePointer(to: &self) { ptr -> ReturnType in
-                ptr.withMemoryRebound(
-                    to: PropertyList.TypedElementLayout<Fields, T>.self,
-                    capacity: 1,
-                    body
-                )
+
+    struct ID {
+        private nonisolated(unsafe) static let lock: os_unfair_lock_t = {
+            let lock = os_unfair_lock_t.allocate(capacity: 1)
+            lock.initialize(to: os_unfair_lock_s())
+            return lock
+        }()
+        private nonisolated(unsafe) static var seed: Int = .max
+
+        static func generate() -> Int {
+            defer {
+                os_unfair_lock_lock(lock); defer { os_unfair_lock_unlock(Self.lock) }
+                seed -= 1
+                if seed < 0 {
+                    seed = .max
+                }
             }
+            return seed
         }
     }
-    
-    public struct ElementFieldsV1: CustomReflectable, CustomStringConvertible {
+
+    public struct ElementLayout<Fields> {
+        var metadata: (Any.Type, UInt)
+        var fields: Fields
+    }
+
+    public struct ElementFieldsV1 {
         var keyType: Any.Type
         var before: UnsafeMutablePointer<ElementLayout<ElementFieldsV1>>?
         var after: UnsafeMutablePointer<ElementLayout<ElementFieldsV1>>?
         var length: Int
         var keyFilter: UInt
         var id: Int
-        
-        public var description: String {
-            String(describing: keyType)
-        }
-        
-        public var customMirror: Mirror {
-            Mirror(self, children: [
-                "keyType": keyType,
-                "length": length,
-                "keyFilter": keyFilter,
-                "id": id,
-            ])
-        }
     }
-    
-    public struct ElementFieldsV6: CustomReflectable, CustomStringConvertible {
+
+    public struct ElementFieldsV6 {
         var keyType: Any.Type
         var before: UnsafeMutablePointer<ElementLayout<ElementFieldsV6>>?
         var after: UnsafeMutablePointer<ElementLayout<ElementFieldsV6>>?
@@ -58,143 +50,342 @@ public struct PropertyList {
         var skipCount: UInt32
         var keyFilter: UInt
         var id: Int
-        
-        public var description: String {
-            String(describing: keyType)
-        }
-        
-        public var customMirror: Mirror {
-            Mirror(self, children: [
-                "keyType": keyType,
-                "length": length,
-                "keyFilter": keyFilter,
-                "id": id,
-            ])
+    }
+
+    public struct ElementFieldsV8 {
+        var before: UnsafeMutablePointer<ElementLayout<ElementFieldsV8>>?
+        var after: UnsafeMutablePointer<ElementLayout<ElementFieldsV8>>?
+        var skip: UnsafeMutablePointer<ElementLayout<ElementFieldsV8>>?
+        var length: UInt32
+        var skipCount: UInt32
+        var skipFilter: UInt
+        var keyFilter: UInt
+        var id: Int
+        var storage: Storage
+        var disableUniquenessChecks: Bool
+
+        struct Storage {
+            var buf: UnsafeMutableRawPointer
+            var count: UInt32
+            var capacity: UInt32
+            var lastOffset: UInt16
+            var nextOffset: UInt16
+            var alignMask: UInt16
+            var ownsBuffer: Bool
+
+            struct Element {
+                var keyType: Any.Type
+                var keyFilter: UInt
+                var type: Any.Type
+            }
+
+            struct TypedElement<Value> {
+                var base: Element
+                var value: Value
+            }
+
+            func keyType(offset: Int) -> Any.Type {
+                let keyType = element(offset: offset).keyType
+                return keyType
+            }
+
+            func valueType(offset: Int) -> Any.Type {
+                let type = element(offset: offset).type
+                return type
+            }
+
+            func value<Value>(offset: Int, as _: Value.Type) -> Value {
+                let element = buf.load(fromByteOffset: offset, as: TypedElement<Value>.self)
+                let value = element.value
+                return value
+            }
+
+            func element(offset: Int) -> Element {
+                let element = buf.load(fromByteOffset: offset, as: Element.self)
+                return element
+            }
+
+            func size(offset: Int) -> Int {
+                let element = buf.load(fromByteOffset: offset, as: Element.self)
+                let typeSize = swift_getSize(of: element.type)
+                return ((typeSize + Int(alignMask)) & ~Int(alignMask)) + MemoryLayout<Element>.stride
+            }
+
+            static func allocate<Input, Value>(input: Input.Type, value: Value) -> Storage {
+                let element = TypedElement(
+                    base: Element(
+                        keyType: input,
+                        keyFilter: 0,
+                        type: Value.self
+                    ),
+                    value: value
+                )
+                let capacity = 1
+                let stride = MemoryLayout<TypedElement<Value>>.stride
+                let byteCount = capacity * stride
+                let buf = UnsafeMutableRawPointer.allocate(
+                    byteCount: byteCount,
+                    alignment: 8 // alignMask + 1
+                )
+                buf.initializeMemory(as: UInt8.self, repeating: 0, count: byteCount)
+                buf.withMemoryRebound(to: TypedElement<Value>.self, capacity: 1) { ptr in
+                    ptr.pointee = element
+                }
+
+                let storage = Storage(
+                    buf: buf,
+                    count: 1,
+                    capacity: UInt32(capacity),
+                    lastOffset: 0,
+                    nextOffset: UInt16(stride),
+                    alignMask: 7,
+                    ownsBuffer: true
+                )
+                return storage
+            }
         }
     }
-    
+
     public struct TypedElementLayout<Fields, Value> {
         var base: ElementLayout<Fields>
         var value: Value
     }
-    
-    public enum ElementPointer: CustomReflectable, CustomStringConvertible {
+
+    public enum ElementPointer {
         case v1(UnsafeMutablePointer<ElementLayout<ElementFieldsV1>>)
         case v6(UnsafeMutablePointer<ElementLayout<ElementFieldsV6>>)
-        
-        public var description: String {
-            switch self {
-                case .v1(let pointer):
-                    String(describing: pointer.pointee)
-                case .v6(let pointer):
-                    String(describing: pointer.pointee)
-            }
-        }
-        
-        public var customMirror: Mirror {
-            Mirror(self, children: [
-                "object": object,
-                "metadata": metadata,
-                "fields": fields,
-                "keyType": keyType,
-            ])
-        }
-        
+        case v8(UnsafeMutablePointer<ElementLayout<ElementFieldsV8>>, _ offset: Int)
+
         var object: Unmanaged<AnyObject> {
             switch self {
-                case .v1(let ptr): Unmanaged<AnyObject>.fromOpaque(ptr)
-                case .v6(let ptr): Unmanaged<AnyObject>.fromOpaque(ptr)
+            case .v1(let ptr): Unmanaged<AnyObject>.fromOpaque(ptr)
+            case .v6(let ptr): Unmanaged<AnyObject>.fromOpaque(ptr)
+            case .v8(let ptr, _): Unmanaged<AnyObject>.fromOpaque(ptr)
             }
         }
-        
+
         var metadata: (Any.Type, UInt) {
             switch self {
-                case .v1(let ptr): ptr.pointee.metadata
-                case .v6(let ptr): ptr.pointee.metadata
+            case .v1(let ptr): ptr.pointee.metadata
+            case .v6(let ptr): ptr.pointee.metadata
+            case .v8(let ptr, _): ptr.pointee.metadata
             }
         }
-        
+
         var fields: Any {
             switch self {
-                case .v1(let ptr): ptr.pointee.fields
-                case .v6(let ptr): ptr.pointee.fields
+            case .v1(let ptr): ptr.pointee.fields
+            case .v6(let ptr): ptr.pointee.fields
+            case .v8(let ptr, _): ptr.pointee.fields
             }
         }
-        
+
+        var id: Int {
+            switch self {
+            case .v1(let ptr): ptr.pointee.fields.id
+            case .v6(let ptr): ptr.pointee.fields.id
+            case .v8(let ptr, _): ptr.pointee.fields.id
+            }
+        }
+
         var keyType: Any.Type {
             switch self {
-                case .v1(let ptr): ptr.pointee.fields.keyType
-                case .v6(let ptr): ptr.pointee.fields.keyType
+            case .v1(let ptr): ptr.pointee.fields.keyType
+            case .v6(let ptr): ptr.pointee.fields.keyType
+            case .v8(let ptr, let offset): ptr.pointee.fields.storage.keyType(offset: offset)
             }
         }
-        
+
         var after: ElementPointer? {
             get {
                 switch self {
-                    case .v1(let ptr):
-                        guard let after = ptr.pointee.fields.after else { return nil }
-                        return .v1(after)
-                    case .v6(let ptr):
-                        guard let after = ptr.pointee.fields.after else { return nil }
-                        return .v6(after)
+                case .v1(let ptr):
+                    guard let after = ptr.pointee.fields.after else { return nil }
+                    return .v1(after)
+                case .v6(let ptr):
+                    guard let after = ptr.pointee.fields.after else { return nil }
+                    return .v6(after)
+                case .v8(let ptr, _):
+                    guard let after = ptr.pointee.fields.after else { return nil }
+                    return .v8(after, 0)
                 }
             }
             nonmutating set {
                 switch self {
-                    case .v1(let ptr):
-                        if case .v1(let newValue) = newValue {
-                            ptr.pointee.fields.after = newValue
-                        } else {
-                            ptr.pointee.fields.after = nil
-                        }
-                    case .v6(let ptr):
-                        if case .v6(let newValue) = newValue {
-                            ptr.pointee.fields.after = newValue
-                        } else {
-                            ptr.pointee.fields.after = nil
-                        }
+                case .v1(let ptr):
+                    if case .v1(let newValue) = newValue {
+                        ptr.pointee.fields.after = newValue
+                    } else {
+                        ptr.pointee.fields.after = nil
+                    }
+                case .v6(let ptr):
+                    if case .v6(let newValue) = newValue {
+                        ptr.pointee.fields.after = newValue
+                    } else {
+                        ptr.pointee.fields.after = nil
+                    }
+                case .v8(let ptr, _):
+                    if case .v8(let newValue, _) = newValue {
+                        ptr.pointee.fields.after = newValue
+                    } else {
+                        ptr.pointee.fields.after = nil
+                    }
                 }
             }
         }
-        
+
+        var skip: ElementPointer? {
+            get {
+                switch self {
+                case .v1:
+                    return nil
+                case .v6(let ptr):
+                    guard let skip = ptr.pointee.fields.skip else { return nil }
+                    return .v6(skip)
+                case .v8(let ptr, _):
+                    guard let skip = ptr.pointee.fields.skip else { return nil }
+                    return .v8(skip, 0)
+                }
+            }
+            nonmutating set {
+                switch self {
+                case .v1:
+                    break
+                case .v6(let ptr):
+                    if case .v6(let newValue) = newValue {
+                        ptr.pointee.fields.skip = newValue
+                    } else {
+                        ptr.pointee.fields.skip = nil
+                    }
+                case .v8(let ptr, _):
+                    if case .v8(let newValue, _) = newValue {
+                        ptr.pointee.fields.skip = newValue
+                    } else {
+                        ptr.pointee.fields.skip = nil
+                    }
+                }
+            }
+        }
+
+        var skipCount: UInt32 {
+            get {
+                switch self {
+                case .v1: 0
+                case .v6(let ptr): ptr.pointee.fields.skipCount
+                case .v8(let ptr, _): ptr.pointee.fields.skipCount
+                }
+            }
+            nonmutating set {
+                switch self {
+                case .v1:
+                    break
+                case .v6(let ptr):
+                    ptr.pointee.fields.skipCount = newValue
+                case .v8(let ptr, _):
+                    ptr.pointee.fields.skipCount = newValue
+                }
+            }
+        }
+
         var length: UInt32 {
             get {
                 switch self {
-                    case .v1(let ptr): UInt32(ptr.pointee.fields.length)
-                    case .v6(let ptr): ptr.pointee.fields.length
+                case .v1(let ptr): UInt32(ptr.pointee.fields.length)
+                case .v6(let ptr): ptr.pointee.fields.length
+                case .v8(let ptr, _): ptr.pointee.fields.length
                 }
             }
             nonmutating set {
                 switch self {
-                    case .v1(let ptr):
-                        ptr.pointee.fields.length = Int(newValue)
-                    case .v6(let ptr):
-                        ptr.pointee.fields.length = newValue
+                case .v1(let ptr):
+                    ptr.pointee.fields.length = Int(newValue)
+                case .v6(let ptr):
+                    ptr.pointee.fields.length = newValue
+                case .v8(let ptr, _):
+                    ptr.pointee.fields.length = newValue
                 }
             }
         }
-        
-        func getValue<T>(
+
+        func advanced() -> ElementPointer? {
+            switch self {
+            case .v1, .v6:
+                return after
+            case .v8(let ptr, let offset):
+                let size = ptr.pointee.fields.storage.size(offset: offset)
+                let newOffset = offset + size
+                if newOffset < ptr.pointee.fields.storage.nextOffset {
+                    return .v8(ptr, newOffset)
+                }
+                return after
+            }
+        }
+
+        var value: Any? {
+            guard let value = value(as: Any.self) else { return nil }
+            return value
+        }
+
+        func value<T>(as _: T.Type) -> T? {
+            func project<Value>(_ value: Value.Type) -> T? {
+                let value = getValue(Value.self)
+                if T.self == Value.self {
+                    return value as? T
+                } else if T.self == Any.self {
+                    return (value as Any) as? T
+                } else if MemoryLayout<T>.size == MemoryLayout<Value>.size {
+                    return unsafeBitCast(value, to: T.self)
+                } else {
+                    return nil
+                }
+            }
+            switch self {
+            case .v1, .v6:
+                if let keyType = keyType as? any ViewInputKey.Type {
+                    func projectKeyType<Key: ViewInputKey>(_ : Key.Type) -> T? {
+                        return project(Key.Value.self)
+                    }
+                    return _openExistential(keyType, do: projectKeyType)
+                } else {
+                    let object = object.takeUnretainedValue()
+                    guard let valueType = try? swift_getFieldType("value", object) else { return nil }
+                    let value = _openExistential(valueType, do: project)
+                    return value
+                }
+            case .v8(let ptr, let offset):
+                let valueType = ptr.pointee.fields.storage.valueType(offset: offset)
+                let value = _openExistential(valueType, do: project)
+                return value
+            }
+        }
+
+        private func getValue<T>(
             _ type: T.Type
         ) -> T {
             switch self {
-                case .v1(let ptr):
-                    return ptr.pointee.withUnsafeValuePointer(T.self) { ptr in
-                        return ptr.pointee.value
-                    }
-                case .v6(let ptr):
-                    return ptr.pointee.withUnsafeValuePointer(T.self) { ptr in
-                        ptr.pointee.value
-                    }
+            case .v1(let ptr):
+                return ptr.withUnsafeValuePointer(T.self, fields: ElementFieldsV1.self) { ptr in
+                    return ptr.pointee.value
+                }
+            case .v6(let ptr):
+                return ptr.withUnsafeValuePointer(T.self, fields: ElementFieldsV6.self) { ptr in
+                    return ptr.pointee.value
+                }
+            case .v8(let ptr, let offset):
+                return ptr.pointee.fields.storage.value(offset: offset, as: T.self)
             }
         }
     }
-    
+
     var ptr: UnsafeMutableRawPointer?
-    
+
     var elements: ElementPointer? {
         guard let ptr else { return nil }
-        if #available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *) {
+        if #available(iOS 27.0, macOS 27.0, tvOS 27.0, watchOS 27.0, visionOS 27.0, *) {
+            return .v8(
+                ptr.assumingMemoryBound(to: ElementLayout<ElementFieldsV8>.self), 0
+            )
+        } else if #available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *) {
             return .v6(
                 ptr.assumingMemoryBound(to: ElementLayout<ElementFieldsV6>.self)
             )
@@ -204,7 +395,7 @@ public struct PropertyList {
             )
         }
     }
-    
+
     func value<Input, Value>(
         _ : Input.Type,
         as: Value.Type
@@ -212,13 +403,13 @@ public struct PropertyList {
         var ptr = elements
         while let p = ptr {
             if p.keyType == Input.self {
-                return p.getValue(Value.self)
+                return p.value(as: Value.self)
             }
-            ptr = p.after
+            ptr = p.advanced()
         }
         return nil
     }
-    
+
     func value<Value>(
         key: String,
         as: Value.Type
@@ -227,13 +418,31 @@ public struct PropertyList {
         while let p = ptr {
             let typeName = _typeName(p.keyType, qualified: false)
             if typeName == key {
-                return p.getValue(Value.self)
+                return p.value(as: Value.self)
             }
             ptr = p.after
         }
         return nil
     }
-    
+
+    mutating func add<Value>(
+        _ key: String,
+        _ newValue: Value
+    ) {
+        var ptr = elements
+        while let p = ptr {
+            let typeName = _typeName(p.keyType, qualified: false)
+            if typeName == key {
+                func project<Input>(_ : Input.Type) {
+                    add(Input.self, newValue)
+                }
+                _openExistential(p.keyType, do: project)
+                break
+            }
+            ptr = p.after
+        }
+    }
+
     mutating func add<Input, Value>(
         _ input: Input.Type,
         _ newValue: Value
@@ -241,11 +450,31 @@ public struct PropertyList {
         guard let lastValue = ptr else {
             return
         }
-        if #available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *) {
+        if #available(iOS 27.0, macOS 27.0, tvOS 27.0, watchOS 27.0, visionOS 27.0, *) {
+            let lastValue = lastValue.assumingMemoryBound(to: ElementLayout<ElementFieldsV8>.self)
+            let newValue = ElementLayout(
+                metadata: lastValue.pointee.metadata, // Fake a class type of the last value
+                fields: ElementFieldsV8(
+                    before: nil,
+                    after: lastValue,
+                    skip: lastValue.pointee.fields.skip,
+                    length: lastValue.pointee.fields.length + 1,
+                    skipCount: lastValue.pointee.fields.skip != nil ? lastValue.pointee.fields.skipCount + 1 : 0,
+                    skipFilter: lastValue.pointee.fields.skipFilter,
+                    keyFilter: lastValue.pointee.fields.keyFilter, // Unknown purpose
+                    id: ID.generate(),
+                    storage: .allocate(input: input, value: newValue),
+                    disableUniquenessChecks: false
+                )
+            )
+            let ref = UnsafeMutablePointer<ElementLayout<ElementFieldsV8>>.allocate(capacity: 1)
+            ref.initialize(to: newValue)
+            ptr = UnsafeMutableRawPointer(ref)
+        } else if #available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *) {
             let lastValue = lastValue.assumingMemoryBound(to: ElementLayout<ElementFieldsV6>.self)
             let newValue = TypedElementLayout<ElementFieldsV6, Value>(
                 base: ElementLayout(
-                    metadata: lastValue.pointee.metadata,
+                    metadata: lastValue.pointee.metadata, // Fake a class type of the last value
                     fields: ElementFieldsV6(
                         keyType: Input.self,
                         before: nil,
@@ -254,7 +483,7 @@ public struct PropertyList {
                         length: lastValue.pointee.fields.length + 1,
                         skipCount: lastValue.pointee.fields.skip != nil ? lastValue.pointee.fields.skipCount + 1 : 0,
                         keyFilter: lastValue.pointee.fields.keyFilter, // Unknown purpose
-                        id: UniqueID.generate()
+                        id: ID.generate()
                     )
                 ),
                 value: newValue
@@ -266,14 +495,14 @@ public struct PropertyList {
             let lastValue = lastValue.assumingMemoryBound(to: ElementLayout<ElementFieldsV1>.self)
             let newValue = TypedElementLayout<ElementFieldsV1, Value>(
                 base: ElementLayout(
-                    metadata: lastValue.pointee.metadata,
+                    metadata: lastValue.pointee.metadata, // Fake a class type of the last value
                     fields: ElementFieldsV1(
                         keyType: Input.self,
                         before: nil,
                         after: lastValue,
                         length: lastValue.pointee.fields.length + 1,
                         keyFilter: lastValue.pointee.fields.keyFilter, // Unknown purpose
-                        id: UniqueID.generate()
+                        id: ID.generate()
                     )
                 ),
                 value: newValue
@@ -283,13 +512,104 @@ public struct PropertyList {
             ptr = UnsafeMutableRawPointer(ref)
         }
     }
+
+    public subscript<Input: ViewInputKey>(
+        _ : Input.Type
+    ) -> Input.Value {
+        get { value(Input.self, as: Input.Value.self) ?? Input.defaultValue }
+        set { add(Input.self, newValue) }
+    }
+
+    @_disfavoredOverload
+    public subscript<Input: ViewInputKey>(
+        _ : Input.Type
+    ) -> Input.Value? {
+        get { value(Input.self, as: Input.Value.self) }
+        set { add(Input.self, newValue ?? Input.defaultValue) }
+    }
+
+    public subscript<Value>(
+        key: String,
+        as _: Value.Type = Value.self
+    ) -> Value? {
+        get { value(key: key, as: Value.self) }
+        set { add(key, newValue) }
+    }
+}
+
+extension PropertyList.ElementLayout: CustomStringConvertible {
+    public var description: String {
+        String(describing: fields)
+    }
+}
+
+extension PropertyList.ElementFieldsV1: CustomReflectable, CustomStringConvertible {
+    public var description: String {
+        String(describing: keyType)
+    }
+
+    public var customMirror: Mirror {
+        Mirror(self, children: [
+            "keyType": keyType,
+            "length": length,
+            "keyFilter": keyFilter,
+            "id": id,
+        ])
+    }
+}
+
+extension PropertyList.ElementFieldsV6: CustomReflectable, CustomStringConvertible {
+    public var description: String {
+        String(describing: keyType)
+    }
+
+    public var customMirror: Mirror {
+        Mirror(self, children: [
+            "keyType": keyType,
+            "length": length,
+            "keyFilter": keyFilter,
+            "id": id,
+        ])
+    }
+}
+
+extension PropertyList.ElementFieldsV8: CustomReflectable, CustomStringConvertible {
+    public var description: String {
+        String(describing: storage)
+    }
+
+    public var customMirror: Mirror {
+        Mirror(self, children: [
+            "length": length,
+            "skipCount": skipCount,
+            "keyFilter": keyFilter,
+            "id": id,
+            "storage": storage,
+        ])
+    }
+}
+
+extension PropertyList.ElementPointer: CustomReflectable, CustomStringConvertible {
+    public var description: String {
+        String(describing: fields)
+    }
+
+    public var customMirror: Mirror {
+        Mirror(self, children: [
+            "object": object,
+            "metadata": metadata,
+            "fields": fields,
+            "keyType": keyType,
+            "value": value as Any,
+        ])
+    }
 }
 
 extension PropertyList: CustomDebugStringConvertible, CustomStringConvertible {
     public var debugDescription: String {
         description
     }
-    
+
     public var description: String {
         Array(self).description
     }
@@ -300,27 +620,22 @@ extension PropertyList: Sequence {
         guard let elements else {
             return AnyIterator(EmptyCollection<ElementPointer>().makeIterator())
         }
-        
-        
+
         return AnyIterator(
-            sequence(first: elements, next: {
-                $0.after
-            })
-            .makeIterator()
+            sequence(first: elements) { $0.advanced() }.makeIterator()
         )
     }
 }
 
-private struct UniqueID {
-    private static var seed: Int = .max
-    
-    static func generate() -> Int {
-        defer {
-            seed -= 1
-            if seed < 0 {
-                seed = .max
-            }
+extension UnsafeMutablePointer {
+
+    func withUnsafeValuePointer<Fields, T, ReturnType>(
+        _ type: T.Type,
+        fields: Fields.Type,
+        do body: (UnsafeMutablePointer<PropertyList.TypedElementLayout<Fields, T>>) -> ReturnType
+    ) -> ReturnType where Pointee == PropertyList.ElementLayout<Fields> {
+        withMemoryRebound(to: PropertyList.TypedElementLayout<Fields, T>.self, capacity: 1) { p in
+            return body(&p.pointee)
         }
-        return seed
     }
 }

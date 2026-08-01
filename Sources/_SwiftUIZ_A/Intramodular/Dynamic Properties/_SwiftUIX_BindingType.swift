@@ -19,7 +19,9 @@ public protocol _SwiftUIX_BindingType<Value>: _SwiftUIZ_DynamicProperty {
 // MARK: - Supplementary
 
 extension Binding {
-    public init(_from binding: some _SwiftUIX_BindingType<Value>) {
+    public init(
+        _from binding: some _SwiftUIX_BindingType<Value>
+    ) {
         self.init(
             get: {
                 binding.wrappedValue
@@ -33,7 +35,7 @@ extension Binding {
 
 // MARK: - Conformees
 
-extension Merge.PublishedAsyncBinding: _SwiftUIZ_A._SwiftUIX_BindingType {
+extension Merge.PublishedAsyncBinding: Swallow.PropertyWrapper, _SwiftUIX._SwiftUIX_PropertyWrapper, _SwiftUIZ_A._SwiftUIX_BindingType, SwiftUI.DynamicProperty {
     @_disfavoredOverload
     public subscript<Subject>(
         _dynamicMember keyPath: WritableKeyPath<Value, Subject>
@@ -42,7 +44,7 @@ extension Merge.PublishedAsyncBinding: _SwiftUIZ_A._SwiftUIX_BindingType {
     }
 }
 
-extension Merge.PublishedBinding: _SwiftUIZ_A._SwiftUIX_BindingType {
+extension Merge.PublishedBinding: Swallow.PropertyWrapper, _SwiftUIX._SwiftUIX_PropertyWrapper, _SwiftUIZ_A._SwiftUIX_BindingType, SwiftUI.DynamicProperty {
     @_disfavoredOverload
     public subscript<Subject>(
         _dynamicMember keyPath: WritableKeyPath<Value, Subject>
@@ -51,7 +53,7 @@ extension Merge.PublishedBinding: _SwiftUIZ_A._SwiftUIX_BindingType {
     }
 }
 
-extension Swallow.Inout: _SwiftUIZ_A._SwiftUIX_BindingType {
+extension Swallow.Inout: SwiftUIX._SwiftUIX_PropertyWrapper, _SwiftUIZ_A._SwiftUIX_BindingType, SwiftUI.DynamicProperty {
     @_disfavoredOverload
     public subscript<Subject>(
         _dynamicMember keyPath: WritableKeyPath<Value, Subject>

@@ -9,35 +9,50 @@ import SwiftUI
 public protocol ViewVisitor {
     mutating func visit<Content: View>(type: Content.Type)
 
-    #if os(iOS) || os(tvOS)
-    @available(iOS 13.0, tvOS 13.0, *)
-    @available(macOS, unavailable)
-    @available(watchOS, unavailable)
+    #if os(iOS) || os(tvOS) || os(visionOS)
     mutating func visit<Content: UIViewRepresentable>(type: Content.Type)
 
-    @available(iOS 13.0, tvOS 13.0, *)
-    @available(macOS, unavailable)
-    @available(watchOS, unavailable)
     mutating func visit<Content: UIViewControllerRepresentable>(type: Content.Type)
     #endif
 
     #if os(macOS)
-    @available(macOS 10.15, *)
-    @available(iOS, unavailable)
-    @available(tvOS, unavailable)
-    @available(watchOS, unavailable)
     mutating func visit<Content: NSViewRepresentable>(type: Content.Type)
 
-    @available(macOS 10.15, *)
-    @available(iOS, unavailable)
-    @available(tvOS, unavailable)
-    @available(watchOS, unavailable)
     mutating func visit<Content: NSViewControllerRepresentable>(type: Content.Type)
     #endif
 }
 
 extension ViewVisitor {
     public func visit<Content: View>(type: Content.Type) { }
+}
+
+extension View {
+
+    public func visit<
+        Visitor: ViewVisitor
+    >(
+        visitor: UnsafeMutablePointer<Visitor>
+    ) {
+        #if os(iOS) || os(tvOS) || os(visionOS)
+        if let conformance = UIViewRepresentableProtocolDescriptor.conformance(of: Self.self) {
+            conformance.visit(visitor: visitor)
+        } else if let conformance = UIViewControllerRepresentableProtocolDescriptor.conformance(of: Self.self) {
+            conformance.visit(visitor: visitor)
+        } else {
+            visitor.pointee.visit(type: Self.self)
+        }
+        #elseif os(macOS)
+        if let conformance = NSViewRepresentableProtocolDescriptor.conformance(of: Self.self) {
+            conformance.visit(visitor: visitor)
+        } else if let conformance = NSViewControllerRepresentableProtocolDescriptor.conformance(of: Self.self) {
+            conformance.visit(visitor: visitor)
+        } else {
+            visitor.pointee.visit(type: Self.self)
+        }
+        #else
+        visitor.pointee.visit(type: Self.self)
+        #endif
+    }
 }
 
 private struct ViewVisitorContext {
@@ -72,7 +87,8 @@ extension ProtocolConformance where P: ViewProtocolConformanceDescriptor {
 public protocol ViewProtocolConformanceDescriptor: TypeDescriptor { }
 
 /// The ``TypeDescriptor`` for the `View` protocol
-public struct ViewProtocolDescriptor: ViewProtocolConformanceDescriptor {
+@frozen
+public struct ViewProtocolDescriptor: ViewProtocolConformanceDescriptor, Sendable {
     public static var descriptor: UnsafeRawPointer {
         _ViewProtocolDescriptor()
     }
@@ -93,10 +109,11 @@ public func _swift_visit_View<Content: View>(
     _openExistential(c.value.type, do: project)
 }
 
-#if os(iOS) || os(tvOS)
+#if os(iOS) || os(tvOS) || os(visionOS)
 
 /// The ``TypeDescriptor`` for the `UIViewRepresentable` protocol
-public struct UIViewRepresentableProtocolDescriptor: ViewProtocolConformanceDescriptor {
+@frozen
+public struct UIViewRepresentableProtocolDescriptor: ViewProtocolConformanceDescriptor, Sendable {
     public static var descriptor: UnsafeRawPointer {
         _UIViewRepresentableProtocolDescriptor()
     }
@@ -118,7 +135,8 @@ public func _swift_visit_UIViewRepresentable<Content: UIViewRepresentable>(
 }
 
 /// The ``TypeDescriptor`` for the `UIViewControllerRepresentable` protocol
-public struct UIViewControllerRepresentableProtocolDescriptor: ViewProtocolConformanceDescriptor {
+@frozen
+public struct UIViewControllerRepresentableProtocolDescriptor: ViewProtocolConformanceDescriptor, Sendable {
     public static var descriptor: UnsafeRawPointer {
         _UIViewControllerRepresentableProtocolDescriptor()
     }
@@ -144,7 +162,8 @@ public func _swift_visit_UIViewControllerRepresentable<Content: UIViewController
 #if os(macOS)
 
 /// The ``TypeDescriptor`` for the `NSViewRepresentable` protocol
-public struct NSViewRepresentableProtocolDescriptor: ViewProtocolConformanceDescriptor {
+@frozen
+public struct NSViewRepresentableProtocolDescriptor: ViewProtocolConformanceDescriptor, Sendable {
     public static var descriptor: UnsafeRawPointer {
         _NSViewRepresentableProtocolDescriptor()
     }
@@ -166,7 +185,8 @@ public func _swift_visit_NSViewRepresentable<Content: NSViewRepresentable>(
 }
 
 /// The ``TypeDescriptor`` for the `NSViewControllerRepresentable` protocol
-public struct NSViewControllerRepresentableProtocolDescriptor: ViewProtocolConformanceDescriptor {
+@frozen
+public struct NSViewControllerRepresentableProtocolDescriptor: ViewProtocolConformanceDescriptor, Sendable {
     public static var descriptor: UnsafeRawPointer {
         _NSViewControllerRepresentableProtocolDescriptor()
     }

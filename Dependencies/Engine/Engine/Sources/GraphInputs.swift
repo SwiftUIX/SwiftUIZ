@@ -3,14 +3,15 @@
 //
 
 import SwiftUI
+import EngineCore
 
 /// A `ViewModifier` that only modifies the static inputs
 public protocol GraphInputsModifier: _GraphInputsModifier, ViewModifier where Body == Never {
-    static func makeInputs(modifier: _GraphValue<Self>, inputs: inout _GraphInputs)
+    nonisolated static func makeInputs(modifier: _GraphValue<Self>, inputs: inout _GraphInputs)
 }
 
 extension GraphInputsModifier {
-    public static func _makeInputs(
+    public nonisolated static func _makeInputs(
         modifier: _GraphValue<Self>,
         inputs: inout _GraphInputs
     ) {
@@ -23,56 +24,51 @@ private struct GraphInputsLayout {
 }
 
 extension _GraphInputs {
+
     public var customInputs: PropertyList {
-        withUnsafePointer(to: self) { ptr -> PropertyList in
-            ptr.withMemoryRebound(to: GraphInputsLayout.self, capacity: 1) { ptr -> PropertyList in
-                ptr.pointee.customInputs
+        get {
+            withUnsafePointer(to: self) { ptr -> PropertyList in
+                ptr.withMemoryRebound(to: GraphInputsLayout.self, capacity: 1) { ptr -> PropertyList in
+                    ptr.pointee.customInputs
+                }
+            }
+        }
+        set {
+            withUnsafeMutablePointer(to: &self) { ptr in
+                ptr.withMemoryRebound(to: GraphInputsLayout.self, capacity: 1) { ptr in
+                    ptr.pointee.customInputs = newValue
+                }
             }
         }
     }
-    
+
     public mutating func withCustomInputs<ReturnType>(
-        do body: (inout PropertyList) -> ReturnType
-    ) -> ReturnType {
-        withUnsafeMutablePointer(to: &self) { ptr -> ReturnType in
-            ptr.withMemoryRebound(to: GraphInputsLayout.self, capacity: 1) { ptr -> ReturnType in
-                body(&ptr.pointee.customInputs)
-            }
-        }
+        do body: (inout PropertyList) throws -> ReturnType
+    ) rethrows -> ReturnType {
+        try body(&customInputs)
     }
-    
+
     public subscript<Input: ViewInputKey>(
         _ : Input.Type
     ) -> Input.Value {
-        get {
-            customInputs.value(Input.self, as: Input.Value.self) ?? Input.defaultValue
-        }
-        set {
-            withCustomInputs {
-                $0.add(Input.self, newValue)
-            }
-        }
+        get { customInputs[Input.self] }
+        set { customInputs[Input.self] = newValue }
     }
-    
+
     @_disfavoredOverload
     public subscript<Input: ViewInputKey>(
         _ : Input.Type
     ) -> Input.Value? {
-        get {
-            customInputs.value(Input.self, as: Input.Value.self)
-        }
-        set {
-            withCustomInputs {
-                $0.add(Input.self, newValue ?? Input.defaultValue)
-            }
-        }
+        get { customInputs[Input.self] }
+        set { customInputs[Input.self] = newValue }
     }
-    
+
     public subscript<Value>(
         key: String,
-        _: Value.Type
+        as _: Value.Type = Value.self
     ) -> Value? {
-        customInputs.value(key: key, as: Value.self)
+        get { customInputs[key, as: Value.self] }
+        set { customInputs[key, as: Value.self] = newValue }
     }
 }
 
@@ -85,87 +81,91 @@ extension _GraphInputs {
 /// - Resetting Context (such as NavigationStack)
 @frozen
 public struct _ViewInputsBridgeModifier: ViewModifier {
-    
+
     @inlinable
     public init() { }
-    
+
     public func body(content: Content) -> some View {
         content
+            .modifier(UnaryViewModifier())
             .modifier(Modifier())
     }
-    
+
     private struct Modifier: GraphInputsModifier {
-        static func makeInputs(
+        nonisolated static func makeInputs(
             modifier: _GraphValue<Self>,
             inputs: inout _GraphInputs
         ) {
-            inputs.withCustomInputs { customInputs in
-                customInputs.detach()
-            }
+            inputs.customInputs.detach()
         }
     }
 }
 
 extension PropertyList {
     fileprivate mutating func detach() {
+
         var ptr = elements
-        var hasMatchedGeometryScope = false
+        let branchKey: String = ".ImplicitRootType"
+        let containerKey = ".UIKitHostContainerFocusItemInput"
+        var hasPassedContainer = false
         while let p = ptr {
             let key = _typeName(p.keyType, qualified: true)
-            var isMatch = key.hasSuffix(".MatchedGeometryScope")
+            let isMatch = key.hasSuffix(branchKey)
+                || (key.hasSuffix(".FocusedItemInputKey") && hasPassedContainer)
+                || (key.hasSuffix(".ViewListOptionsInput") && hasPassedContainer)
             if isMatch {
-                hasMatchedGeometryScope = true
-            }
-            #if !os(macOS)
-            let branchKey: String
-            if #available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *) {
-                branchKey = "SwiftUI.UIKitHostContainerFocusItemInput"
-            } else {
-                branchKey = ".ImplicitRootType"
-            }
-            isMatch = isMatch || key.hasSuffix(branchKey)
-            #endif
-            if isMatch {
-                // Reached the {UI/NS}ViewRepresentable
-                #if !os(macOS)
-                if let next = p.after {
-                    // Reached the UIViewRepresentable
-                    if _typeName(next.keyType, qualified: true).hasSuffix(branchKey) {
-                        ptr = next
-                    }
-                }
-                #endif
                 break
             }
+            hasPassedContainer = hasPassedContainer || key.hasSuffix(containerKey)
             if let next = p.after {
                 ptr = next
             } else {
                 return
             }
         }
-        
+
         let tail = ptr!
         var last = tail.after
+        if let last, last.length == 1 {
+            return
+        }
         tail.after = nil
+
         while let p = last?.after {
-            if !hasMatchedGeometryScope {
-                let key = _typeName(p.keyType, qualified: true)
-                if key.hasSuffix(".MatchedGeometryScope") {
+            if let after = p.after {
+                let key = _typeName(after.keyType, qualified: true)
+                let isMatch = key.hasSuffix(branchKey)
+                    || key.hasSuffix(".AccessibilityRelationshipScope")
+                    || key.hasSuffix(".EventBindingBridgeFactoryInput")
+                    || key.hasSuffix(".InterfaceIdiomInput")
+                if isMatch {
                     break
                 }
             }
             last = p
         }
-        
+
+        guard let last else { return }
+
         ptr = elements
-        let offset = tail.length - ((last?.length ?? 0) + 1)
+        let offset = tail.length - (last.length + 1)
         while offset > 0, let p = ptr {
+            if let skip = p.skip, skip.length < tail.length {
+                p.skip = last
+                p.skipCount = p.length - last.length - offset
+            }
             p.length -= offset
+            if p.skip == nil {
+                p.skipCount = p.length
+            }
             ptr = p.after
         }
-        if let last {
-            _ = last.object.retain() // Prevent dealloc
-            tail.after = last
+
+        _ = last.object.retain() // Prevent dealloc
+        tail.after = last
+        if last.skip == nil {
+            tail.skip = last
+            tail.skipCount = 1
         }
     }
 }

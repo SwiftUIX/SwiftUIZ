@@ -46,7 +46,7 @@ import SwiftUI
 /// you can implement the optional `defaultBody`.
 ///
 @MainActor @preconcurrency
-public protocol ViewAlias: PrimitiveView where Body == Never {
+public protocol ViewAlias: PrimitiveView {
     associatedtype DefaultBody: View = EmptyView
     @ViewBuilder @MainActor @preconcurrency var defaultBody: DefaultBody { get }
 }
@@ -70,20 +70,27 @@ public struct ViewAliasSourceModifier<
     }
 
     public func body(content: Content) -> some View {
-        content.modifier(Modifier(source: source))
+        content
+            .modifier(UnaryViewModifier())
+            .modifier(Modifier(source: source))
+            .modifier(UnaryViewModifier())
     }
 
     private struct Modifier: GraphInputsModifier {
-        var source: Source
+        nonisolated(unsafe) var source: Source
 
-        public static func makeInputs(
+        nonisolated var attribute: ViewAliasBody<Source> {
+            ViewAliasBody(source: source)
+        }
+
+        public nonisolated static func makeInputs(
             modifier: _GraphValue<Self>,
             inputs: inout _GraphInputs
         ) {
             if Alias.self != Source.self {
                 inputs[ViewAliasInput<Alias>.self].append(
                     .init(
-                        attribute: unsafeBitCast(modifier[\.source], to: _GraphValue<Any>.self),
+                        attribute: unsafeBitCast(modifier[\.attribute], to: _GraphValue<Any>.self),
                         type: Source.self
                     )
                 )
@@ -129,19 +136,20 @@ extension ViewAlias where DefaultBody == EmptyView {
 }
 
 extension ViewAlias {
-    public var body: Never {
-        bodyError()
+
+    private nonisolated var _defaultBody: ViewAliasDefaultBody<Self> {
+        ViewAliasDefaultBody(alias: self)
     }
 
-    public static func makeView(
+    public nonisolated static func makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
-    ) -> SwiftUI._ViewOutputs {
+    ) -> _ViewOutputs {
         var inputs = inputs
         guard let input = inputs[ViewAliasInput<Self>.self].popLast() else {
-            return DefaultBody._makeView(view: view[\.defaultBody], inputs: inputs)
+            return ViewAliasDefaultBody<Self>._makeView(view: view[\._defaultBody], inputs: inputs)
         }
-        func project<T>(_ type: T.Type) -> SwiftUI._ViewOutputs {
+        func project<T>(_ type: T.Type) -> _ViewOutputs {
             let conformance = ViewProtocolDescriptor.conformance(of: T.self)!
             var visitor = ViewOutputsVisitor(view: input.attribute, inputs: inputs)
             conformance.visit(visitor: &visitor)
@@ -150,15 +158,15 @@ extension ViewAlias {
         return _openExistential(input.type, do: project)
     }
 
-    public static func makeViewList(
+    public nonisolated static func makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
-    ) -> SwiftUI._ViewListOutputs {
+    ) -> _ViewListOutputs {
         var inputs = inputs
         guard let input = inputs[ViewAliasInput<Self>.self].popLast() else {
-            return DefaultBody._makeViewList(view: view[\.defaultBody], inputs: inputs)
+            return ViewAliasDefaultBody<Self>._makeViewList(view: view[\._defaultBody], inputs: inputs)
         }
-        func project<T>(_ type: T.Type) -> SwiftUI._ViewListOutputs {
+        func project<T>(_ type: T.Type) -> _ViewListOutputs {
             let conformance = ViewProtocolDescriptor.conformance(of: T.self)!
             var visitor = ViewListOutputsVisitor(view: input.attribute, inputs: inputs)
             conformance.visit(visitor: &visitor)
@@ -168,12 +176,12 @@ extension ViewAlias {
     }
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-    public static func viewListCount(
-        inputs: SwiftUI._ViewListCountInputs
+    public nonisolated static func viewListCount(
+        inputs: _ViewListCountInputs
     ) -> Int? {
         var inputs = inputs
         guard let input = inputs[ViewAliasInput<Self>.self].popLast() else {
-            return DefaultBody._viewListCount(inputs: inputs)
+            return ViewAliasDefaultBody<Self>._viewListCount(inputs: inputs)
         }
         func project<T>(_ type: T.Type) -> Int? {
             let conformance = ViewProtocolDescriptor.conformance(of: T.self)!
@@ -185,8 +193,20 @@ extension ViewAlias {
     }
 }
 
+private struct ViewAliasDefaultBody<Alias: ViewAlias>: View {
+    nonisolated(unsafe) var alias: Alias
+
+    var body: some View {
+        alias.defaultBody
+    }
+}
+
 private struct ViewAliasBody<Content: View>: View {
-    var body: Content
+    nonisolated(unsafe) var source: Content
+
+    var body: some View {
+        source
+    }
 }
 
 private struct ViewOutputsVisitor: ViewVisitor {
@@ -196,7 +216,7 @@ private struct ViewOutputsVisitor: ViewVisitor {
     var outputs: _ViewOutputs!
 
     mutating func visit<Content>(type: Content.Type) where Content: View {
-        let view = unsafeBitCast(view, to: _GraphValue<ViewAliasBody<Content>>.self)
+        let view = view.unsafeCast(to: ViewAliasBody<Content>.self)
         outputs = ViewAliasBody<Content>._makeView(view: view, inputs: inputs)
     }
 }
@@ -208,14 +228,14 @@ private struct ViewListOutputsVisitor: ViewVisitor {
     var outputs: _ViewListOutputs!
 
     mutating func visit<Content>(type: Content.Type) where Content: View {
-        let view = unsafeBitCast(view, to: _GraphValue<ViewAliasBody<Content>>.self)
+        let view = view.unsafeCast(to: ViewAliasBody<Content>.self)
         outputs = ViewAliasBody<Content>._makeViewList(view: view, inputs: inputs)
     }
 }
 
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 private struct ViewListOutputsCountVisitor: ViewVisitor {
-    var inputs: SwiftUI._ViewListCountInputs
+    var inputs: _ViewListCountInputs
 
     var outputs: Int?
 
@@ -233,36 +253,236 @@ struct ViewAlias_Previews: PreviewProvider {
         }
     }
 
+    struct CustomView: View {
+        @State var value = 0
+
+        var body: some View {
+            Button {
+                value += 1
+            } label: {
+                Text("CustomView \(value)")
+            }
+        }
+    }
+
     static var previews: some View {
-        Group {
-            ZStack {
-                VStack {
+        ZStack {
+            VStack {
+                PreviewAlias()
+
+                PreviewAlias()
+                    .viewAlias(PreviewAlias.self) {
+                        PreviewAlias()
+                    }
+
+                PreviewAlias()
+                    .viewAlias(PreviewAlias.self) {
+                        Text("Hello, World")
+                    }
+
+                PreviewAlias()
+                    .viewAlias(PreviewAlias.self) {
+                        PreviewAlias()
+                            .viewAlias(PreviewAlias.self) {
+                                Text("Hello, World")
+                            }
+                    }
+
+                PreviewAlias()
+                    .viewAlias(PreviewAlias.self) {
+                        Text("Line 1")
+                    }
+                    .viewAlias(PreviewAlias.self) {
+                        Text("Line 2")
+                    }
+
+                PreviewAlias()
+                    .viewAlias(PreviewAlias.self) {
+                        PreviewAlias()
+                    }
+                    .viewAlias(PreviewAlias.self) {
+                        Text("Line 2")
+                    }
+
+                PreviewAlias()
+                    .viewAlias(PreviewAlias.self) {
+                        CustomView()
+                    }
+
+                HStack {
                     PreviewAlias()
 
+                    PreviewAlias()
+                }
+                .viewAlias(PreviewAlias.self) {
+                    CustomView()
+                }
+            }
+        }
+        .previewDisplayName("ViewAlias")
+
+        ZStack {
+            VStack {
+                PreviewAlias()
+                    .viewAlias(PreviewAlias.self) {
+                        ForEach(0...2, id: \.self) { _ in
+                            Text("Hello, World")
+                        }
+                    }
+
+                VStack {
+                    PreviewAlias()
+                }
+                .viewAlias(PreviewAlias.self) {
+                    ForEach(0...2, id: \.self) { _ in
+                        Text("Hello, World")
+                    }
+                }
+
+                VStack {
+                    ForEach(0...2, id: \.self) { index in
+                        PreviewAlias()
+                    }
+                    .viewAlias(PreviewAlias.self) {
+                        Text("Hello, World")
+                    }
+                }
+            }
+        }
+        .previewDisplayName("ForEach")
+
+        ZStack {
+            VStack {
+                Group {
+                    PreviewAlias()
+                    PreviewAlias()
                     PreviewAlias()
                 }
                 .viewAlias(PreviewAlias.self) {
                     Text("Hello, World")
                 }
-            }
-            .previewDisplayName("Text")
 
-            ZStack {
+                PreviewAlias()
+                    .viewAlias(PreviewAlias.self) {
+                        Group {
+                            Text("Hello, World")
+                            Text("Hello, World")
+                            Text("Hello, World")
+                        }
+                    }
+
+            }
+        }
+        .previewDisplayName("Group")
+
+        ZStack {
+            VariadicViewAdapter(source: PreviewAlias()) { content in
+                Text(content.count.description)
+            }
+            .viewAlias(PreviewAlias.self) {
+                Text("Hello, World")
+                Text("Hello, World")
+                Text("Hello, World")
+            }
+        }
+        .previewDisplayName("VariadicView")
+
+        ZStack {
+            VStack {
+                ConditionalView(if: true) {
+                    ZStack {
+                        PreviewAlias()
+                    }
+                    .viewAlias(PreviewAlias.self) {
+                        Text("Hello, World")
+                    }
+                }
+
+                ConditionalView(if: true) {
+                    PreviewAlias()
+                }
+                .viewAlias(PreviewAlias.self) {
+                    Text("Hello, World")
+                }
+
+                VStack {
+                    ConditionalView(if: true) {
+                        VStack {
+                            PreviewAlias()
+                        }
+                    }
+                }
+                .viewAlias(PreviewAlias.self) {
+                    Text("Hello, World")
+                }
+
+                ConditionalView(if: true) {
+                    VStack {
+                        PreviewAlias()
+                    }
+                }
+                .viewAlias(PreviewAlias.self) {
+                    Text("Hello, World")
+                }
+
                 VStack {
                     PreviewAlias()
                 }
                 .viewAlias(PreviewAlias.self) {
-                    ForEach(0...2, id: \.self) { index in
-                        Text(index.description)
+                    ConditionalView(if: true) {
+                        Text("Hello, World")
                     }
                 }
             }
-            .previewDisplayName("ForEach")
+        }
+        .previewDisplayName("ConditionalContent")
 
-            ZStack {
+        ZStack {
+            AnyView(PreviewAlias())
+                .viewAlias(PreviewAlias.self) {
+                    Text("Hello, World")
+                }
+        }
+        .previewDisplayName("AnyView")
+
+        ZStack {
+            ScrollView {
                 PreviewAlias()
             }
-            .previewDisplayName("DefaultBody")
+            .viewAlias(PreviewAlias.self) {
+                Text("Hello, World")
+            }
+        }
+        .previewDisplayName("ScrollView")
+
+        #if os(iOS)
+        ZStack {
+            HostingViewBridge {
+                PreviewAlias()
+            }
+            .viewAlias(PreviewAlias.self) {
+                Text("Hello, World")
+            }
+        }
+        .previewDisplayName("HostingViewBridge")
+        #endif
+    }
+
+    #if os(iOS)
+    struct HostingViewBridge<Content: View>: UIViewControllerRepresentable {
+        @ViewBuilder var content: Content
+
+        func makeUIViewController(
+            context: Context
+        ) -> HostingController<Content> {
+            HostingController(content: content)
+        }
+
+        func updateUIViewController(
+            _ uiViewController: HostingController<Content>,
+            context: Context
+        ) {
         }
     }
+    #endif
 }

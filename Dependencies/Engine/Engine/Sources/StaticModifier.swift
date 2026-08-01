@@ -11,10 +11,12 @@ import EngineCore
 /// > Warning: The ``TypeDescriptor/descriptor`` should match the type
 ///  returned by `modifier`
 @frozen
-public struct StaticModifier<Descriptor: TypeDescriptor>: ViewModifier {
+public struct StaticModifier<
+    Descriptor: TypeDescriptor
+>: PrimitiveViewModifier {
 
     @usableFromInline
-    var modifier: Any
+    nonisolated(unsafe) var modifier: Any
 
     @inlinable
     public init(
@@ -24,18 +26,14 @@ public struct StaticModifier<Descriptor: TypeDescriptor>: ViewModifier {
         self.modifier = modifier()
     }
 
-    public func body(content: Content) -> Never {
-        bodyError()
-    }
-
-    public static func _makeView(
+    public static func makeView(
         modifier: _GraphValue<Self>,
         inputs: _ViewInputs,
-        body: @escaping (_Graph, _ViewInputs) -> SwiftUI._ViewOutputs
-    ) -> SwiftUI._ViewOutputs {
-        func project<T>(_ type: T.Type) -> SwiftUI._ViewOutputs {
+        body: @escaping (_Graph, _ViewInputs) -> _ViewOutputs
+    ) -> _ViewOutputs {
+        func project<T>(_ type: T.Type) -> _ViewOutputs {
             let conformance = ViewModifierProtocolDescriptor.conformance(of: T.self)!
-            var visitor = ViewOutputsVisitor(view: modifier[\.modifier], inputs: inputs, body: body)
+            var visitor = ViewOutputsVisitor(modifier: modifier[\.modifier], inputs: inputs, body: body)
             conformance.visit(visitor: &visitor)
             return visitor.outputs
         }
@@ -43,14 +41,14 @@ public struct StaticModifier<Descriptor: TypeDescriptor>: ViewModifier {
         return _openExistential(type, do: project)
     }
 
-    public static func _makeViewList(
+    public static func makeViewList(
         modifier: _GraphValue<Self>,
         inputs: _ViewListInputs,
-        body: @escaping (_Graph, _ViewListInputs) -> SwiftUI._ViewListOutputs
-    ) -> SwiftUI._ViewListOutputs {
-        func project<T>(_ type: T.Type) -> SwiftUI._ViewListOutputs {
+        body: @escaping (_Graph, _ViewListInputs) -> _ViewListOutputs
+    ) -> _ViewListOutputs {
+        func project<T>(_ type: T.Type) -> _ViewListOutputs {
             let conformance = ViewModifierProtocolDescriptor.conformance(of: T.self)!
-            var visitor = ViewListOutputsVisitor(view: modifier[\.modifier], inputs: inputs, body: body)
+            var visitor = ViewListOutputsVisitor(modifier: modifier[\.modifier], inputs: inputs, body: body)
             conformance.visit(visitor: &visitor)
             return visitor.outputs
         }
@@ -59,8 +57,8 @@ public struct StaticModifier<Descriptor: TypeDescriptor>: ViewModifier {
     }
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-    public static func _viewListCount(
-        inputs: SwiftUI._ViewListCountInputs,
+    public static func viewListCount(
+        inputs: _ViewListCountInputs,
         body: (_ViewListCountInputs) -> Int?
     ) -> Int? {
         func project<T>(_ type: T.Type) -> Int? {
@@ -85,34 +83,34 @@ private struct StaticModifierBody<Modifier: ViewModifier>: ViewModifier {
 }
 
 private struct ViewOutputsVisitor: ViewModifierVisitor {
-    var view: _GraphValue<Any>
+    var modifier: _GraphValue<Any>
     var inputs: _ViewInputs
-    var body: (_Graph, _ViewInputs) -> SwiftUI._ViewOutputs
+    var body: (_Graph, _ViewInputs) -> _ViewOutputs
 
     var outputs: _ViewOutputs!
 
     mutating func visit<Modifier>(type: Modifier.Type) where Modifier: ViewModifier {
-        let modifier = unsafeBitCast(view, to: _GraphValue<StaticModifierBody<Modifier>>.self)
+        let modifier = modifier.unsafeCast(to: StaticModifierBody<Modifier>.self)
         outputs = StaticModifierBody<Modifier>._makeView(modifier: modifier, inputs: inputs, body: body)
     }
 }
 
 private struct ViewListOutputsVisitor: ViewModifierVisitor {
-    var view: _GraphValue<Any>
+    var modifier: _GraphValue<Any>
     var inputs: _ViewListInputs
-    var body: (_Graph, _ViewListInputs) -> SwiftUI._ViewListOutputs
+    var body: (_Graph, _ViewListInputs) -> _ViewListOutputs
 
     var outputs: _ViewListOutputs!
 
     mutating func visit<Modifier>(type: Modifier.Type) where Modifier: ViewModifier {
-        let modifier = unsafeBitCast(view, to: _GraphValue<StaticModifierBody<Modifier>>.self)
+        let modifier = modifier.unsafeCast(to: StaticModifierBody<Modifier>.self)
         outputs = StaticModifierBody<Modifier>._makeViewList(modifier: modifier, inputs: inputs, body: body)
     }
 }
 
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 private struct ViewListOutputsCountVisitor: ViewModifierVisitor {
-    var inputs: SwiftUI._ViewListCountInputs
+    var inputs: _ViewListCountInputs
     var body: (_ViewListCountInputs) -> Int?
 
     var outputs: Int?
@@ -127,8 +125,17 @@ private struct ViewListOutputsCountVisitor: ViewModifierVisitor {
 struct StaticModifier_Previews: PreviewProvider {
 
     struct Modifier: ViewModifier {
+        @State var value = 0
+
         func body(content: Content) -> some View {
-            content.border(Color.red)
+            HStack {
+                Button(value.description) {
+                    value += 1
+                }
+
+                content
+                    .border(Color.blue)
+            }
         }
     }
 

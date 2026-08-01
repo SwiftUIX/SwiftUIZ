@@ -23,14 +23,14 @@ public protocol ViewTraitKey {
 public struct ZIndexTrait: ViewTraitKey {
     public typealias Value = Double
     public static let conformance = ViewTraitKeyProtocolDescriptor.conformance(
-        of: "s7SwiftUI14ZIndexTraitKeyV"
+        of: "7SwiftUI14ZIndexTraitKeyV"
     )
 }
 
 public struct LayoutPriorityTrait: ViewTraitKey {
     public typealias Value = Double
     public static let conformance = ViewTraitKeyProtocolDescriptor.conformance(
-        of: "s7SwiftUI22LayoutPriorityTraitKeyV"
+        of: "7SwiftUI22LayoutPriorityTraitKeyV"
     )
 }
 
@@ -43,7 +43,7 @@ public struct TagValueTrait<V>: ViewTraitKey {
     public static var conformance: ProtocolConformance<ViewTraitKeyProtocolDescriptor>? {
         guard let typeName = _mangledTypeName(V.self) else { return nil }
         return ViewTraitKeyProtocolDescriptor.conformance(
-            of: "s7SwiftUI16TagValueTraitKeyVy\(typeName)G"
+            of: "7SwiftUI16TagValueTraitKeyVy\(typeName)G"
         )
     }
 }
@@ -51,18 +51,18 @@ public struct TagValueTrait<V>: ViewTraitKey {
 public struct IsSectionHeaderTrait: ViewTraitKey {
     public typealias Value = Bool
     public static let conformance = ViewTraitKeyProtocolDescriptor.conformance(
-        of: "s7SwiftUI23IsSectionHeaderTraitKeyV"
+        of: "7SwiftUI23IsSectionHeaderTraitKeyV"
     )
 }
 
 public struct IsSectionFooterTrait: ViewTraitKey {
     public typealias Value = Bool
     public static let conformance = ViewTraitKeyProtocolDescriptor.conformance(
-        of: "s7SwiftUI23IsSectionFooterTraitKeyV"
+        of: "7SwiftUI23IsSectionFooterTraitKeyV"
     )
 }
 
-extension AnyVariadicView.Subview {
+extension VariadicView.Subview {
     public subscript<K: ViewTraitKey>(
         key: K.Type
     ) -> K.Value? {
@@ -77,14 +77,17 @@ extension AnyVariadicView.Subview {
     }
 
     private struct Visitor<K: ViewTraitKey>: ViewTraitKeyVisitor {
-        var subview: AnyVariadicView.Subview
+        var subview: VariadicView.Subview
         var output: K.Value!
 
         mutating func visit<Key: _ViewTraitKey>(type: Key.Type) {
+            let value = subview.element[Key.self]
             if K.Value.self == Key.Value.self {
-                output = subview.element[Key.self] as? K.Value
+                output = value as? K.Value
+            } else if K.Value.self == Any.self {
+                output = (value as Any) as? K.Value
             } else if MemoryLayout<K.Value>.size == MemoryLayout<Key.Value>.size {
-                output = unsafeBitCast(subview.element[Key.self], to: K.Value.self)
+                output = unsafeBitCast(value, to: K.Value.self)
             }
         }
     }
@@ -123,10 +126,13 @@ extension Layout.Subviews.Element {
         var output: K.Value!
 
         mutating func visit<Key: _ViewTraitKey>(type: Key.Type) {
+            let trait = subview._trait(key: Key.self)
             if K.Value.self == Key.Value.self {
-                output = subview._trait(key: Key.self) as? K.Value
+                output = trait as? K.Value
+            } else if K.Value.self == Any.self {
+                output = (trait as Any) as? K.Value
             } else if MemoryLayout<K.Value>.size == MemoryLayout<Key.Value>.size {
-                output = unsafeBitCast(subview._trait(key: Key.self), to: K.Value.self)
+                output = unsafeBitCast(trait, to: K.Value.self)
             }
         }
     }
@@ -178,11 +184,9 @@ public struct ViewTraitWritingModifier<Trait: ViewTraitKey>: ViewModifier {
         }
     }
 
-    private struct BodyModifier: View {
-        var content: Content
-        var value: Trait.Value
-
-        var body: Never { bodyError() }
+    private struct BodyModifier: PrimitiveView {
+        nonisolated(unsafe) var content: Content
+        nonisolated(unsafe) var value: Trait.Value
 
         private struct TraitVisitor: ViewTraitKeyVisitor {
             var content: Content
@@ -202,7 +206,7 @@ public struct ViewTraitWritingModifier<Trait: ViewTraitKey>: ViewModifier {
             }
         }
 
-        private var modifiedContent: Any {
+        private nonisolated var modifiedContent: Any {
             let conformance = Trait.conformance!
             var visitor = TraitVisitor(
                 content: content,
@@ -212,10 +216,10 @@ public struct ViewTraitWritingModifier<Trait: ViewTraitKey>: ViewModifier {
             return visitor.output!
         }
 
-        static func _makeView(
+        nonisolated static func makeView(
             view: _GraphValue<Self>,
             inputs: _ViewInputs
-        ) -> SwiftUI._ViewOutputs {
+        ) -> _ViewOutputs {
             let conformance = Trait.conformance!
             var visitor = ViewOutputsVisitor(
                 view: view[\.modifiedContent],
@@ -225,10 +229,10 @@ public struct ViewTraitWritingModifier<Trait: ViewTraitKey>: ViewModifier {
             return visitor.outputs
         }
 
-        static func _makeViewList(
+        nonisolated static func makeViewList(
             view: _GraphValue<Self>,
             inputs: _ViewListInputs
-        ) -> SwiftUI._ViewListOutputs {
+        ) -> _ViewListOutputs {
             let conformance = Trait.conformance!
             var visitor = ViewListOutputsVisitor(
                 view: view[\.modifiedContent],
@@ -239,8 +243,8 @@ public struct ViewTraitWritingModifier<Trait: ViewTraitKey>: ViewModifier {
         }
 
         @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-        static func _viewListCount(
-            inputs: SwiftUI._ViewListCountInputs
+        nonisolated static func viewListCount(
+            inputs: _ViewListCountInputs
         ) -> Int? {
             let conformance = Trait.conformance!
             var visitor = ViewListCountVisitor(
@@ -256,10 +260,7 @@ public struct ViewTraitWritingModifier<Trait: ViewTraitKey>: ViewModifier {
             var outputs: _ViewOutputs!
 
             mutating func visit<Key>(type: Key.Type) where Key: _ViewTraitKey {
-                let view = unsafeBitCast(
-                    view,
-                    to: _GraphValue<ModifiedContent<Content, _TraitWritingModifier<Key>>>.self
-                )
+                let view = view.unsafeCast(to: ModifiedContent<Content, _TraitWritingModifier<Key>>.self)
                 outputs = ModifiedContent<Content, _TraitWritingModifier<Key>>._makeView(
                     view: view,
                     inputs: inputs
@@ -273,10 +274,7 @@ public struct ViewTraitWritingModifier<Trait: ViewTraitKey>: ViewModifier {
             var outputs: _ViewListOutputs!
 
             mutating func visit<Key>(type: Key.Type) where Key: _ViewTraitKey {
-                let view = unsafeBitCast(
-                    view,
-                    to: _GraphValue<ModifiedContent<Content, _TraitWritingModifier<Key>>>.self
-                )
+                let view = view.unsafeCast(to: ModifiedContent<Content, _TraitWritingModifier<Key>>.self)
                 outputs = ModifiedContent<Content, _TraitWritingModifier<Key>>._makeViewList(
                     view: view,
                     inputs: inputs
@@ -286,7 +284,7 @@ public struct ViewTraitWritingModifier<Trait: ViewTraitKey>: ViewModifier {
 
         @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
         private struct ViewListCountVisitor: ViewTraitKeyVisitor {
-            var inputs: SwiftUI._ViewListCountInputs
+            var inputs: _ViewListCountInputs
             var outputs: Int?
 
             mutating func visit<Key>(type: Key.Type) where Key: _ViewTraitKey {
@@ -298,7 +296,13 @@ public struct ViewTraitWritingModifier<Trait: ViewTraitKey>: ViewModifier {
     }
 }
 
+// MARK: - Previews
+
 struct ViewTraitKey_Previews: PreviewProvider {
+    struct PreviewViewTraitKey: TraitValueKey {
+        static var defaultValue: String { "default" }
+    }
+
     static var previews: some View {
         Group {
             HStack {
@@ -351,6 +355,17 @@ struct ViewTraitKey_Previews: PreviewProvider {
                 }
                 .previewDisplayName("TagValueTrait")
             }
+
+            VStack {
+                VariadicViewAdapter {
+                    Color.blue
+                        .trait(PreviewViewTraitKey.self, "Hello, World")
+                } content: { source in
+                    Text(source[0].trait(PreviewViewTraitKey.self))
+                    Text(source[0][PreviewViewTraitKey.self])
+                }
+            }
+            .previewDisplayName("Custom Trait")
         }
     }
 }

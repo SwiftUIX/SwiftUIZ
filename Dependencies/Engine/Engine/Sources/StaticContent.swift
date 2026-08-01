@@ -11,10 +11,10 @@ import EngineCore
 /// > Warning: The ``TypeDescriptor/descriptor`` should match the type
 ///  returned by `content`
 @frozen
-public struct StaticContent<Descriptor: TypeDescriptor>: View {
+public struct StaticContent<Descriptor: TypeDescriptor>: PrimitiveView {
 
     @usableFromInline
-    var content: Any
+    nonisolated(unsafe) var content: Any
 
     @inlinable
     public init(
@@ -24,15 +24,11 @@ public struct StaticContent<Descriptor: TypeDescriptor>: View {
         self.content = content()
     }
 
-    public var body: Never {
-        bodyError()
-    }
-
-    public static func _makeView(
+    public nonisolated static func makeView(
         view: _GraphValue<Self>,
         inputs: _ViewInputs
-    ) -> SwiftUI._ViewOutputs {
-        func project<T>(_ type: T.Type) -> SwiftUI._ViewOutputs {
+    ) -> _ViewOutputs {
+        func project<T>(_ type: T.Type) -> _ViewOutputs {
             let conformance = ViewProtocolDescriptor.conformance(of: T.self)!
             var visitor = ViewOutputsVisitor(view: view[\.content], inputs: inputs)
             conformance.visit(visitor: &visitor)
@@ -42,11 +38,11 @@ public struct StaticContent<Descriptor: TypeDescriptor>: View {
         return _openExistential(type, do: project)
     }
 
-    public static func _makeViewList(
+    public nonisolated static func makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
-    ) -> SwiftUI._ViewListOutputs {
-        func project<T>(_ type: T.Type) -> SwiftUI._ViewListOutputs {
+    ) -> _ViewListOutputs {
+        func project<T>(_ type: T.Type) -> _ViewListOutputs {
             let conformance = ViewProtocolDescriptor.conformance(of: T.self)!
             var visitor = ViewListOutputsVisitor(view: view[\.content], inputs: inputs)
             conformance.visit(visitor: &visitor)
@@ -57,8 +53,8 @@ public struct StaticContent<Descriptor: TypeDescriptor>: View {
     }
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-    public static func _viewListCount(
-        inputs: SwiftUI._ViewListCountInputs
+    public nonisolated static func viewListCount(
+        inputs: _ViewListCountInputs
     ) -> Int? {
         func project<T>(_ type: T.Type) -> Int? {
             let conformance = ViewProtocolDescriptor.conformance(of: T.self)!
@@ -86,7 +82,7 @@ private struct ViewOutputsVisitor: ViewVisitor {
     var outputs: _ViewOutputs!
 
     mutating func visit<Content>(type: Content.Type) where Content: View {
-        let view = unsafeBitCast(view, to: _GraphValue<StaticContentBody<Content>>.self)
+        let view = view.unsafeCast(to: StaticContentBody<Content>.self)
         outputs = StaticContentBody<Content>._makeView(view: view, inputs: inputs)
     }
 }
@@ -98,14 +94,14 @@ private struct ViewListOutputsVisitor: ViewVisitor {
     var outputs: _ViewListOutputs!
 
     mutating func visit<Content>(type: Content.Type) where Content: View {
-        let view = unsafeBitCast(view, to: _GraphValue<StaticContentBody<Content>>.self)
+        let view = view.unsafeCast(to: StaticContentBody<Content>.self)
         outputs = StaticContentBody<Content>._makeViewList(view: view, inputs: inputs)
     }
 }
 
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 private struct ViewListOutputsCountVisitor: ViewVisitor {
-    var inputs: SwiftUI._ViewListCountInputs
+    var inputs: _ViewListCountInputs
 
     var outputs: Int?
 
@@ -119,8 +115,12 @@ private struct ViewListOutputsCountVisitor: ViewVisitor {
 struct StaticContent_Previews: PreviewProvider {
 
     struct Content: View {
+        @State var value = 0
+
         var body: some View {
-            Text("Hello, World")
+            Button(value.description) {
+                value += 1
+            }
         }
     }
 

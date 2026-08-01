@@ -27,12 +27,12 @@ public struct VariadicViewAdapter<Source: View, Content: View>: View {
     var source: Source
 
     @usableFromInline
-    var content: (VariadicView<Source>) -> Content
+    var content: (VariadicView) -> Content
 
     @inlinable
     public init(
         source: Source,
-        content: @escaping (VariadicView<Source>) -> Content
+        content: @escaping (VariadicView) -> Content
     ) {
         self.source = source
         self.content = content
@@ -42,97 +42,201 @@ public struct VariadicViewAdapter<Source: View, Content: View>: View {
     @inlinable
     public init(
         @ViewBuilder source: () -> Source,
-        @ViewBuilder content: @escaping (VariadicView<Source>) -> Content
+        @ViewBuilder content: @escaping (VariadicView) -> Content
     ) {
         self.init(source: source(), content: content)
     }
 
     public var body: some View {
-        _VariadicView.Tree(Root(content: content)) {
+        VariadicViewVisitor(
+            source: source,
+            layout: AnyVariadicViewLayout(content: content)
+        )
+    }
+}
+
+@frozen
+public struct VariadicViewVisitor<
+    Source: View,
+    Layout: VariadicViewLayout
+>: View {
+
+    @usableFromInline
+    var source: Source
+
+    @usableFromInline
+    var layout: Layout
+
+    @inlinable
+    public init(
+        source: Source,
+        layout: Layout
+    ) {
+        self.source = source
+        self.layout = layout
+    }
+
+    @inlinable
+    public init(
+        layout: Layout,
+        @ViewBuilder source: () -> Source
+    ) {
+        self.init(source: source(), layout: layout)
+    }
+
+    public var body: some View {
+        _VariadicView.Tree(Root(layout: layout)) {
             source
         }
     }
 
     private struct Root: _VariadicView.MultiViewRoot {
-        var content: (VariadicView<Source>) -> Content
+        var layout: Layout
 
         func body(children: _VariadicView.Children) -> some View {
-            content(VariadicView(children))
+            layout.body(children: VariadicView(children))
         }
     }
 }
 
-/// A container view with type-erased subviews
-///
-/// A variadic view impacts layout and how a `ViewModifier` is applied,
-/// which can have a direct impact on performance.
+@MainActor @preconcurrency
+public protocol VariadicViewLayout: DynamicProperty {
+
+    associatedtype Body: View
+
+    @ViewBuilder func body(children: VariadicView) -> Body
+}
+
 @frozen
-public struct VariadicView<Content: View>: View, RandomAccessCollection {
+public struct AnyVariadicViewLayout<
+    Content: View
+>: VariadicViewLayout {
 
-    public var children: AnyVariadicView
+    public var content: (VariadicView) -> Content
 
-    init(_ children: _VariadicView.Children) {
-        self.children = AnyVariadicView(children)
+    public init(
+        content: @escaping (VariadicView) -> Content
+    ) {
+        self.content = content
     }
 
-    public var body: some View {
-        children
+    public func body(children: VariadicView) -> some View {
+        content(children)
     }
+}
 
-    // MARK: Sections
+@available(*, deprecated, renamed: "VariadicView")
+public typealias AnyVariadicView = VariadicView
 
-    public var sections: [AnyVariadicSectionView] {
-        children.sections
-    }
+extension KeyPath where Root == VariadicView.Subview {
 
-    // MARK: Collection
-
-    public typealias Element = AnyVariadicView.Element
-    public typealias Iterator = AnyVariadicView.Iterator
-    public typealias Index = AnyVariadicView.Index
-
-    public func makeIterator() -> Iterator {
-        children.makeIterator()
-    }
-
-    public var startIndex: Index {
-        children.startIndex
-    }
-
-    public var endIndex: Index {
-        children.endIndex
-    }
-
-    public subscript(position: Index) -> Element {
-        children[position]
-    }
-
-    public func index(after index: Index) -> Index {
-        children.index(after: index)
+    @MainActor
+    public static func selection<ID: Hashable>(
+        _ id: ID.Type
+    ) -> KeyPath<VariadicView.Subview, ID> {
+        \.[selection: VariadicView.Subview.Selection<ID>()]
     }
 }
 
 /// A type-erased collection of subviews in a container view.
 @frozen
-public struct AnyVariadicView: View, RandomAccessCollection {
+public struct VariadicView: View, RandomAccessCollection, Sequence {
 
     /// A type-erased subview of a container view.
     @frozen
     public struct Subview: View, Identifiable {
 
         @usableFromInline
-        var element: _VariadicView.Children.Element
+        nonisolated(unsafe) var element: _VariadicView.Children.Element
 
-        init(_ element: _VariadicView.Children.Element) {
+        nonisolated init(_ element: _VariadicView.Children.Element) {
             self.element = element
         }
 
-        public var id: AnyHashable {
-            element.id
+        private struct CanonicalID: Hashable {
+            var index: Int32
+            var implicitID: Int32
+            var explicitID: AnyHashable?
         }
 
-        public func id<ID: Hashable>(as _: ID.Type = ID.self) -> ID? {
-            element.id(as: ID.self)
+        @frozen
+        public struct Selection<T: Hashable>: Hashable {
+
+            @inlinable
+            public init() { }
+        }
+
+        @frozen
+        public struct ID: Hashable, @unchecked Sendable {
+            var value: AnyHashable
+        }
+
+        public nonisolated var id: ID {
+            ID(value: element.id)
+        }
+
+        public subscript<T: Hashable>(selection _: Selection<T>) -> T {
+            if let id = selection(as: T.self) {
+                return id
+            }
+            fatalError("Selection type \(T.self) was nil, set one via the `tag` or `id` modifiers")
+        }
+
+        public func hasID<T: Hashable>(keyPath: KeyPath<Self, T>) -> Bool {
+            if keyPath == \.id {
+                return true
+            }
+            return selection(as: T.self, allowsImplicitID: false) != nil
+        }
+
+        public func id<T: Hashable>(as _: T.Type = T.self) -> T? {
+            return id(as: T.self, allowsImplicitID: true)
+        }
+
+        private func id<T: Hashable>(as _: T.Type = T.self, allowsImplicitID: Bool) -> T? {
+            if let id = element.id(as: T.self) {
+                return id
+            } else if allowsImplicitID, T.self == Int.self {
+                func project<Value>(_ id: Value) -> T? {
+                    guard
+                        let index = try? swift_getFieldValue("_index", Int32.self, id),
+                        let implicitId = try? swift_getFieldValue("implicitID", Int32.self, id)
+                    else {
+                        return nil
+                    }
+                    if implicitId == 0 {
+                        return Int(index) as? T
+                    }
+                    return Int(implicitId) as? T
+                }
+                return _openExistential(element.id.base, do: project)
+            }
+            return nil
+        }
+
+        public func index<T: Hashable, C: Collection>(in collection: C) -> C.Index? where C.Element == T {
+            guard let selection = id(as: T.self) else { return nil }
+            for index in collection.indices {
+                if collection[index] == selection {
+                    return index
+                }
+            }
+            return nil
+        }
+
+        public func selection<T: Hashable>(as _: T.Type = T.self) -> T? {
+            return selection(as: T.self, allowsImplicitID: true)
+        }
+
+        private func selection<T: Hashable>(as _: T.Type = T.self, allowsImplicitID: Bool) -> T? {
+            if #available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *),
+                let tag = tag(as: T.self)
+            {
+                return tag
+            } else if let id = id(as: T.self, allowsImplicitID: allowsImplicitID) {
+                return id
+            }
+            return nil
         }
 
         public subscript<K: _ViewTraitKey>(key: K.Type) -> K.Value {
@@ -140,11 +244,23 @@ public struct AnyVariadicView: View, RandomAccessCollection {
             set { element[K.self] = newValue }
         }
 
+        public func trait<K: _ViewTraitKey>(
+            _ key: K.Type
+        ) -> K.Value? {
+            self[K.self]
+        }
+
         public subscript<K: ViewTraitKey>(
             key: K.Type,
             default defaultValue: @autoclosure () -> K.Value
         ) -> K.Value {
             self[K.self] ?? defaultValue()
+        }
+
+        public func trait<K: ViewTraitKey>(
+            _ key: K.Type
+        ) -> K.Value? {
+            self[K.self]
         }
 
         public subscript<T>(key: String, as _: T.Type) -> T? {
@@ -156,9 +272,16 @@ public struct AnyVariadicView: View, RandomAccessCollection {
             return nil
         }
 
+        public func trait<T>(
+            key: String,
+            as _: T.Type
+        ) -> T? {
+            self[key, as: T.self]
+        }
+
         private struct AnyTraitVisitor<T>: ViewTraitKeyVisitor {
             var element: _VariadicView.Children.Element
-            var value: T!
+            var value: T?
 
             mutating func visit<Key>(type: Key.Type) where Key: _ViewTraitKey {
                 value = element[Key.self] as? T
@@ -175,11 +298,6 @@ public struct AnyVariadicView: View, RandomAccessCollection {
             case .untagged:
                 return nil
             }
-        }
-
-        /// The layout priority of the subview.
-        public var priority: Double {
-            self[LayoutPriorityTrait.self, default: 0]
         }
 
         /// The z-index of the subview.
@@ -204,41 +322,46 @@ public struct AnyVariadicView: View, RandomAccessCollection {
         }
     }
 
-    var children: _VariadicView.Children
+    nonisolated(unsafe) var storage: _VariadicView.Children
 
     init(_ children: _VariadicView.Children) {
-        self.children = children
+        self.storage = children
     }
 
     // MARK: View
 
     public var body: some View {
-        children
+        storage
     }
 
     // MARK: Sections
 
-    public var sections: [AnyVariadicSectionView] {
-        var sections: [AnyVariadicSectionView] = [
-            AnyVariadicSectionView(id: 0)
+    @available(*, deprecated, message: "Use `self` directly")
+    public var children: VariadicView {
+        return self
+    }
+
+    public var sections: [VariadicSectionView] {
+        var sections: [VariadicSectionView] = [
+            VariadicSectionView(id: 0)
         ]
         for element in self {
             if element.isHeader {
                 if sections[sections.endIndex - 1].header.child != nil || !sections[sections.endIndex - 1].content.isEmpty {
-                    sections.append(AnyVariadicSectionView(id: sections.endIndex))
+                    sections.append(VariadicSectionView(id: sections.endIndex))
                 }
                 sections[sections.endIndex - 1].id = element.id
                 sections[sections.endIndex - 1].header.child = element
 
             } else if element.isFooter {
                 if sections[sections.endIndex - 1].footer.child != nil {
-                    sections.append(AnyVariadicSectionView(id: sections.endIndex))
+                    sections.append(VariadicSectionView(id: sections.endIndex))
                 }
                 sections[sections.endIndex - 1].footer.child = element
 
             } else {
                 if sections[sections.endIndex - 1].footer.child != nil {
-                    sections.append(AnyVariadicSectionView(id: sections.endIndex))
+                    sections.append(VariadicSectionView(id: sections.endIndex))
                 }
                 if sections[sections.endIndex - 1].header.child == nil && sections[sections.endIndex - 1].content.isEmpty {
                     sections[sections.endIndex - 1].id = element.id
@@ -250,35 +373,42 @@ public struct AnyVariadicView: View, RandomAccessCollection {
         return sections
     }
 
-    // MARK: Collection
+    // MARK: Sequence
+
+    public typealias Iterator = IndexingIterator<Array<Element>>
+
+    public nonisolated func makeIterator() -> Iterator {
+        storage.map { Subview($0) }.makeIterator()
+    }
+
+    public nonisolated var underestimatedCount: Int {
+        storage.underestimatedCount
+    }
+
+    // MARK: RandomAccessCollection
 
     public typealias Element = Subview
-    public typealias Iterator = IndexingIterator<Array<Element>>
     public typealias Index = Int
 
-    public func makeIterator() -> Iterator {
-        children.map { Subview($0) }.makeIterator()
+    public nonisolated var startIndex: Index {
+        storage.startIndex
     }
 
-    public var startIndex: Index {
-        children.startIndex
+    public nonisolated var endIndex: Index {
+        storage.endIndex
     }
 
-    public var endIndex: Index {
-        children.endIndex
+    public nonisolated subscript(position: Index) -> Element {
+        Subview(storage[position])
     }
 
-    public subscript(position: Index) -> Element {
-        Subview(children[position])
-    }
-
-    public func index(after index: Index) -> Index {
-        children.index(after: index)
+    public nonisolated func index(after index: Index) -> Index {
+        storage.index(after: index)
     }
 }
 
 #if hasAttribute(retroactive)
-extension Slice: @retroactive View where Element == AnyVariadicView.Subview, Index: SignedInteger, Base.Index.Stride: SignedInteger {
+extension Slice: @retroactive View where Element == VariadicView.Subview, Index: SignedInteger, Base.Index.Stride: SignedInteger {
 
     public var body: some View {
         let subviews = (startIndex..<endIndex).map { index in
@@ -290,7 +420,7 @@ extension Slice: @retroactive View where Element == AnyVariadicView.Subview, Ind
     }
 }
 #else
-extension Slice: View where Element == AnyVariadicView.Subview, Index: SignedInteger, Base.Index.Stride: SignedInteger {
+extension Slice: View where Element == VariadicView.Subview, Index: SignedInteger, Base.Index.Stride: SignedInteger {
 
     public var body: some View {
         let subviews = (startIndex..<endIndex).map { index in
@@ -304,14 +434,14 @@ extension Slice: View where Element == AnyVariadicView.Subview, Index: SignedInt
 #endif
 
 @frozen
-public struct AnyVariadicSectionView: View, Identifiable {
+public struct VariadicSectionView: View, Identifiable {
 
     public typealias Header = Subview
     public typealias Footer = Subview
 
     @frozen
     public struct Subview: View {
-        var child: AnyVariadicView.Subview?
+        var child: VariadicView.Subview?
 
         public var body: some View {
             child
@@ -319,8 +449,8 @@ public struct AnyVariadicSectionView: View, Identifiable {
     }
 
     @frozen
-    public struct Content: View, RandomAccessCollection {
-        public typealias Subview = AnyVariadicView.Subview
+    public struct Content: View, RandomAccessCollection, Sequence {
+        public typealias Subview = VariadicView.Subview
         var children: [Subview]
 
         public var body: some View {
@@ -329,43 +459,50 @@ public struct AnyVariadicSectionView: View, Identifiable {
             }
         }
 
-        // MARK: Collection
+        // MARK: Sequence
 
-        public typealias Element = Subview
         public typealias Iterator = IndexingIterator<Array<Element>>
-        public typealias Index = Int
 
-        public func makeIterator() -> Iterator {
+        public nonisolated func makeIterator() -> Iterator {
             children.makeIterator()
         }
 
-        public var startIndex: Index {
+        public nonisolated var underestimatedCount: Int {
+            children.underestimatedCount
+        }
+
+        // MARK: RandomAccessCollection
+
+        public typealias Element = Subview
+        public typealias Index = Int
+
+        public nonisolated var startIndex: Index {
             children.startIndex
         }
 
-        public var endIndex: Index {
+        public nonisolated var endIndex: Index {
             children.endIndex
         }
 
-        public subscript(position: Index) -> Element {
+        public nonisolated subscript(position: Index) -> Element {
             children[position]
         }
 
-        public func index(after index: Index) -> Index {
+        public nonisolated func index(after index: Index) -> Index {
             children.index(after: index)
         }
     }
 
-    public var id: AnyHashable
+    public internal(set) nonisolated(unsafe) var id: AnyHashable
     public var header: Header
     public var content: Content
     public var footer: Footer
 
     init(
         id: AnyHashable,
-        header: AnyVariadicView.Subview? = nil,
-        content: [AnyVariadicView.Subview] = [],
-        footer: AnyVariadicView.Subview? = nil
+        header: VariadicView.Subview? = nil,
+        content: [VariadicView.Subview] = [],
+        footer: VariadicView.Subview? = nil
     ) {
         self.id = id
         self.header = .init(child: header)
@@ -374,7 +511,7 @@ public struct AnyVariadicSectionView: View, Identifiable {
     }
 
     public var body: some View {
-        SectionView {
+        Section {
             content
         } header: {
             header
@@ -386,15 +523,42 @@ public struct AnyVariadicSectionView: View, Identifiable {
 
 // MARK: - Previews
 
+private struct PreviewTestEnvironmentKey: EnvironmentKey {
+    static let defaultValue: String = "default"
+}
+
+extension EnvironmentValues {
+    fileprivate var previewTest: String {
+        get { self[PreviewTestEnvironmentKey.self] }
+        set { self[PreviewTestEnvironmentKey.self] = newValue }
+    }
+}
+
 struct VariadicView_Previews: PreviewProvider {
-    enum PreviewCases: Int, Hashable, CaseIterable {
-        case one
+    private enum PreviewCases: Int, Hashable, CaseIterable {
+        case one = 1
         case two
         case three
     }
 
+    private struct VariadicAlias: ViewAlias { }
+
     static var previews: some View {
         Group {
+            ZStack {
+                VariadicViewAdapter {
+                    Text("Line 1")
+                    Text("Line 2")
+                } content: { source in
+                    VStack {
+                        ForEachSubview(source) { index, subview in
+                            Text(subview.id(as: Int.self)?.description ?? "nil")
+                        }
+                    }
+                }
+            }
+            .previewDisplayName("Implicit ID")
+
             ZStack {
                 VariadicViewAdapter {
                     Text("Line 1").id("1")
@@ -420,7 +584,7 @@ struct VariadicView_Previews: PreviewProvider {
                             HStack {
                                 Text("\(subview.id(as: PreviewCases.self)?.rawValue ?? -1)")
 
-                                Text(String("\(subview.id)"))
+                                Text(verbatim: "\(subview.id)")
                             }
                             .background(index.isMultiple(of: 2) ? Color.red : Color.blue)
                         }
@@ -428,6 +592,21 @@ struct VariadicView_Previews: PreviewProvider {
                 }
             }
             .previewDisplayName("ForEach")
+
+            ZStack {
+                VariadicViewAdapter {
+                    ForEach(PreviewCases.allCases, id: \.self) {
+                        Text($0.rawValue.description)
+                    }
+                } content: { source in
+                    VStack {
+                        ForEachSubview(source) { index, subview in
+                            Text(subview.index(in: PreviewCases.allCases)?.description ?? "nil")
+                        }
+                    }
+                }
+            }
+            .previewDisplayName("Index")
 
             if #available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *) {
                 ZStack {
@@ -444,6 +623,39 @@ struct VariadicView_Previews: PreviewProvider {
                 }
                 .previewDisplayName("Custom Tag")
             }
+
+            ZStack {
+                VariadicViewAdapter {
+                    Text("Line 1").tag("1")
+                    Text("Line 2").tag("2")
+                    Text("Line 3").tag("3")
+                } content: { source in
+                    VariadicViewAdapter {
+                        ForEachSubview(
+                            source,
+                            id: .selection(String.self)
+                        ) { index, subview in
+                            HStack {
+                                Text(subview.selection(as: String.self) ?? "nil")
+
+                                subview
+                            }
+                        }
+                    } content: { transformedSource in
+                        VStack {
+                            ForEachSubview(transformedSource) { index, subview in
+                                HStack {
+                                    Text(subview.selection(as: String.self) ?? "nil")
+
+                                    subview
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+            .previewDisplayName("ForEachSubview Transform")
 
             ZStack {
                 VariadicViewAdapter {
@@ -465,7 +677,7 @@ struct VariadicView_Previews: PreviewProvider {
                     }
                 } content: { source in
                     HStack {
-                        Text(source.children.count.description)
+                        Text(source.count.description)
 
                         VStack {
                             source
@@ -477,31 +689,33 @@ struct VariadicView_Previews: PreviewProvider {
 
             ZStack {
                 VariadicViewAdapter {
-                    SectionView {
+                    Section {
                         Text("Content")
                     } header: {
-                        Text("Header")
+                        SectionHeader {
+                            Text("Header")
+                        }
                     } footer: {
-                        Text("Footer")
+                        SectionFooter {
+                            Text("Footer")
+                        }
                     }
                 } content: { source in
-                    HStack {
-                        Text(source.children.count.description)
-
+                    ForEach(source.sections) { section in
                         VStack {
-                            let isHeader = source[0].isHeader
                             HStack {
-                                Text(isHeader.description)
-                                source[0]
+                                Text("Header: ")
+                                section.header
                             }
+                            .border(Color.red)
 
-                            source[1]
+                            section.content
 
-                            let isFooter = source[2].isFooter
                             HStack {
-                                Text(isFooter.description)
-                                source[2]
+                                Text("Footer: ")
+                                section.footer
                             }
+                            .border(Color.red)
                         }
                     }
                 }
@@ -510,41 +724,51 @@ struct VariadicView_Previews: PreviewProvider {
 
             ZStack {
                 VariadicViewAdapter {
-                    SectionView {
+                    Section {
                         Text("Content 1")
                     } header: {
-                        Text("Header 1")
+                        SectionHeader {
+                            Text("Header 1")
+                        }
                     } footer: {
-                        Text("Footer 1")
+                        SectionFooter {
+                            Text("Footer 1")
+                        }
                     }
 
                     Text("Content 2a")
 
                     Text("Content 2b")
 
-                    SectionView {
+                    Section {
                         Text("Content 3")
                     } header: {
-                        Text("Header 3")
+                        SectionHeader {
+                            Text("Header 3")
+                        }
                     } footer: {
-                        Text("Footer 3")
+                        SectionFooter {
+                            Text("Footer 3")
+                        }
                     }
 
-                    SectionView {
+                    Section {
                         Text("Content 4")
                     }
 
-                    SectionView {
+                    Section {
 
                     } header: {
-                        Text("Header 5")
+                        SectionHeader {
+                            Text("Header 5")
+                        }
                     }
                 } content: { source in
                     VStack {
                         ForEach(source.sections) { section in
                             Section {
                                 HStack {
-                                    Text("\(section.id)")
+                                    Text(verbatim: "\(section.id)")
 
                                     VStack {
                                         ForEach(section.content) { child in
@@ -554,13 +778,13 @@ struct VariadicView_Previews: PreviewProvider {
                                 }
                             } header: {
                                 HStack {
-                                    Text("\(section.id)")
+                                    Text(verbatim: "\(section.id)")
 
                                     section.header
                                 }
                             } footer: {
                                 HStack {
-                                    Text("\(section.id)")
+                                    Text(verbatim: "\(section.id)")
 
                                     section.footer
                                 }
@@ -583,7 +807,7 @@ struct VariadicView_Previews: PreviewProvider {
                     }
                 } content: { source in
                     HStack {
-                        Text(source.children.count.description)
+                        Text(source.count.description)
 
                         VStack {
                             source
@@ -597,7 +821,7 @@ struct VariadicView_Previews: PreviewProvider {
                 VariadicViewAdapter {
                     EmptyView()
                 } content: { source in
-                    Text(source.children.count.description)
+                    Text(source.count.description)
                 }
             }
             .previewDisplayName("EmptyView")
@@ -606,7 +830,7 @@ struct VariadicView_Previews: PreviewProvider {
                 VariadicViewAdapter {
                     Text("Line 1")
                 } content: { source in
-                    Text(source.children.count.description)
+                    Text(source.count.description)
                 }
             }
             .previewDisplayName("Text View")
@@ -625,12 +849,95 @@ struct VariadicView_Previews: PreviewProvider {
                         }
 
                         VStack {
-                            views[2...]
+                            ForEachSubview(views[2...]) { index, subview in
+                                subview
+                                    .border(Color.red)
+                            }
                         }
                     }
                 }
             }
             .previewDisplayName("Slice View")
+
+            ZStack {
+                VariadicViewAdapter {
+                    VariadicAlias()
+                } content: { source in
+                    Text(source.count.description)
+                }
+                .viewAlias(VariadicAlias.self) {
+                    Text("Line 1")
+                    Text("Line 2")
+                    Text("Line 3")
+                }
+            }
+            .previewDisplayName("ViewAlias")
+
+            ZStack {
+                StateAdapter(initialValue: 0) { $value in
+                    VariadicViewAdapter {
+                        Text("Label")
+                    } content: { source in
+                        Button {
+                            value += 1
+                        } label: {
+                            HStack {
+                                Text(value.description)
+
+                                source
+                            }
+                        }
+                    }
+                }
+            }
+            .previewDisplayName("Styles")
+
+            ZStack {
+                VariadicViewAdapter {
+                    Group {
+                        EnvironmentValueReader(\.previewTest) { value in
+                            Text(value)
+                        }
+                        .tag("Tag")
+                        .id("ID")
+                    }
+                    // Fixes custom environment keys, but breaks reading tag/id
+                    .modifier(UnaryViewModifier())
+
+                    EnvironmentValueReader(\.previewTest) { value in
+                        Text(value)
+                    }
+                    .tag("Tag")
+                    .id("ID")
+                } content: { source in
+                    VStack {
+                        ForEachSubview(source) { _, subview in
+                            VStack {
+                                subview
+                                subview
+                                    .font(.largeTitle)
+                                HStack {
+                                    EnvironmentValueReader(\.previewTest) { value in
+                                        Text(value)
+                                    }
+
+                                    subview
+                                }
+
+                                if #available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *) {
+                                    let tag = subview.tag(as: String.self)
+                                    Text(tag ?? "nil")
+
+                                    let id = subview.id(as: String.self)
+                                    Text(id ?? "nil")
+                                }
+                            }
+                        }
+                    }
+                    .environment(\.previewTest, "Custom")
+                }
+            }
+            .previewDisplayName("Environment")
         }
         .padding()
         .previewLayout(.sizeThatFits)

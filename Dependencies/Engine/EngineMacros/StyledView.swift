@@ -91,38 +91,67 @@ import Engine
 ///         }
 ///     }
 ///
-@attached(peer, names: suffixed(Configuration), suffixed(Body), suffixed(Style), suffixed(StyleModifier), suffixed(DefaultStyle))
-@attached(member, names: named(_body), named(init))
+@attached(peer, names: suffixed(Configuration), suffixed(Body), suffixed(Style), prefixed(Styled), suffixed(StyleModifier), suffixed(DefaultStyle))
+@attached(member, names: named(_body), named(init), named(Configuration))
 public macro StyledView() = #externalMacro(module: "EngineMacrosCore", type: "StyledViewMacro")
 
 /// A protocol intended to be used with the ``@StyledView`` macro define a
 /// ``ViewStyle`` and all it's related components.
 @MainActor @preconcurrency
-public protocol StyledView: PrimitiveView, DynamicProperty {
+public protocol StyledView: PrimitiveView where Body == Never {
+
+    associatedtype Configuration
+
+    associatedtype ResolvedStyleBody: View = Never
+    @ViewBuilder @MainActor @preconcurrency static func makeResolvedStyleBody(configuration: Configuration) -> ResolvedStyleBody
+
+    associatedtype DefaultStyleBody: View
+    @ViewBuilder @MainActor @preconcurrency static func makeDefaultStyleBody(configuration: Configuration) -> DefaultStyleBody
+
     associatedtype _Body: View
     @ViewBuilder @MainActor @preconcurrency var _body: _Body { get }
 }
 
+extension StyledView where ResolvedStyleBody == Never {
+
+    public static func makeResolvedStyleBody(configuration: Configuration) -> Never {
+        fatalError("makeResolvedStyleBody() should not be called on \(String(describing: Self.self))")
+    }
+}
+
 extension StyledView {
-    public static func makeView(
-        view: _GraphValue<Self>,
-        inputs: _ViewInputs
-    ) -> SwiftUI._ViewOutputs {
-        _Body._makeView(view: view[\._body], inputs: inputs)
+
+    private nonisolated var content: StyledViewBody<Self> {
+        StyledViewBody(content: self)
     }
 
-    public static func makeViewList(
+    public nonisolated static func makeView(
+        view: _GraphValue<Self>,
+        inputs: _ViewInputs
+    ) -> _ViewOutputs {
+        StyledViewBody<Self>._makeView(view: view[\.content], inputs: inputs)
+    }
+
+    public nonisolated static func makeViewList(
         view: _GraphValue<Self>,
         inputs: _ViewListInputs
-    ) -> SwiftUI._ViewListOutputs {
-        _Body._makeViewList(view: view[\._body], inputs: inputs)
+    ) -> _ViewListOutputs {
+        StyledViewBody<Self>._makeViewList(view: view[\.content], inputs: inputs)
     }
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-    public static func viewListCount(
-        inputs: SwiftUI._ViewListCountInputs
+    public nonisolated static func viewListCount(
+        inputs: _ViewListCountInputs
     ) -> Int? {
-        _Body._viewListCount(inputs: inputs)
+        StyledViewBody<Self>._viewListCount(inputs: inputs)
+    }
+}
+
+private struct StyledViewBody<Content: StyledView>: View {
+    nonisolated(unsafe) var content: Content
+
+    var body: some View {
+        content._body
     }
 }
 
@@ -130,14 +159,14 @@ extension StyledView {
 public struct _DefaultStyledView<Content: StyledView>: View {
 
     @usableFromInline
-    var content: Content
+    var configuration: Content.Configuration
 
     @inlinable
-    public init(_ content: Content) {
-        self.content = content
+    public init(_ configuration: Content.Configuration) {
+        self.configuration = configuration
     }
 
     public var body: some View {
-        content.body
+        Content.makeDefaultStyleBody(configuration: configuration)
     }
 }

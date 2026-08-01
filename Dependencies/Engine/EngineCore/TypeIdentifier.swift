@@ -4,7 +4,7 @@
 
 /// A unique identifier derived from a type
 @frozen
-public struct TypeIdentifier: Hashable, CustomDebugStringConvertible {
+public struct TypeIdentifier: Hashable, @unchecked Sendable, CustomDebugStringConvertible {
     public var metadata: UnsafeRawPointer
 
     public init<T>(_: T.Type = T.self) {
@@ -12,6 +12,6 @@ public struct TypeIdentifier: Hashable, CustomDebugStringConvertible {
     }
 
     public var debugDescription: String {
-        _typeName(unsafeBitCast(metadata, to: Any.Type.self), qualified: true)
+        _typeName(unsafeBitCast(metadata, to: Any.Type.self), qualified: false)
     }
 }

@@ -25,22 +25,23 @@ extension EnvironmentValues {
     ///                 .padding()
     ///                 .background(
     ///                     Capsule()
-    ///                         .fill(foregroundStyle ?? AnyShapeStyle(.tint))
+    ///                         .fill(foregroundStyle ?? AnyShapeStyle(.foreground))
     ///                 )
     ///         }
     ///     }
     ///
     public subscript<Value>(
-        _ key: String
-    ) -> Value? {
-        visit("EnvironmentPropertyKey<\(key)>")
+        _ key: String,
+        as _: Value.Type = Value.self
+    ) -> Optional<Value> {
+        value(for: key, as: Optional<Value>.self, default: nil)
     }
 
     /// Visit the `EnvironmentKey` type that matches the key
     ///
     ///     extension EnvironmentValues {
     ///         var foregroundStyle: AnyShapeStyle {
-    ///             self["ForegroundStyleKey", default: AnyShapeStyle(.tint)]
+    ///             self["ForegroundStyleKey", default: AnyShapeStyle(.foreground)]
     ///         }
     ///     }
     ///
@@ -60,52 +61,68 @@ extension EnvironmentValues {
     ///
     public subscript<Value>(
         _ key: String,
-        default defaultValue: @autoclosure () -> Value
-    ) -> Value {
-        visit(key, default: defaultValue())
-    }
-
-    /// Visit the `EnvironmentKey` type that matches the key
-    ///
-    ///     extension EnvironmentValues {
-    ///         var accentColor: Any {
-    ///             self["AccentColorKey", as: Any.self, default: nil]
-    ///         }
-    ///     }
-    ///
-    public func visit<Value>(
-        _ key: String,
         as _: Value.Type = Value.self,
         default defaultValue: @autoclosure () -> Value
     ) -> Value {
-        visit("EnvironmentPropertyKey<\(key)>", as: Value.self) ?? defaultValue()
+        value(for: key, as: Value.self, default: defaultValue())
+    }
+
+    /// Visit the `EnvironmentKey` type that matches the key to get the value
+    public func value<Value>(
+        for key: String,
+        as _: Value.Type = Value.self,
+        default defaultValue: @autoclosure () -> Value
+    ) -> Value {
+        visit("EnvironmentPropertyKey<\(key)>", default: defaultValue()) { conformance in
+            conformance.value(in: self, as: Value.self)
+        }
+    }
+
+    /// Visit the `EnvironmentKey` type that matches the key to set the value
+    ///
+    /// > Warning: Only works if `EnvironmentKey` exists
+    @discardableResult
+    public mutating func setValue<Value>(
+        _ value: Value,
+        for key: String
+    ) -> Bool {
+        visit("EnvironmentPropertyKey<\(key)>", default: false) { conformance in
+            conformance.setValue(value, in: &self)
+        }
     }
 
     fileprivate func visit<Value>(
         _ key: String,
-        as _: Value.Type = Value.self
-    ) -> Value? {
+        default defaultValue: @autoclosure () -> Value,
+        body: (ProtocolConformance<EnvironmentKeyProtocolDescriptor>) -> Value?
+    ) -> Value {
 
         if let conformance = EnvironmentKeyLookupCache.shared[key] {
-            return conformance.value(in: self)
+            return body(conformance) ?? defaultValue()
         }
 
         var ptr = plist.elements
         while let p = ptr {
             let typeName = _typeName(p.keyType, qualified: false)
-            if typeName == key {
+            var isMatch = typeName == key
+            if !isMatch, typeName == "EnvironmentPropertyKey<Key>" {
+                let qualifiedTypeName = _typeName(p.keyType, qualified: true)
+                    .replacingOccurrences(of: "SwiftUI.", with: "")
+                isMatch = qualifiedTypeName == key
+            }
+            if isMatch {
                 guard
                     let environmentKey = swift_getStructGenerics(for: p.keyType)?.first,
                     let conformance = EnvironmentKeyProtocolDescriptor.conformance(of: environmentKey)
                 else {
-                    return nil
+                    return defaultValue()
                 }
                 EnvironmentKeyLookupCache.shared[key] = conformance
-                return conformance.value(in: self)
+                return body(conformance) ?? defaultValue()
             }
-            ptr = p.after
+            ptr = p.advanced()
         }
-        return nil
+        return defaultValue()
     }
 }
 
@@ -124,27 +141,67 @@ extension EnvironmentValues {
 }
 
 extension ProtocolConformance where P == EnvironmentKeyProtocolDescriptor {
-    fileprivate func value<Value>(in environment: EnvironmentValues) -> Value? {
-        var visitor = EnvironmentValuesVisitor<Value>(environment: environment)
+
+    fileprivate func value<Value>(
+        in environment: EnvironmentValues,
+        as _: Value.Type = Value.self
+    ) -> Value? {
+        var visitor = EnvironmentValuesGetterVisitor<Value>(
+            environment: environment
+        )
         visit(visitor: &visitor)
+        return visitor.output
+    }
+
+    fileprivate func setValue<Value>(
+        _ value: Value,
+        in environment: inout EnvironmentValues
+    ) -> Bool {
+        var visitor = EnvironmentValuesSetterVisitor<Value>(
+            environment: environment,
+            value: value
+        )
+        visit(visitor: &visitor)
+        if visitor.output {
+            environment = visitor.environment
+        }
         return visitor.output
     }
 }
 
-private struct EnvironmentValuesVisitor<Value>: EnvironmentKeyVisitor {
+private struct EnvironmentValuesGetterVisitor<Value>: EnvironmentKeyVisitor {
     var environment: EnvironmentValues
-    var output: Value!
+    var output: Value?
 
     mutating func visit<Key: EnvironmentKey>(type: Key.Type) {
+        let value = environment[Key.self]
         if Key.Value.self == Value.self {
-            output = environment[Key.self] as? Value
+            output = value as? Value
+        } else if Value.self == Any.self {
+            output = (value as Any) as? Value
         } else if MemoryLayout<Key.Value>.size == MemoryLayout<Value>.size {
-            output = unsafeBitCast(environment[Key.self], to: Value.self)
+            output = unsafeBitCast(value, to: Value.self)
         }
     }
 }
 
-private class EnvironmentKeyLookupCache {
+private struct EnvironmentValuesSetterVisitor<Value>: EnvironmentKeyVisitor {
+    var environment: EnvironmentValues
+    var value: Value
+    var output: Bool = false
+
+    mutating func visit<Key: EnvironmentKey>(type: Key.Type) {
+        if let value = value as? Key.Value {
+            environment[Key.self] = value
+            output = true
+        } else if MemoryLayout<Key.Value>.size == MemoryLayout<Value>.size {
+            environment[Key.self] = unsafeBitCast(value, to: Key.Value.self)
+            output = true
+        }
+    }
+}
+
+private class EnvironmentKeyLookupCache: @unchecked Sendable {
 
     private let lock: os_unfair_lock_t
     private var storage = [String: ProtocolConformance<EnvironmentKeyProtocolDescriptor>]()
@@ -182,15 +239,18 @@ public struct _EnvironmentValuesLogModifier: ViewModifier {
             .onAppear {
                 let log: String = {
                     var message = "\n=== EnvironmentValues ===\n"
+                    let environment = environment
                     var ptr = environment.plist.elements
                     while let p = ptr {
                         let keyType = _typeName(p.keyType, qualified: false)
-                        let value = environment.visit(keyType, as: Any.self)
+                        let value = environment.visit(keyType, default: nil) { conformance in
+                            conformance.value(in: environment, as: Any.self)
+                        }
                         message += """
                         \(keyType)
                             ▿ value: \(value ?? "nil")\n
                         """
-                        ptr = p.after
+                        ptr = p.advanced()
                     }
                     return message
                 }()

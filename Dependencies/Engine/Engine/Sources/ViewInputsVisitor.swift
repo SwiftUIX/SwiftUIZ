@@ -8,10 +8,10 @@ import SwiftUI
 /// to be iterated upon
 public protocol ViewInputsVisitor {
 
-    func visit<Value>(_ value: Value, key: String, stop: inout Bool)
+    mutating func visit<Value>(_ value: Value, key: String, stop: inout Bool)
 }
 
-extension _GraphInputs {
+extension ViewInputs {
 
     /// Visits the custom view inputs with the `Visitor`
     public func visit<
@@ -25,24 +25,21 @@ extension _GraphInputs {
             let next = p.after
             defer { ptr = next }
             stop = next == nil
-            let key = _typeName(p.keyType, qualified: false)
-            let value: Any.Type
-            if let inputKey = p.keyType as? AnyViewInputKey.Type {
-                value = inputKey.value
-            } else {
-                guard let valueType = swift_getClassGenerics(for: p.metadata.0)?.first
-                else {
-                    continue
-                }
-                print(p.keyType, p.metadata.0, valueType)
-                value = valueType
-            }
-            func project<Value>(_: Value.Type) {
-                let value = p.getValue(Value.self)
-                visitor.visit(value, key: key, stop: &stop)
-            }
-            _openExistential(value, do: project)
+            let key = _typeName(p.keyType, qualified: true)
+            visitor.visit(p.value, key: key, stop: &stop)
         }
+    }
+}
+
+extension _GraphInputs {
+
+    /// Visits the custom view inputs with the `Visitor`
+    public func visit<
+        Visitor: ViewInputsVisitor
+    >(
+        visitor: inout Visitor
+    ) {
+        ViewInputs(inputs: self).visit(visitor: &visitor)
     }
 }
 
@@ -54,7 +51,7 @@ extension _ViewInputs {
     >(
         visitor: inout Visitor
     ) {
-        _graphInputs.visit(visitor: &visitor)
+        ViewInputs(inputs: self).visit(visitor: &visitor)
     }
 }
 
@@ -66,7 +63,7 @@ extension _ViewListInputs {
     >(
         visitor: inout Visitor
     ) {
-        _graphInputs.visit(visitor: &visitor)
+        ViewInputs(inputs: self).visit(visitor: &visitor)
     }
 }
 
@@ -79,29 +76,19 @@ extension _ViewListCountInputs {
     >(
         visitor: inout Visitor
     ) {
-        _graphInputs.visit(visitor: &visitor)
-    }
-}
-
-extension ViewInputs {
-
-    /// Visits the custom view inputs with the `Visitor`
-    public func visit<
-        Visitor: ViewInputsVisitor
-    >(
-        visitor: inout Visitor
-    ) {
-        _graphInputs.visit(visitor: &visitor)
+        ViewInputs(inputs: self).visit(visitor: &visitor)
     }
 }
 
 public protocol ViewInputsVisitorModifier: ViewInputsModifier {
     associatedtype Visitor: ViewInputsVisitor
-    static var visitor: Visitor { get }
+    nonisolated static var visitor: Visitor { get }
 }
 
 extension ViewInputsVisitorModifier {
-    public static func makeInputs(inputs: inout ViewInputs) {
+    public nonisolated static func makeInputs(
+        inputs: inout ViewInputs
+    ) {
         var visitor = visitor
         inputs.visit(visitor: &visitor)
     }
@@ -126,7 +113,9 @@ struct ViewInputsVisitor_Previews: PreviewProvider {
 
     struct Visitor: ViewInputsVisitor {
         func visit<Value>(_ value: Value, key: String, stop: inout Bool) {
-            print(key, value)
+            var message = "\(key)\n"
+            dump(value, to: &message)
+            print(message)
         }
     }
 }

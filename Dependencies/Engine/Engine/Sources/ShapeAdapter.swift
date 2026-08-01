@@ -7,8 +7,12 @@ import SwiftUI
 @frozen
 public struct ShapeAdapter<S: Shape>: Shape {
 
-    @usableFromInline
-    var shape: S
+    public var shape: S
+
+    public var animatableData: S.AnimatableData {
+        get { shape.animatableData }
+        set { shape.animatableData = newValue }
+    }
 
     @inlinable
     public init(@ShapeBuilder shape: () -> S) {
@@ -35,6 +39,25 @@ public struct ShapeAdapter<S: Shape>: Shape {
     }
 }
 
+extension ShapeAdapter: InsettableShape where S: InsettableShape {
+
+    public nonisolated func inset(
+        by amount: CGFloat
+    ) -> S.InsetShape {
+        shape.inset(by: amount)
+    }
+}
+
+#if canImport(FoundationModels) // Xcode 26
+@available(iOS 26.0, macOS 26.0, tvOS 26.0, watchOS 26.0, visionOS 26.0, *)
+extension ShapeAdapter: RoundedRectangularShape where S: RoundedRectangularShape {
+
+    public func corners(in size: CGSize?) -> Corners? {
+        shape.corners(in: size)
+    }
+}
+#endif
+
 // MARK: - Previews
 
 @available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *)
@@ -48,10 +71,23 @@ struct ShapeAdapter_Previews: PreviewProvider {
 
         var body: some View {
             VStack {
-                ShapeAdapter {
-                    Circle()
+                HStack {
+                    ShapeAdapter {
+                        Circle()
+                    }
+                    .fill(Color.red)
+
+                    ShapeAdapter {
+                        Circle()
+                    }
+                    .inset(by: 12)
+                    .fill(Color.red)
+
+                    ShapeAdapter {
+                        Circle()
+                    }
+                    .strokeBorder(Color.red)
                 }
-                .fill(Color.red)
 
                 ShapeAdapter {
                     Rectangle()
@@ -60,6 +96,11 @@ struct ShapeAdapter_Previews: PreviewProvider {
 
                 ShapeAdapter {
                     RoundedRectangle(cornerRadius: 12)
+                }
+                .fill(Color.red)
+
+                ShapeAdapter {
+                    RoundedRectangle(cornerRadius: isCircle ? 25 : 0)
                 }
                 .fill(Color.red)
 
@@ -78,6 +119,13 @@ struct ShapeAdapter_Previews: PreviewProvider {
                             Circle()
                         } else {
                             Rectangle()
+                        }
+                    }
+
+                Color.red
+                    .clipShape {
+                        if isCircle {
+                            Circle()
                         }
                     }
             }

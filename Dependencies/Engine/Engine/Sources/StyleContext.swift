@@ -73,10 +73,12 @@ extension StyleContext where Self == ScrollViewStyleContext {
 
 /// The style context of a `List`
 public struct ListStyleContext: StyleContext {
-    public static let aliases: [any StyleContext.Type] = [
-        InsetGroupedListStyleContext.self,
-        FormStyleContext.self
-    ]
+    public static var aliases: [any StyleContext.Type] {
+        [
+            InsetGroupedListStyleContext.self,
+            FormStyleContext.self,
+        ]
+    }
 }
 extension StyleContext where Self == ListStyleContext {
     public static var list: ListStyleContext { .init() }
@@ -90,10 +92,12 @@ extension StyleContext where Self == InsetGroupedListStyleContext {
 
 /// The style context of a `Form`
 public struct FormStyleContext: StyleContext {
-    public static let aliases: [any StyleContext.Type] = [
-        GroupedFormStyleContext.self,
-        ColumnsFormStyleContext.self
-    ]
+    public static var aliases: [any StyleContext.Type] {
+        [
+            GroupedFormStyleContext.self,
+            ColumnsFormStyleContext.self,
+        ]
+    }
 }
 extension StyleContext where Self == FormStyleContext {
     public static var form: FormStyleContext { .init() }
@@ -101,12 +105,12 @@ extension StyleContext where Self == FormStyleContext {
 
 public struct GroupedFormStyleContext: StyleContext { }
 extension StyleContext where Self == GroupedFormStyleContext {
-    public static var form: GroupedFormStyleContext { .init() }
+    public static var groupedForm: GroupedFormStyleContext { .init() }
 }
 
 public struct ColumnsFormStyleContext: StyleContext { }
 extension StyleContext where Self == ColumnsFormStyleContext {
-    public static var form: ColumnsFormStyleContext { .init() }
+    public static var columnsForm: ColumnsFormStyleContext { .init() }
 }
 
 
@@ -128,9 +132,11 @@ extension StyleContext where Self == SidebarStyleContext {
 
 /// The style context of a `NavigationView`/`NavigationSplitView`
 public struct NavigationViewStyleContext: StyleContext {
-    public static let aliases: [any StyleContext.Type] = [
-        SidebarStyleContext.self
-    ]
+    public static var aliases: [any StyleContext.Type] {
+        [
+            SidebarStyleContext.self,
+        ]
+    }
 }
 extension StyleContext where Self == NavigationViewStyleContext {
     public static var navigationView: NavigationViewStyleContext { .init() }
@@ -153,9 +159,10 @@ extension StyleContext {
     }
 
     static func contains(typeName: String) -> Bool {
-        if typeName.hasPrefix("TupleStyleContext<(") {
-            // TupleStyleContext<( = 19 >) = -2
-            let typeNames = typeName[typeName.index(typeName.startIndex, offsetBy: 19)..<typeName.index(typeName.endIndex, offsetBy: -2)]
+        let prefix = "TupleStyleContext<("
+        let suffix = ")>"
+        if typeName.hasPrefix(prefix), typeName.hasSuffix(suffix) {
+            let typeNames = typeName[typeName.index(typeName.startIndex, offsetBy: prefix.count)..<typeName.index(typeName.endIndex, offsetBy: -suffix.count)]
                 .components(separatedBy: ", ")
                 .filter { $0 != "NoStyleContext" }
             return typeNames.contains(where: {
@@ -229,12 +236,14 @@ public struct StyleContextModifier<
 }
 
 private struct StyleContextInput: ViewInputKey {
-    static var defaultValue: StyleContext.Type { NoStyleContext.self }
+    static let defaultValue: StyleContextInputLayout = StyleContextInputLayout(metadata: (NoStyleContext.self, 0))
 }
 
 private struct StyleContextInputValue<Context: StyleContext>: ViewInput {
     typealias Key = StyleContextInput
-    static var value: Key.Value { Context.self }
+    static var value: Key.Value {
+        StyleContextInputLayout(metadata: (Context.self, 0))
+    }
 }
 
 @frozen
@@ -243,7 +252,7 @@ public struct StyleContextCondition<
 >: ViewInputsCondition {
 
     public static func evaluate(_ inputs: ViewInputs) -> Bool {
-        let styleContext = inputs["StyleContextInput", StyleContextInputLayout.self]?.context ?? NoStyleContext.self
+        let styleContext = inputs["StyleContextInput", as: StyleContextInputLayout.self]?.context ?? NoStyleContext.self
         let input = StyleContextInputs(type: styleContext)
         return Context.evaluate(input)
     }
@@ -270,12 +279,61 @@ public struct _StyleContextLogModifier: ViewInputsModifier {
 
     public static func makeInputs(inputs: inout ViewInputs) {
         #if DEBUG
-        let styleContext = inputs["StyleContextInput", StyleContextInputLayout.self]?.context ?? NoStyleContext.self
+        let styleContext = inputs["StyleContextInput", as: StyleContextInputLayout.self]?.context ?? NoStyleContext.self
         let log = """
             === StyleContext ===
             \(_typeName(styleContext, qualified: false))
             """
         os_log(.debug, "%@", log)
         #endif
+    }
+}
+
+// MARK: - Previews
+
+struct PreviewStyleContext: StyleContext { }
+
+struct StyleContext_Previews: PreviewProvider {
+    static var previews: some View {
+        VStack {
+            PreviewCustomView {
+                Text("Hello, World")
+            }
+            .styledViewStyle(
+                PreviewCustomViewBody.self,
+                style: BorderedPreviewCustomViewStyle(),
+                predicate: PreviewStyleContext()
+            )
+
+            PreviewCustomView {
+                Text("Hello, World")
+            }
+            .styledViewStyle(
+                PreviewCustomViewBody.self,
+                style: BorderedPreviewCustomViewStyle(),
+                predicate: PreviewStyleContext()
+            )
+            .styleContext(PreviewStyleContext())
+
+            PreviewCustomView {
+                Text("Hello, World")
+            }
+            .styledViewStyle(
+                PreviewCustomViewBody.self,
+                style: BorderedPreviewCustomViewStyle(),
+                predicate: .scrollView
+            )
+
+            ScrollView {
+                PreviewCustomView {
+                    Text("Hello, World")
+                }
+                .styledViewStyle(
+                    PreviewCustomViewBody.self,
+                    style: BorderedPreviewCustomViewStyle(),
+                    predicate: .scrollView
+                )
+            }
+        }
     }
 }

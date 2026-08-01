@@ -1,4 +1,4 @@
-// swift-tools-version:5.10
+// swift-tools-version:6.0
 
 import CompilerPluginSupport
 import PackageDescription
@@ -100,17 +100,21 @@ let package = Package(
             name: "Engine",
             dependencies: [
                 "EngineCore",
-                "Swallow",
             ],
-            path: "Dependencies/Engine/Engine"
+            path: "Dependencies/Engine/Engine",
+            swiftSettings: [
+                .swiftLanguageMode(.v6)
+            ]
         ),
         .target(
             name: "EngineCore",
             dependencies: [
                 "EngineCoreC",
-                "Swallow",
             ],
-            path: "Dependencies/Engine/EngineCore"
+            path: "Dependencies/Engine/EngineCore",
+            swiftSettings: [
+                .swiftLanguageMode(.v6)
+            ]
         ),
         .target(
             name: "EngineCoreC",
@@ -186,5 +190,6 @@ let package = Package(
                 .enableExperimentalFeature("AccessLevelOnImport")
             ]
         ),
-    ]
+    ],
+    swiftLanguageModes: [.v5]
 )

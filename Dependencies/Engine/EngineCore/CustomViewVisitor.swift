@@ -3,6 +3,7 @@
 //
 
 import SwiftUI
+import os.log
 
 private struct CustomViewIterator<
     Content: View
@@ -17,20 +18,45 @@ private struct CustomViewIterator<
         context: Context,
         stop: inout Bool
     ) {
-        if let conformance = MultiViewProtocolDescriptor.conformance(of: Content.self) {
+        if context.traits.contains(.header) || context.traits.contains(.footer) {
+            visitor.value.visit(
+                content: content,
+                context: context,
+                stop: &stop
+            )
+        } else if let conformance = MultiViewProtocolDescriptor.conformance(of: Content.self) {
             conformance.visit(
                 content: content,
                 visitor: visitor,
                 context: context,
                 stop: &stop
             )
-        } else if let conformance = MultiViewProtocolDescriptor.conformance(of: Content.Body.self) {
-            conformance.visit(
-                content: content.body,
-                visitor: visitor,
-                context: context,
-                stop: &stop
-            )
+        } else if Content.Body.self != Never.self,
+            let conformance = MultiViewProtocolDescriptor.conformance(of: Content.Body.self),
+            !content.hasDynamicProperties
+        {
+            let body = content.getBody()
+            if IsMultiViewVisitor.isMultiView(
+                body, 
+                conformance: conformance
+            ) {
+                var context = context
+                if isOpaqueViewAnyView() {
+                    context.id.append(Content.Body.self)
+                }
+                conformance.visit(
+                    content: body,
+                    visitor: visitor,
+                    context: context,
+                    stop: &stop
+                )
+            } else {
+                visitor.value.visit(
+                    content: content,
+                    context: context,
+                    stop: &stop
+                )
+            }
         } else {
             visitor.value.visit(
                 content: content,
@@ -42,79 +68,72 @@ private struct CustomViewIterator<
 }
 
 extension View {
-
-    public func visit<
-        Visitor: ViewVisitor
-    >(
-        visitor: UnsafeMutablePointer<Visitor>
-    ) {
-        #if os(iOS) || os(tvOS)
-        if let conformance = UIViewRepresentableProtocolDescriptor.conformance(of: Self.self) {
-            conformance.visit(visitor: visitor)
-        } else if let conformance = UIViewControllerRepresentableProtocolDescriptor.conformance(of: Self.self) {
-            conformance.visit(visitor: visitor)
-        } else {
-            visitor.pointee.visit(type: Self.self)
-        }
-        #elseif os(macOS)
-        if let conformance = NSViewRepresentableProtocolDescriptor.conformance(of: Self.self) {
-            conformance.visit(visitor: visitor)
-        } else if let conformance = NSViewControllerRepresentableProtocolDescriptor.conformance(of: Self.self) {
-            conformance.visit(visitor: visitor)
-        } else {
-            visitor.pointee.visit(type: Self.self)
-        }
-        #endif
-    }
-
-    public func makeSubviewIterator() -> some MultiViewIterator {
+    public nonisolated func makeSubviewIterator() -> some MultiViewIterator {
         CustomViewIterator(content: self)
     }
 
-    @_disfavoredOverload
-    @inline(__always)
-    public func visit<
-        Visitor: MultiViewVisitor
-    >(
-        visitor: UnsafeMutablePointer<Visitor>
-    ) {
-        var stop = false
-        visit(visitor: visitor, stop: &stop)
-    }
-
-    @_disfavoredOverload
-    @inline(__always)
-    public func visit<
-        Visitor: MultiViewVisitor
-    >(
-        visitor: UnsafeMutablePointer<Visitor>,
-        stop: inout Bool
-    ) {
-        visit(visitor: visitor, context: .init(Self.self), stop: &stop)
-    }
-
-    @_disfavoredOverload
-    public func visit<
-        Visitor: MultiViewVisitor
-    >(
-        visitor: UnsafeMutablePointer<Visitor>,
-        context: MultiViewIteratorContext,
-        stop: inout Bool
-    ) {
-        if let conformance = MultiViewProtocolDescriptor.conformance(of: Self.self) {
-            conformance.visit(
-                content: self,
-                visitor: visitor,
-                context: context,
-                stop: &stop
-            )
-        } else {
-            let iterator = CustomViewIterator(content: self)
-            iterator.visit(
-                visitor: visitor,
-                context: context,
-                stop: &stop
-            )
+    nonisolated var hasDynamicProperties: Bool {
+        do {
+            let fields = try swift_getFields(self)
+            for field in fields {
+                if field.value is DynamicProperty {
+                    return true
+                }
+            }
+        } catch {
+            os_log(.debug, log: .default, "Failed to resolve fields of %{public}@. Please file an issue.", String(describing: Self.self))
         }
+        return false
+    }
+
+    nonisolated func getBody() -> Body {
+        let content = SendableStorage(value: self)
+        if Thread.isMainThread {
+            let storage = MainActor.assumeIsolated { [content] in
+                SendableStorage<Body>(value: content.value.body)
+            }
+            return storage.value
+        }
+        let body = SendableStorage<Body>()
+        let semaphore = DispatchSemaphore(value: 0)
+        Task { @MainActor [content] in
+            body.value = content.value.body
+            semaphore.signal()
+        }
+        semaphore.wait()
+        return body.value
+    }
+}
+
+private class SendableStorage<T>: @unchecked Sendable {
+    var value: T!
+    init(value: T? = nil) { self.value = value }
+}
+
+private struct IsMultiViewVisitor: MultiViewVisitor {
+    var count = 0
+
+    mutating func visit<Content: View>(
+        content: Content,
+        context: Context,
+        stop: inout Bool
+    ) {
+        count += 1
+        stop = count > 1
+    }
+
+    static func isMultiView<Content: View>(
+        _ content: Content,
+        conformance: ProtocolConformance<MultiViewProtocolDescriptor>
+    ) -> Bool {
+        var visitor = IsMultiViewVisitor()
+        var stop = false
+        conformance.visit(
+            content: content,
+            visitor: &visitor,
+            context: .init(Content.self),
+            stop: &stop
+        )
+        return visitor.count != 1
     }
 }

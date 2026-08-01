@@ -2,61 +2,61 @@
 // Copyright (c) Nathan Tannar
 //
 
+import os.log
 import SwiftUI
+import EngineCore
 
-#if !os(watchOS)
+#if os(watchOS)
+import WatchKit
+#endif
 
 #if os(macOS)
 public typealias PlatformHostingController<Content: View> = NSHostingController<Content>
+#elseif os(watchOS)
+public typealias PlatformHostingController<Content: View> = WKHostingController<Content>
 #else
 public typealias PlatformHostingController<Content: View> = UIHostingController<Content>
 #endif
 
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, *)
+#if !os(watchOS)
+public protocol AnyHostingController: PlatformViewController {
+
+    #if os(iOS) || os(tvOS) || os(visionOS)
+    var disableSafeArea: Bool { get set }
+    #endif
+    func render()
+}
+#endif
+
 open class HostingController<
     Content: View
->: PlatformHostingController<Content> {
+>: PlatformHostingController<HostingRootView<Content>> {
 
     public var content: Content {
-        get { rootView }
-        set { rootView = newValue }
+        get { rootView.content }
+        set { rootView.content = newValue }
     }
 
-    public var disablesSafeArea: Bool {
-        get {
-            if #available(macOS 13.3, iOS 16.4, tvOS 16.4, *) {
-                return safeAreaRegions.isEmpty
-            } else {
-                #if os(iOS) || os(tvOS)
-                return _disableSafeArea
-                #else
-                return false
-                #endif
-            }
-        }
-        set {
-            if #available(macOS 13.3, iOS 16.4, tvOS 16.4, *) {
-                safeAreaRegions = newValue ? [] : .all
-            } else {
-                #if os(iOS) || os(tvOS)
-                _disableSafeArea = newValue
-                #endif
-            }
+    #if os(watchOS)
+    public var rootView: HostingRootView<Content> {
+        didSet {
+            setNeedsBodyUpdate()
         }
     }
+    #endif
 
-    #if os(iOS) || os(tvOS)
-    @available(iOS 16.0, tvOS 16.0, *)
+    #if os(iOS) || os(tvOS) || os(visionOS)
+    @available(iOS 18.1, tvOS 18.1, visionOS 2.1, *)
+    public var allowUIKitAnimations: Int32 {
+        get { (view as! AnyHostingView).allowUIKitAnimations }
+        set { (view as! AnyHostingView).allowUIKitAnimations = newValue }
+    }
+
+    @available(iOS, introduced: 16.0, obsoleted: 18.1)
+    @available(tvOS, introduced: 16.0, obsoleted: 18.1)
     public var allowUIKitAnimationsForNextUpdate: Bool {
-        get {
-            guard let view else { return false }
-            let result = try? swift_getFieldValue("allowUIKitAnimationsForNextUpdate", Bool.self, view)
-            return result ?? false
-        }
-        set {
-            guard let view else { return }
-            try? swift_setFieldValue("allowUIKitAnimationsForNextUpdate", newValue, view)
-        }
+        get { (view as! AnyHostingView).allowUIKitAnimationsForNextUpdate }
+        set { (view as! AnyHostingView).allowUIKitAnimationsForNextUpdate = newValue }
     }
 
     @available(iOS 16.0, tvOS 16.0, *)
@@ -68,30 +68,109 @@ open class HostingController<
     #endif
 
     public init(content: Content) {
-        super.init(rootView: content)
+        let rootView = HostingRootView(content: content, transaction: Transaction())
+        #if os(watchOS)
+        self.rootView = rootView
+        super.init()
+        #else
+        super.init(rootView: rootView)
+        #endif
     }
 
+    #if !os(watchOS)
     @available(iOS, obsoleted: 13.0, renamed: "init(content:)")
     @available(tvOS, obsoleted: 13.0, renamed: "init(content:)")
     @available(macOS, obsoleted: 10.15, renamed: "init(content:)")
-    override init(rootView: Content) {
+    override init(rootView: HostingRootView<Content>) {
         fatalError("init(rootView:) has not been implemented")
     }
 
     public required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    #endif
 
-    #if os(iOS) || os(tvOS)
+    open func update(content: Content, transaction: Transaction) {
+        rootView = HostingRootView(
+            content: content,
+            transaction: transaction
+        )
+        // Fixes `.transition` modifier
+        #if os(iOS) || os(tvOS) || os(visionOS)
+        if transitionCoordinator == nil {
+            view.layoutIfNeeded()
+        }
+        #elseif os(macOS)
+        view.layoutSubtreeIfNeeded()
+        #endif
+        #if os(iOS) || os(tvOS) || os(visionOS)
+        if shouldRenderForContentUpdate {
+            withCATransaction {
+                self._render(seconds: 1 / 60)
+            }
+        }
+        #endif
+    }
+
+    #if os(iOS) || os(tvOS) || os(visionOS)
+    public func sizeThatFits(_ proposal: ProposedSize) -> CGSize {
+        let fittingSize = proposal
+            .replacingUnspecifiedDimensions(
+                by: CGSize(
+                    width: CGFloat.infinity,
+                    height: CGFloat.infinity
+                )
+            )
+        let size = sizeThatFits(in: fittingSize)
+        return size
+    }
+    #elseif os(macOS)
+    public func sizeThatFits(_ proposal: ProposedSize) -> CGSize {
+        var sizeThatFits = view.fittingSize
+        if let proposedWidth = proposal.width, proposedWidth != .infinity {
+            sizeThatFits.width = max(sizeThatFits.width, proposedWidth)
+        }
+        if let proposedHeight = proposal.height, proposedHeight != .infinity {
+            sizeThatFits.height = max(sizeThatFits.height, proposedHeight)
+        }
+        return sizeThatFits
+    }
+    #endif
+
+    #if os(iOS) || os(tvOS) || os(visionOS)
     open override func viewWillLayoutSubviews() {
-        if #available(iOS 16.0, tvOS 16.0, *), shouldAutomaticallyAllowUIKitAnimationsForNextUpdate,
-            UIView.inheritedAnimationDuration > 0 || view.layer.animationKeys()?.isEmpty == false
-        {
-            allowUIKitAnimationsForNextUpdate = true
+        if #available(iOS 16.0, tvOS 16.0, *), shouldAutomaticallyAllowUIKitAnimationsForNextUpdate {
+            (view as! AnyHostingView).enableUIKitAnimationsIfNeeded()
         }
         super.viewWillLayoutSubviews()
     }
     #endif
 }
 
-#endif // !os(watchOS)
+#if !os(watchOS)
+extension PlatformHostingController: AnyHostingController {
+
+    #if os(iOS) || os(tvOS) || os(visionOS)
+    public var disableSafeArea: Bool {
+        get { _disableSafeArea }
+        set { _disableSafeArea = newValue }
+    }
+    #endif
+
+    public func render() {
+        _render(seconds: 1 / 60)
+    }
+}
+#endif
+
+#if os(iOS) || os(tvOS) || os(visionOS)
+extension AnyHostingController {
+
+    public var shouldRenderForContentUpdate: Bool {
+        if view.frame != .zero, transitionCoordinator == nil, view.window == nil {
+            return true
+        }
+        return false
+    }
+}
+#endif

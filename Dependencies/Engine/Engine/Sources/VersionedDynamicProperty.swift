@@ -80,27 +80,46 @@ import SwiftUI
 ///         }
 ///     }
 ///
+@MainActor @preconcurrency
 public protocol VersionedDynamicProperty: DynamicProperty {
+
+    @available(iOS 27.0, macOS 27.0, tvOS 27.0, watchOS 27.0, visionOS 27.0, *)
+    associatedtype V8Property: DynamicProperty = V7Property
+
+    @available(iOS 27.0, macOS 27.0, tvOS 27.0, watchOS 27.0, visionOS 27.0, *)
+    var v8Property: V8Property { get }
+
+    @available(iOS 26.0, macOS 26.0, tvOS 26.0, watchOS 26.0, visionOS 26.0, *)
+    associatedtype V7Property: DynamicProperty = V6Property
+
+    @available(iOS 26.0, macOS 26.0, tvOS 26.0, watchOS 26.0, visionOS 26.0, *)
+    var v7Property: V7Property { get }
+
+    @available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *)
     associatedtype V6Property: DynamicProperty = V5Property
 
     @available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *)
     var v6Property: V6Property { get }
 
+    @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, visionOS 1.0, *)
     associatedtype V5Property: DynamicProperty = V4Property
 
     @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, visionOS 1.0, *)
     var v5Property: V5Property { get }
 
+    @available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *)
     associatedtype V4Property: DynamicProperty = V3Property
 
     @available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *)
     var v4Property: V4Property { get }
 
+    @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
     associatedtype V3Property: DynamicProperty = V2Property
 
     @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
     var v3Property: V3Property { get }
 
+    @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     associatedtype V2Property: DynamicProperty = V1Property
 
     @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
@@ -111,28 +130,38 @@ public protocol VersionedDynamicProperty: DynamicProperty {
     var v1Property: V1Property { get }
 }
 
+@available(iOS 27.0, macOS 27.0, tvOS 27.0, watchOS 27.0, visionOS 27.0, *)
+extension VersionedDynamicProperty where V8Property == V7Property {
+    public var v8Property: V8Property { v7Property }
+}
+
+@available(iOS 26.0, macOS 26.0, tvOS 26.0, watchOS 26.0, visionOS 26.0, *)
+extension VersionedDynamicProperty where V7Property == V6Property {
+    public var v7Property: V7Property { v6Property }
+}
+
+@available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *)
 extension VersionedDynamicProperty where V6Property == V5Property {
-    @available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *)
     public var v6Property: V6Property { v5Property }
 }
 
+@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, visionOS 1.0, *)
 extension VersionedDynamicProperty where V5Property == V4Property {
-    @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, visionOS 1.0, *)
     public var v5Property: V5Property { v4Property }
 }
 
+@available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *)
 extension VersionedDynamicProperty where V4Property == V3Property {
-    @available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *)
     public var v4Property: V4Property { v3Property }
 }
 
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 extension VersionedDynamicProperty where V3Property == V2Property {
-    @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
     public var v3Property: V3Property { v2Property }
 }
 
+@available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 extension VersionedDynamicProperty where V2Property == V1Property {
-    @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public var v2Property: V2Property { v1Property }
 }
 
@@ -194,7 +223,21 @@ extension VersionedDynamicProperty {
         inputs: inout _GraphInputs
     ) {
         #if !DEBUG
-        if #available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *) {
+        if #available(iOS 27.0, macOS 27.0, tvOS 27.0, watchOS 27.0, visionOS 27.0, *) {
+            V8Property._makeProperty(
+                in: &buffer,
+                container: container,
+                fieldOffset: fieldOffset,
+                inputs: &inputs
+            )
+        } else if #available(iOS 26.0, macOS 26.0, tvOS 26.0, watchOS 26.0, visionOS 26.0, *) {
+            V7Property._makeProperty(
+                in: &buffer,
+                container: container,
+                fieldOffset: fieldOffset,
+                inputs: &inputs
+            )
+        } else if #available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *) {
             V6Property._makeProperty(
                 in: &buffer,
                 container: container,
@@ -241,6 +284,25 @@ extension VersionedDynamicProperty {
         /// Support ``VersionInput`` for development support
         let version = inputs[VersionInputKey.self]
         switch version {
+        case .v8:
+            if #available(iOS 27.0, macOS 27.0, tvOS 27.0, watchOS 27.0, visionOS 27.0, *) {
+                V8Property._makeProperty(
+                    in: &buffer,
+                    container: container,
+                    fieldOffset: fieldOffset,
+                    inputs: &inputs
+                )
+            }
+        case .v7:
+            if #available(iOS 26.0, macOS 26.0, tvOS 26.0, watchOS 26.0, visionOS 26.0, *) {
+                V7Property._makeProperty(
+                    in: &buffer,
+                    container: container,
+                    fieldOffset: fieldOffset,
+                    inputs: &inputs
+                )
+                return
+            }
         case .v6:
             if #available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *) {
                 V6Property._makeProperty(
@@ -313,8 +375,16 @@ extension VersionedDynamicProperty {
 
     @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
     public static var _propertyBehaviors: UInt32 {
-        if #available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *) {
+        if #available(iOS 27.0, macOS 27.0, tvOS 27.0, watchOS 27.0, visionOS 27.0, *) {
+            return V8Property._propertyBehaviors
+        } else if #available(iOS 26.0, macOS 26.0, tvOS 26.0, watchOS 26.0, visionOS 26.0, *) {
+            return V7Property._propertyBehaviors
+        } else if #available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *) {
+            return V6Property._propertyBehaviors
+        } else if #available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *) {
             return V5Property._propertyBehaviors
+        } else if #available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *) {
+            return V4Property._propertyBehaviors
         } else {
             return V3Property._propertyBehaviors
         }
