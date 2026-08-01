@@ -35,7 +35,7 @@ extension Binding {
 
 // MARK: - Conformees
 
-extension Merge.PublishedAsyncBinding: Swallow.PropertyWrapper, _SwiftUIX._SwiftUIX_PropertyWrapper, _SwiftUIZ_A._SwiftUIX_BindingType, SwiftUI.DynamicProperty {
+extension Merge.PublishedAsyncBinding: @retroactive Swallow.PropertyWrapper, @retroactive _SwiftUIX._SwiftUIX_PropertyWrapper, _SwiftUIZ_A._SwiftUIX_BindingType, @retroactive SwiftUI.DynamicProperty {
     @_disfavoredOverload
     public subscript<Subject>(
         _dynamicMember keyPath: WritableKeyPath<Value, Subject>
@@ -44,7 +44,7 @@ extension Merge.PublishedAsyncBinding: Swallow.PropertyWrapper, _SwiftUIX._Swift
     }
 }
 
-extension Merge.PublishedBinding: Swallow.PropertyWrapper, _SwiftUIX._SwiftUIX_PropertyWrapper, _SwiftUIZ_A._SwiftUIX_BindingType, SwiftUI.DynamicProperty {
+extension Merge.PublishedBinding: @retroactive Swallow.PropertyWrapper, @retroactive _SwiftUIX._SwiftUIX_PropertyWrapper, _SwiftUIZ_A._SwiftUIX_BindingType, @retroactive SwiftUI.DynamicProperty {
     @_disfavoredOverload
     public subscript<Subject>(
         _dynamicMember keyPath: WritableKeyPath<Value, Subject>
@@ -53,7 +53,7 @@ extension Merge.PublishedBinding: Swallow.PropertyWrapper, _SwiftUIX._SwiftUIX_P
     }
 }
 
-extension Swallow.Inout: SwiftUIX._SwiftUIX_PropertyWrapper, _SwiftUIZ_A._SwiftUIX_BindingType, SwiftUI.DynamicProperty {
+extension Swallow.Inout: @retroactive SwiftUIX._SwiftUIX_PropertyWrapper, _SwiftUIZ_A._SwiftUIX_BindingType, @retroactive SwiftUI.DynamicProperty {
     @_disfavoredOverload
     public subscript<Subject>(
         _dynamicMember keyPath: WritableKeyPath<Value, Subject>
@@ -62,7 +62,7 @@ extension Swallow.Inout: SwiftUIX._SwiftUIX_PropertyWrapper, _SwiftUIZ_A._SwiftU
     }
 }
 
-extension SwiftUI.Binding: _SwiftUIZ_A._SwiftUIX_BindingType {
+extension SwiftUI.Binding: @retroactive _SwiftUIX._SwiftUIX_PropertyWrapper, _SwiftUIZ_A._SwiftUIX_BindingType {
     @_disfavoredOverload
     public subscript<Subject>(
         _dynamicMember keyPath: WritableKeyPath<Value, Subject>

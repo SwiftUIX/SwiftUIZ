@@ -135,6 +135,10 @@ extension Mirror {
                 return "[:]"
             case .set:
                 return "[...]"
+#if compiler(>=6.3)
+            case .foreignReference:
+                return "C"
+#endif
             @unknown default:
                 assertionFailure()
                 

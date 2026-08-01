@@ -1,5 +1,5 @@
 {
-  "originHash" : "48d510ab3515f2570ac83f149d558527beebc93eca83279b27eb0a86054ce332",
+  "originHash" : "5059a81fbdd93d2ff3ee115afd29ba6686f66cc68e5931be5f0df3409f0f6d8d",
   "pins" : [
     {
       "identity" : "corepersistence",
@@ -7,7 +7,7 @@
       "location" : "https://github.com/vmanot/CorePersistence.git",
       "state" : {
         "branch" : "main",
-        "revision" : "ebce4e238d80e834480f3c2b407994023517c07b"
+        "revision" : "01a27b551ce395c841cc1b64104d417fe5fc459d"
       }
     },
     {
@@ -16,7 +16,7 @@
       "location" : "https://github.com/vmanot/Merge.git",
       "state" : {
         "branch" : "master",
-        "revision" : "a793a7967de38a252d78c2d841993cf574df44b1"
+        "revision" : "ba5746f3ca618f6579e904017a3245f33e2a4227"
       }
     },
     {
@@ -25,7 +25,7 @@
       "location" : "https://github.com/vmanot/Swallow.git",
       "state" : {
         "branch" : "master",
-        "revision" : "606b12aba7a2e715bbe45b5cd817b62772a75393"
+        "revision" : "a4cc6db40aecacf7de767bdb800567cb5fcb3064"
       }
     },
     {
