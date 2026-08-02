@@ -3,6 +3,8 @@
 import CompilerPluginSupport
 import PackageDescription
 
+let swift5Settings: [SwiftSetting] = [.swiftLanguageMode(.v5)]
+
 let package = Package(
     name: "SwiftUIZ",
     platforms: [
@@ -50,7 +52,7 @@ let package = Package(
                 .product(name: "MacroBuilder", package: "Swallow"),
             ],
             path: "Macros",
-            swiftSettings: []
+            swiftSettings: swift5Settings
         ),
         .target(
             name: "_SwiftUIZ_cmark-gfm",
@@ -65,7 +67,7 @@ let package = Package(
             path: "Sources/_UniversalDisplayLink",
             swiftSettings: [
                 .enableExperimentalFeature("AccessLevelOnImport")
-            ]
+            ] + swift5Settings
         ),
         .target(
             name: "_SwiftUI_Internals",
@@ -76,7 +78,7 @@ let package = Package(
             path: "Sources/_SwiftUI_Internals",
             swiftSettings: [
                 .enableExperimentalFeature("AccessLevelOnImport")
-            ]
+            ] + swift5Settings
         ),
         .target(
             name: "_SwiftUIZ_Nuke",
@@ -84,7 +86,7 @@ let package = Package(
             path: "Dependencies/_SwiftUIZ_Nuke",
             swiftSettings: [
                 .enableExperimentalFeature("AccessLevelOnImport")
-            ]
+            ] + swift5Settings
         ),
         .target(
             name: "_SwiftUIZ_NukeUI",
@@ -94,7 +96,7 @@ let package = Package(
             path: "Dependencies/_SwiftUIZ_NukeUI",
             swiftSettings: [
                 .enableExperimentalFeature("AccessLevelOnImport")
-            ]
+            ] + swift5Settings
         ),
         .target(
             name: "Engine",
@@ -134,7 +136,7 @@ let package = Package(
             path: "Miscellaneous/MarkdownUI",
             swiftSettings: [
                 .enableExperimentalFeature("AccessLevelOnImport")
-            ]
+            ] + swift5Settings
         ),
         .target(
             name: "Emoji",
@@ -148,7 +150,7 @@ let package = Package(
             ],
             swiftSettings: [
                 .enableExperimentalFeature("AccessLevelOnImport")
-            ]
+            ] + swift5Settings
         ),
         .target(
             name: "_SwiftUIZ_A",
@@ -165,7 +167,7 @@ let package = Package(
             path: "Sources/_SwiftUIZ_A",
             swiftSettings: [
                 .enableExperimentalFeature("AccessLevelOnImport")
-            ]
+            ] + swift5Settings
         ),
         .target(
             name: "_SwiftUIZ_B",
@@ -177,7 +179,7 @@ let package = Package(
             path: "Sources/_SwiftUIZ_B",
             swiftSettings: [
                 .enableExperimentalFeature("AccessLevelOnImport")
-            ]
+            ] + swift5Settings
         ),
         .target(
             name: "SwiftUIZ",
@@ -188,7 +190,7 @@ let package = Package(
             path: "Sources/SwiftUIZ",
             swiftSettings: [
                 .enableExperimentalFeature("AccessLevelOnImport")
-            ]
+            ] + swift5Settings
         ),
     ],
     swiftLanguageModes: [.v5, .v6]
