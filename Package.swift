@@ -5,6 +5,13 @@ import PackageDescription
 
 let swift5Settings: [SwiftSetting] = [.swiftLanguageMode(.v5)]
 
+let swiftUIIntrospectDependency: Package.Dependency
+#if compiler(>=6.3.2)
+swiftUIIntrospectDependency = .package(url: "https://github.com/swift-precompiled/SwiftUI-Introspect.git", from: "1.3.0")
+#else
+swiftUIIntrospectDependency = .package(url: "https://github.com/siteline/SwiftUI-Introspect.git", from: "1.3.0")
+#endif
+
 let package = Package(
     name: "SwiftUIZ",
     platforms: [
@@ -39,7 +46,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/siteline/SwiftUI-Introspect.git", from: "1.3.0"),
+        swiftUIIntrospectDependency,
         .package(url: "https://github.com/SwiftUIX/SwiftUIX.git", branch: "master"),
         .package(url: "https://github.com/vmanot/CorePersistence.git", branch: "main"),
         .package(url: "https://github.com/vmanot/Merge.git", branch: "master"),
