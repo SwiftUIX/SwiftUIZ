@@ -67,7 +67,16 @@ public struct ViewOutputList<Content: View>: View, RandomAccessCollection, Seque
         }
     }
 
-    public private(set) var elements: [Subview]
+    public var elements: [Subview] {
+        didSet {
+            elementsByExplicitID = Dictionary(
+                elements.compactMap { child in
+                    child.explicitID.map { ($0, child) }
+                },
+                uniquingKeysWith: { _, rhs in rhs }
+            )
+        }
+    }
     public nonisolated(unsafe) private(set) var elementsByExplicitID: [AnyHashable: Subview]
 
     public nonisolated init(elements: [Subview]) {
@@ -82,10 +91,6 @@ public struct ViewOutputList<Content: View>: View, RandomAccessCollection, Seque
 
     public nonisolated mutating func mergeInPlace(with other: Self) {
         elements.append(contentsOf: other.elements)
-        elementsByExplicitID.merge(
-            other.elementsByExplicitID,
-            uniquingKeysWith: { _, rhs in rhs }
-        )
     }
 
     public var body: some View {
@@ -249,7 +254,7 @@ private struct ViewOutputPreferenceKey<
                 return false
             }
             for (lhs, rhs) in zip(lhs.list, rhs.list) {
-                if lhs.id != rhs.id || lhs.phase != rhs.phase {
+                if lhs.id != rhs.id || lhs.phase != rhs.phase || lhs.explicitID != rhs.explicitID {
                     return false
                 }
             }

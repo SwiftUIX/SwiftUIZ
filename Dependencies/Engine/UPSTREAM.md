@@ -5,7 +5,7 @@ This directory vendors selected targets from
 
 - Upstream version: `2.13.1`
 - Upstream commit: `9e674764e18889165a6618359fbd93d40c41b801`
-- Previous vendored baseline: `1.8.1` (`0d2d564af1ad667c684071f208e431425806855f`)
+- Previous vendored baseline: `1.8.1` (`0d2d5647921473be4aac40cb70ad13900f56ed2b`)
 - Synced targets: `Engine`, `EngineCore`, `EngineCoreC`, `EngineMacros`, and `EngineMacrosCore`
 
 `EngineMacros` and `EngineMacrosCore` are retained as source snapshots but are not
